@@ -1,19 +1,7 @@
 // New interfaces for API response
 import {LocationData} from "~/components/LocationComponent";
-
-export interface WeatherLocation {
-  latitude: number;
-  longitude: number;
-  hourly: {
-    time: number[];
-    temperature_2m: number[];
-    cloud_cover: number[];
-    cloud_cover_low: number[];
-    cloud_cover_mid: number[];
-    cloud_cover_high: number[];
-    visibility: number[];
-  };
-}
+import {undefined} from "zod";
+import {WeatherLocation} from "~/.server/interfaces";
 
 class SunsetRatingCalculator {
   // Define constants for array indices corresponding to distances
