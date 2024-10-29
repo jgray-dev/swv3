@@ -10,3 +10,22 @@ body {
     color-scheme: dark;
   }
 }
+
+
+@property --interpolation {
+    syntax: '<number>';
+    initial-value: 0;
+    inherits: false;
+}
+
+@property --progress-color {
+    syntax: '<color>';
+    initial-value: hsl(0, 70%, 25%);
+    inherits: false;
+}
+
+@property --target-color {
+    syntax: '<color>';
+    initial-value: hsl(150, 70%, 50%);
+    inherits: false;
+}
