@@ -6,13 +6,6 @@ export function Details() {
   if (!data) return null;
   return (
     <div>
-      <button
-        onClick={() => {
-          console.log(useRouteLoaderData("routes/_index"));
-        }}
-      >
-        CHECK DATA
-      </button>
       Details component here. Lat: {data.lat}, Lon: {data.lon}
     </div>
   );
