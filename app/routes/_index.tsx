@@ -42,7 +42,12 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     eventTime = sunrise > now ? sunrise : sunset;
   }
   const apiKey = context.cloudflare.env.METEO_KEY;
+  // @ts-ignore
   const coords = generateCoordinateString(lat, lon, eventType);
+  const response = await fetch(
+    `https://customer-api.open-meteo.com/v1/forecast?${coords}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&past_days=1&forecast_days=2&apikey=${apiKey}`
+  );
+  const weatherData = await response.json();
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
@@ -55,6 +60,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       now: Math.round(Date.now() / 1000),
       coords: coords,
     },
+    weatherData: weatherData,
   };
 };
 
