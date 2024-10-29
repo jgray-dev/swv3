@@ -6,6 +6,7 @@ import { redirect, useLoaderData } from "@remix-run/react";
 import { LocationData } from "~/components/LocationComponent";
 import { Details } from "~/components/Details";
 import { getSunrise, getSunset } from "sunrise-sunset-js";
+import { generateCoordinateString } from "~/.server/data";
 
 export const meta: MetaFunction = () => {
   return [{ title: "swv3" }, { name: "swv3", content: "attempt 6??" }];
@@ -17,14 +18,25 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const lon = url.searchParams.get("lon");
   const city = url.searchParams.get("city");
   if (!lat || !lon || !city) return null;
-
+  const sunrise = Math.round(
+    new Date(getSunrise(parseFloat(lat), parseFloat(lon))).getTime() / 1000
+  );
+  const sunset = Math.round(
+    new Date(getSunset(parseFloat(lat), parseFloat(lon))).getTime() / 1000
+  );
+  const eventType = sunrise > sunset ? "sunset" : "sunrise";
+  const apiKey = context.cloudflare.env.METEO_KEY;
+  const milesToDegrees = 20 / 69; // approximately 0.29 degrees per 20 miles
+  const coords = generateCoordinateString(lat, lon, eventType);
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
     city: String(city),
     data: {
-      sunrise: getSunrise(parseFloat(lat), parseFloat(lon)),
-      sunset: getSunset(parseFloat(lat), parseFloat(lon)),
+      eventType: eventType,
+      sunrise: sunrise,
+      sunset: sunset,
+      coords: coords,
     },
   };
 };
