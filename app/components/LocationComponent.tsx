@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Form, useFetcher, useRouteLoaderData } from "@remix-run/react";
 import { CiLocationArrow1 } from "react-icons/ci";
-import { MdOutlineManageSearch } from "react-icons/md";
 import {LoaderData} from "~/.server/interfaces";
+import {FaSearchLocation} from "react-icons/fa";
 
 export interface LocationData {
   type: "geolocation" | "input";
@@ -62,7 +62,7 @@ export default function LocationComponent() {
     }
   }
   return (
-    <div className="bg-slate-900 p-4 sm:p-6 md:p-8">
+    <div className="p-4 sm:p-6 md:p-8">
       <div className="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2">
         <Form
           onSubmit={handleManualSubmit}
@@ -85,7 +85,7 @@ export default function LocationComponent() {
                    rounded-lg hover:bg-slate-600 active:bg-slate-800
                    transition-colors duration-200 w-auto"
           >
-            <MdOutlineManageSearch className="w-6 h-6 block sm:hidden" />
+            <FaSearchLocation  className="w-6 h-6 block sm:hidden" />
             <span className="hidden sm:block">Submit</span>
           </button>
         </Form>
