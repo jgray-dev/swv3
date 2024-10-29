@@ -2,13 +2,17 @@ import type { MetaFunction } from "@remix-run/cloudflare";
 import LocationComponent from "~/components/LocationComponent";
 import React from "react";
 import { json, LoaderFunction } from "@remix-run/router";
-import { redirect, useLoaderData, useRouteLoaderData } from "@remix-run/react";
+import { redirect, useRouteLoaderData } from "@remix-run/react";
 import { LocationData } from "~/components/LocationComponent";
 import { Details } from "~/components/Details";
 import { getSunrise, getSunset } from "sunrise-sunset-js";
-import { generateCoordinateString, WeatherDataResponse } from "~/.server/data";
-import { skyRating, WeatherLocation } from "~/.server/rating";
+import {
+  generateCoordinateString,
+  interpolateWeatherData,
+} from "~/.server/data";
+import { skyRating } from "~/.server/rating";
 import ColorGrid from "~/components/ColorGrid";
+import {WeatherLocation} from "~/.server/interfaces";
 
 export const meta: MetaFunction = () => {
   return [{ title: "swv3" }, { name: "swv3", content: "attempt 6??" }];
@@ -30,6 +34,9 @@ export const loader: LoaderFunction = async ({ request, context }) => {
 
   let eventType;
   let eventTime;
+  console.log(sunrise)
+  console.log(sunset)
+  console.log(now)
   if (sunrise > now && sunset > now) {
     // Both events are in the future, pick the nearest one
     eventType = sunrise < sunset ? "sunrise" : "sunset";
@@ -37,6 +44,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   } else if (sunrise <= now && sunset <= now) {
     // Both events are in the past, assume next day's sunrise
     eventType = "sunrise";
+    eventTime = sunrise + 86400
     console.error("Both times are in the past (index loader eventType)");
   } else {
     // One event is in the past, one in future - pick the future event
@@ -51,6 +59,11 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   );
   const weatherData = await response.json();
   const rating = skyRating(weatherData as WeatherLocation[]);
+  if (!eventTime) return null;
+  const interpData = interpolateWeatherData(
+    weatherData as WeatherLocation[],
+    eventTime
+  );
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
@@ -59,7 +72,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     eventTime: eventTime,
     now: Math.round(Date.now() / 1000),
     rating: rating,
-    data: weatherData,
+    weatherData: interpData,
+    allData: weatherData
   };
 };
 
@@ -74,7 +88,7 @@ export function isLocationData(data: any): data is LocationData {
   );
 }
 
-// @ts-expect-error fts
+// @ts-expect-error
 export const action: ActionFunction = async ({ request, context }) => {
   const formData = await request.formData();
   const locationDataString = formData.get("locationData");
@@ -136,7 +150,6 @@ export const action: ActionFunction = async ({ request, context }) => {
 };
 
 export default function Sunwatch() {
-  const data = useRouteLoaderData("routes/_index");
   return (
     <div className={"w-screen min-h-screen bg-gray-950"}>
       <div>
