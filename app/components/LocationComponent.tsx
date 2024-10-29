@@ -15,8 +15,7 @@ export default function LocationComponent() {
   const [gotGeolocation, setGotGeolocation] = useState<boolean>(false);
   const [gettingGeolocation, setGettingGeolocation] = useState<boolean>(false);
   let allData = useRouteLoaderData<LoaderData>("routes/_index");
-  if (!allData) return null
-  const [input, setInput] = useState<string>(allData.city);
+  const [input, setInput] = useState<string>(allData? allData.city:"");
   const fetcher = useFetcher();
   useEffect(() => {
     if (locationData) {
