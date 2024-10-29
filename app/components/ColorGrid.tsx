@@ -1,42 +1,32 @@
 import { useState } from "react";
-import { WeatherDataResponse } from "~/functions/data";
+import {useRouteLoaderData} from "@remix-run/react";
+import {WeatherDataResponse} from "~/.server/data";
 
-const ColorGrid = (data: WeatherDataResponse) => {
+export function ColorGrid() {
+  const allData = useRouteLoaderData("routes/_index")
+  const data = allData.data
   const [showImpact, setShowImpact] = useState(false);
 
   const getDirection = (data: WeatherDataResponse): string => {
     return data["event-type"] == "sunset" ? "flex-row-reverse" : "flex-row";
   };
 
-  const getHighCloudImpact = (
-    coverage: number,
-    isInFarZone: boolean
-  ): number => {
+  const getHighCloudImpact = (coverage: number, isInFarZone: boolean): number => {
     if (isInFarZone) {
       // High clouds in far zone (60-80 miles) are good for color, optimal at 55%
-      return Math.round(
-        (100 - Math.min(Math.abs(coverage - 55) * 2, 100)) * 0.7
-      );
+      return Math.round((100 - Math.min(Math.abs(coverage - 55) * 2, 100)) * 0.7);
     }
     return 0;
   };
 
-  const getMidCloudImpact = (
-    coverage: number,
-    distance: keyof WeatherDataResponse["data"]
-  ): number => {
+  const getMidCloudImpact = (coverage: number, distance: keyof WeatherDataResponse["data"]): number => {
     if (distance === "60miles" || distance === "80miles") {
-      return Math.round(
-        (100 - Math.min(Math.abs(coverage - 30) * 2, 100)) * 0.3
-      );
+      return Math.round((100 - Math.min(Math.abs(coverage - 30) * 2, 100)) * 0.3);
     }
     return Math.round(-coverage * 0.4);
   };
 
-  const getLowCloudImpact = (
-    coverage: number,
-    distance: keyof WeatherDataResponse["data"]
-  ): number => {
+  const getLowCloudImpact = (coverage: number, distance: keyof WeatherDataResponse["data"]): number => {
     if (["0miles", "20miles", "40miles"].includes(distance)) {
       return Math.round(-coverage * 0.8);
     }
@@ -61,30 +51,9 @@ const ColorGrid = (data: WeatherDataResponse) => {
 
   const getDefaultColor = (height: string, index: number): string => {
     const colors = {
-      high: [
-        "bg-red-200",
-        "bg-orange-200",
-        "bg-yellow-300",
-        "bg-green-300",
-        "bg-green-400",
-        "bg-blue-200",
-      ],
-      mid: [
-        "bg-red-300",
-        "bg-orange-300",
-        "bg-yellow-400",
-        "bg-green-200",
-        "bg-green-200",
-        "bg-blue-100",
-      ],
-      low: [
-        "bg-red-600",
-        "bg-red-500",
-        "bg-red-400",
-        "bg-yellow-200",
-        "bg-yellow-100",
-        "bg-gray-200",
-      ],
+      high: ["bg-red-200", "bg-orange-200", "bg-yellow-300", "bg-green-300", "bg-green-400", "bg-blue-200"],
+      mid: ["bg-red-300", "bg-orange-300", "bg-yellow-400", "bg-green-200", "bg-green-200", "bg-blue-100"],
+      low: ["bg-red-600", "bg-red-500", "bg-red-400", "bg-yellow-200", "bg-yellow-100", "bg-gray-200"]
     };
     return colors[height as keyof typeof colors][index];
   };
@@ -114,110 +83,72 @@ const ColorGrid = (data: WeatherDataResponse) => {
         <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-4">40</div>
         <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-4">60</div>
         <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-4">80</div>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-4">
-          100
-        </div>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-4">
-          miles
-        </div>
+        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-4">100</div>
+        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-4">miles</div>
         <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
       </div>
 
       {/* High clouds row */}
       <div className={`flex justify-center ${getDirection(data)}`}>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2">
-          High
-        </div>
-        {Object.entries(data.data)
-          .slice(0, 6)
-          .map(([distance, values], index) => {
-            const impact = getHighCloudImpact(
-              values.cloud_cover_high,
-              index >= 3
-            );
-            const bgColor = showImpact
-              ? getImpactColor(impact)
-              : getDefaultColor("high", index);
-            return (
-              <div
-                key={distance}
-                className={`${bgColor} min-h-12 min-w-12 border border-black text-center pt-1 text-black`}
-                title={`Impact: ${impact}`}
-              >
-                {Math.round(values.cloud_cover_high)}%
-              </div>
-            );
-          })}
+        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2">High</div>
+        {Object.entries(data.data).slice(0, 6).map(([distance, values], index) => {
+          const impact = getHighCloudImpact(values.cloud_cover_high, index >= 3);
+          const bgColor = showImpact ? getImpactColor(impact) : getDefaultColor("high", index);
+          return (
+            <div
+              key={distance}
+              className={`${bgColor} min-h-12 min-w-12 border border-black text-center pt-1 text-black`}
+              title={`Impact: ${impact}`}
+            >
+              {Math.round(values.cloud_cover_high)}%
+            </div>
+          );
+        })}
         <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
         <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
       </div>
 
       {/* Mid clouds row */}
       <div className={`flex justify-center ${getDirection(data)}`}>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2">
-          Mid
-        </div>
-        {Object.entries(data.data)
-          .slice(0, 6)
-          .map(([distance, values], index) => {
-            const impact = getMidCloudImpact(
-              values.cloud_cover_mid,
-              distance as keyof WeatherDataResponse["data"]
-            );
-            const bgColor = showImpact
-              ? getImpactColor(impact)
-              : getDefaultColor("mid", index);
-            return (
-              <div
-                key={distance}
-                className={`${bgColor} min-h-12 min-w-12 border border-black text-center pt-1 text-black`}
-                title={`Impact: ${impact}`}
-              >
-                {Math.round(values.cloud_cover_mid)}%
-              </div>
-            );
-          })}
+        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2">Mid</div>
+        {Object.entries(data.data).slice(0, 6).map(([distance, values], index) => {
+          const impact = getMidCloudImpact(values.cloud_cover_mid, distance as keyof WeatherDataResponse["data"]);
+          const bgColor = showImpact ? getImpactColor(impact) : getDefaultColor("mid", index);
+          return (
+            <div
+              key={distance}
+              className={`${bgColor} min-h-12 min-w-12 border border-black text-center pt-1 text-black`}
+              title={`Impact: ${impact}`}
+            >
+              {Math.round(values.cloud_cover_mid)}%
+            </div>
+          );
+        })}
         <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
         <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
       </div>
 
       {/* Low clouds row */}
       <div className={`flex justify-center ${getDirection(data)}`}>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2">
-          Low
-        </div>
-        {Object.entries(data.data)
-          .slice(0, 6)
-          .map(([distance, values], index) => {
-            const impact = getLowCloudImpact(
-              values.cloud_cover_low,
-              distance as keyof WeatherDataResponse["data"]
-            );
-            const bgColor = showImpact
-              ? getImpactColor(impact)
-              : getDefaultColor("low", index);
-            const isObservingLocation = distance === "0miles";
-            return (
-              <div
-                key={distance}
-                className={`${bgColor} min-h-12 min-w-12 ${
-                  isObservingLocation
-                    ? "border-2 border-white"
-                    : "border border-black"
-                } text-center pt-1 text-black`}
-                title={`Impact: ${impact}${
-                  isObservingLocation ? "\nObserving location" : ""
-                }`}
-              >
-                {Math.round(values.cloud_cover_low)}%
-              </div>
-            );
-          })}
+        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2">Low</div>
+        {Object.entries(data.data).slice(0, 6).map(([distance, values], index) => {
+          const impact = getLowCloudImpact(values.cloud_cover_low, distance as keyof WeatherDataResponse["data"]);
+          const bgColor = showImpact ? getImpactColor(impact) : getDefaultColor("low", index);
+          const isObservingLocation = distance === "0miles";
+          return (
+            <div
+              key={distance}
+              className={`${bgColor} min-h-12 min-w-12 ${
+                isObservingLocation ? "border-2 border-white" : "border border-black"
+              } text-center pt-1 text-black`}
+              title={`Impact: ${impact}${isObservingLocation ? "\nObserving location" : ""}`}
+            >
+              {Math.round(values.cloud_cover_low)}%
+            </div>
+          );
+        })}
         <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
-        <div
-          className="bg-amber-500 min-h-12 min-w-12 text-center pt-2 border-[13px] border-gray-400"
-          title="Sun"
-        ></div>
+        <div className="bg-amber-500 min-h-12 min-w-12 text-center pt-2 border-[13px] border-gray-400" title="Sun"></div>
       </div>
 
       <div className={`flex justify-center ${getDirection(data)}`}>
