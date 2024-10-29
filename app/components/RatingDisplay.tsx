@@ -2,7 +2,7 @@ import { useRouteLoaderData } from "@remix-run/react";
 import { LoaderData } from "~/.server/interfaces";
 import { useEffect, useState, useRef } from "react";
 
-export default function Rating() {
+export default function RatingDisplay() {
   let allData = useRouteLoaderData<LoaderData>("routes/_index");
   if (!allData) return null;
 
