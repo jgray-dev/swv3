@@ -13,8 +13,9 @@ body {
 
 .blob {
     height: 300%;
-    background-color: hsl(0, 0%, 53%);
-    background-image: radial-gradient(at 100% 43%, hsla(156, 66%, 65%, 1) 0px, transparent 50%),
-    radial-gradient(at 0% 0%, hsla(61, 100%, 50%, 0.28) 0px, transparent 50%),
-    radial-gradient(at 0% 79%, hsla(346, 100%, 80%, 1) 0px, transparent 50%);
+    background-color: hsl(222, 47%, 11%);
+    background-image:
+            radial-gradient(at 80% 0%, hsla(225, 68%, 42%, 0.75) 0px, transparent 50%),
+            radial-gradient(at 0% 50%, hsla(262, 68%, 32%, 0.45) 0px, transparent 50%);
+    backdrop-filter: blur(100px);
 }
