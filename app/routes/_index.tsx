@@ -12,7 +12,7 @@ import {
 } from "~/.server/data";
 import { skyRating } from "~/.server/rating";
 import ColorGrid from "~/components/ColorGrid";
-import {WeatherLocation} from "~/.server/interfaces";
+import {InterpolatedWeather, WeatherLocation} from "~/.server/interfaces";
 
 export const meta: MetaFunction = () => {
   return [{ title: "swv3" }, { name: "swv3", content: "attempt 6??" }];
@@ -24,19 +24,24 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const lon = url.searchParams.get("lon");
   const city = url.searchParams.get("city");
   if (!lat || !lon || !city) return null;
-  const sunrise = Math.round(
+  let sunrise = Math.round(
     new Date(getSunrise(parseFloat(lat), parseFloat(lon))).getTime() / 1000
   );
-  const sunset = Math.round(
+  let sunset = Math.round(
     new Date(getSunset(parseFloat(lat), parseFloat(lon))).getTime() / 1000
   );
   const now = Math.round(Date.now() / 1000);
 
+  if (sunrise <= now && sunset <= now) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1); // Add one day to get tomorrow's date
+    sunrise = Math.round(
+      new Date(getSunrise(parseFloat(lat), parseFloat(lon), tomorrow)).getTime() / 1000
+    );
+  }
+  
   let eventType;
   let eventTime;
-  console.log(sunrise)
-  console.log(sunset)
-  console.log(now)
   if (sunrise > now && sunset > now) {
     // Both events are in the future, pick the nearest one
     eventType = sunrise < sunset ? "sunrise" : "sunset";
@@ -58,12 +63,12 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     `https://customer-api.open-meteo.com/v1/forecast?${coords}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&past_days=1&forecast_days=2&apikey=${apiKey}`
   );
   const weatherData = await response.json();
-  const rating = skyRating(weatherData as WeatherLocation[]);
   if (!eventTime) return null;
   const interpData = interpolateWeatherData(
     weatherData as WeatherLocation[],
     eventTime
   );
+  const rating = skyRating(interpData as InterpolatedWeather[]);
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
