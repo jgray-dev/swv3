@@ -1,12 +1,13 @@
 import { useRouteLoaderData } from "@remix-run/react";
+import {LoaderData} from "~/.server/interfaces";
 
 export function Details() {
-  const data = useRouteLoaderData("routes/_index");
-  console.log(data);
-  if (!data) return null;
+  let allData = useRouteLoaderData<LoaderData>("routes/_index");
+  if (!allData) return null
+  console.log(allData)
   return (
     <div>
-      Details component here. Lat: {data.lat}, Lon: {data.lon}
+      Details component here. Lat: {allData.lat}, Lon: {allData.lon}
     </div>
   );
 }
