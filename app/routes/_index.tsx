@@ -2,11 +2,13 @@ import type { MetaFunction } from "@remix-run/cloudflare";
 import LocationComponent from "~/components/LocationComponent";
 import React from "react";
 import { json, LoaderFunction } from "@remix-run/router";
-import { redirect, useLoaderData } from "@remix-run/react";
+import { redirect, useLoaderData, useRouteLoaderData } from "@remix-run/react";
 import { LocationData } from "~/components/LocationComponent";
 import { Details } from "~/components/Details";
 import { getSunrise, getSunset } from "sunrise-sunset-js";
-import { generateCoordinateString } from "~/.server/data";
+import { generateCoordinateString, WeatherDataResponse } from "~/.server/data";
+import { skyRating, WeatherLocation } from "~/.server/rating";
+import ColorGrid from "~/components/ColorGrid";
 
 export const meta: MetaFunction = () => {
   return [{ title: "swv3" }, { name: "swv3", content: "attempt 6??" }];
@@ -48,19 +50,16 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     `https://customer-api.open-meteo.com/v1/forecast?${coords}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&past_days=1&forecast_days=2&apikey=${apiKey}`
   );
   const weatherData = await response.json();
+  const rating = skyRating(weatherData as WeatherLocation[]);
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
     city: String(city),
-    data: {
-      eventType: eventType,
-      eventTime: eventTime,
-      sunrise: sunrise,
-      sunset: sunset,
-      now: Math.round(Date.now() / 1000),
-      coords: coords,
-    },
-    weatherData: weatherData,
+    eventType: eventType,
+    eventTime: eventTime,
+    now: Math.round(Date.now() / 1000),
+    rating: rating,
+    data: weatherData,
   };
 };
 
@@ -137,16 +136,13 @@ export const action: ActionFunction = async ({ request, context }) => {
 };
 
 export default function Sunwatch() {
-  const locationData = useLoaderData<{
-    lat: number;
-    lon: number;
-    city: string;
-  } | null>();
+  const data = useRouteLoaderData("routes/_index");
   return (
     <div className={"w-screen min-h-screen bg-gray-950"}>
       <div>
         <LocationComponent />
-        {locationData && <Details />}
+        <Details />
+        <ColorGrid />
       </div>
     </div>
   );
