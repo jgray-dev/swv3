@@ -91,7 +91,7 @@ export function ColorGrid() {
 
   return (
     <div className="bg-transparent mt-12 w-screen min-h-16 flex flex-col font-semibold">
-      <div className="flex justify-end px-4 py-2">
+      <div className="flex justify-center px-4 py-2">
         <label className="inline-flex items-center cursor-pointer">
           <span className="mr-3 text-sm">Default</span>
           <div className="relative">
@@ -200,24 +200,24 @@ export function ColorGrid() {
         })}
         <div className="bg-transparent min-h-12 min-w-12 text-center pt-2"></div>
         <div
-          className="bg-amber-500 min-h-12 min-w-12 text-center pt-2 border-[13px] border-gray-950"
+          className="bg-gradient-to-br from-orange-600 to-orange-400 rounded-full min-h-6 min-w-6 text-center pt-2 mb-3 mt-3 mr-6"
           title="Sun"
         ></div>
       </div>
       <div className={`flex justify-center ${getDirection(allData)}`}>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2">
-          {allData.eventType == "sunrise" ? "Cloud" : "height"}
+        <div className="bg-transparent min-h-12 min-w-12 text-center pt-2">
+          {allData.eventType == "sunrise" ? "Cloud " : " height"}
         </div>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2">
-          {allData.eventType == "sunrise" ? "height" : "Cloud"}
+        <div className="bg-transparent min-h-12 min-w-12 text-center pt-2">
+          {allData.eventType == "sunrise" ? " height" : "Cloud "}
         </div>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
-        <div className="bg-gray-400 min-h-12 min-w-12 text-center pt-2"></div>
+        <div className="bg-transparent min-h-12 min-w-12 text-center pt-2"></div>
+        <div className="bg-transparent min-h-12 min-w-12 text-center pt-2"></div>
+        <div className="bg-transparent min-h-12 min-w-12 text-center pt-2"></div>
+        <div className="bg-transparent min-h-12 min-w-12 text-center pt-2"></div>
+        <div className="bg-transparent min-h-12 min-w-12 text-center pt-2"></div>
+        <div className="bg-transparent min-h-12 min-w-12 text-center pt-2"></div>
+        <div className="bg-transparent min-h-12 min-w-12 text-center pt-2"></div>
       </div>
     </div>
   );
