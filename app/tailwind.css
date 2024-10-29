@@ -11,21 +11,10 @@ body {
   }
 }
 
-
-@property --interpolation {
-    syntax: '<number>';
-    initial-value: 0;
-    inherits: false;
-}
-
-@property --progress-color {
-    syntax: '<color>';
-    initial-value: hsl(0, 70%, 25%);
-    inherits: false;
-}
-
-@property --target-color {
-    syntax: '<color>';
-    initial-value: hsl(150, 70%, 50%);
-    inherits: false;
+.blob {
+    height: 300%;
+    background-color: hsl(0, 0%, 53%);
+    background-image: radial-gradient(at 100% 43%, hsla(156, 66%, 65%, 1) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(61, 100%, 50%, 0.28) 0px, transparent 50%),
+    radial-gradient(at 0% 79%, hsla(346, 100%, 80%, 1) 0px, transparent 50%);
 }
