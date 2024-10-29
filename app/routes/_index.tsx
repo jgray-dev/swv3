@@ -24,9 +24,24 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const sunset = Math.round(
     new Date(getSunset(parseFloat(lat), parseFloat(lon))).getTime() / 1000
   );
-  const eventType = sunrise > sunset ? "sunset" : "sunrise";
+  const now = Math.round(Date.now() / 1000);
+
+  let eventType;
+  let eventTime;
+  if (sunrise > now && sunset > now) {
+    // Both events are in the future, pick the nearest one
+    eventType = sunrise < sunset ? "sunrise" : "sunset";
+    eventTime = sunrise < sunset ? sunrise : sunset;
+  } else if (sunrise <= now && sunset <= now) {
+    // Both events are in the past, assume next day's sunrise
+    eventType = "sunrise";
+    console.error("Both times are in the past (index loader eventType)");
+  } else {
+    // One event is in the past, one in future - pick the future event
+    eventType = sunrise > now ? "sunrise" : "sunset";
+    eventTime = sunrise > now ? sunrise : sunset;
+  }
   const apiKey = context.cloudflare.env.METEO_KEY;
-  const milesToDegrees = 20 / 69; // approximately 0.29 degrees per 20 miles
   const coords = generateCoordinateString(lat, lon, eventType);
   return {
     lat: parseFloat(lat),
@@ -34,8 +49,10 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     city: String(city),
     data: {
       eventType: eventType,
+      eventTime: eventTime,
       sunrise: sunrise,
       sunset: sunset,
+      now: Math.round(Date.now() / 1000),
       coords: coords,
     },
   };
