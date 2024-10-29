@@ -26,6 +26,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const lon = url.searchParams.get("lon");
   const city = url.searchParams.get("city");
   if (!lat || !lon || !city) return null;
+  const NINETY_MINUTES_SECONDS = 5400; // 90 minutes in seconds
+
   let sunrise = Math.round(
     new Date(getSunrise(parseFloat(lat), parseFloat(lon))).getTime() / 1000
   );
@@ -34,29 +36,47 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   );
   const now = Math.round(Date.now() / 1000);
 
+// Calculate next day's sunrise if both events are in the past
   if (sunrise <= now && sunset <= now) {
     const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1); // Add one day to get tomorrow's date
+    tomorrow.setDate(tomorrow.getDate() + 1);
     sunrise = Math.round(
       new Date(getSunrise(parseFloat(lat), parseFloat(lon), tomorrow)).getTime() / 1000
     );
   }
-  
+
   let eventType;
   let eventTime;
-  if (sunrise > now && sunset > now) {
-    // Both events are in the future, pick the nearest one
-    eventType = sunrise < sunset ? "sunrise" : "sunset";
-    eventTime = sunrise < sunset ? sunrise : sunset;
-  } else if (sunrise <= now && sunset <= now) {
-    // Both events are in the past, assume next day's sunrise
-    eventType = "sunrise";
-    eventTime = sunrise + 86400
-    console.error("Both times are in the past (index loader eventType)");
+
+// Check for events within last 90 minutes
+  const sunriseRecent = (now - sunrise) <= NINETY_MINUTES_SECONDS && sunrise <= now;
+  const sunsetRecent = (now - sunset) <= NINETY_MINUTES_SECONDS && sunset <= now;
+
+  if (sunriseRecent || sunsetRecent) {
+    // Prefer the most recent event if both are within window
+    if (sunriseRecent && sunsetRecent) {
+      eventType = sunrise > sunset ? "sunrise" : "sunset";
+      eventTime = sunrise > sunset ? sunrise : sunset;
+    } else {
+      eventType = sunriseRecent ? "sunrise" : "sunset";
+      eventTime = sunriseRecent ? sunrise : sunset;
+    }
+  } else if (sunrise > now || sunset > now) {
+    // At least one future event exists
+    if (sunrise > now && sunset > now) {
+      // Both are future events, pick nearest
+      eventType = sunrise < sunset ? "sunrise" : "sunset";
+      eventTime = sunrise < sunset ? sunrise : sunset;
+    } else {
+      // One future event exists, pick it
+      eventType = sunrise > now ? "sunrise" : "sunset";
+      eventTime = sunrise > now ? sunrise : sunset;
+    }
   } else {
-    // One event is in the past, one in future - pick the future event
-    eventType = sunrise > now ? "sunrise" : "sunset";
-    eventTime = sunrise > now ? sunrise : sunset;
+    // No recent or future events, use next day's sunrise
+    eventType = "sunrise";
+    eventTime = sunrise;
+    console.error("Both times are in the past (index loader eventType)");
   }
   const apiKey = context.cloudflare.env.METEO_KEY;
   // @ts-ignore
