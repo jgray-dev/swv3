@@ -70,21 +70,28 @@ export default function LocationComponent() {
           <input
             type="text"
             required
-            className="w-full sm:w-64 px-4 py-2 bg-slate-800 border border-slate-700 
-                   rounded-lg text-slate-100 placeholder-slate-400
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 
-                   transition-all duration-200"
+            className="w-full sm:w-64 px-4 py-2 
+                     bg-white/10 backdrop-blur-sm
+                     border border-white/20 
+                     rounded-lg text-slate-100 placeholder-slate-400
+                     focus:outline-none focus:ring-2 focus:ring-blue-400/50 
+                     focus:bg-white/20 focus:backdrop-blur-md
+                     transition-all duration-200"
             placeholder="Enter location manually"
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-slate-700 text-slate-100
-                   rounded-lg hover:bg-slate-600 active:bg-slate-800
-                   transition-colors duration-200 w-auto"
+            className="px-4 py-2 
+                     bg-white/20 backdrop-blur-sm
+                     border border-white/10
+                     rounded-lg hover:bg-white/30 
+                     active:bg-white/10
+                     transition-all duration-200 w-auto
+                     text-slate-100"
           >
-            <FaSearchLocation  className="w-6 h-6 block sm:hidden" />
+            <FaSearchLocation className="w-6 h-6 block sm:hidden" />
             <span className="hidden sm:block">Submit</span>
           </button>
         </Form>
@@ -93,33 +100,35 @@ export default function LocationComponent() {
             geolocationError
               ? alert("Unable to use GPS. Did you deny the permission?")
               : gettingGeolocation
-              ? null
-              : gotGeolocation
-              ? null
-              : handleGeolocation();
+                ? null
+                : gotGeolocation
+                  ? null
+                  : handleGeolocation();
           }}
           className={`py-2 px-4 rounded-lg transition-all duration-200 sm:ml-2 
-                   w-full sm:w-auto flex items-center justify-center ${
-                     geolocationError
-                       ? "bg-slate-800 cursor-not-allowed"
-                       : gotGeolocation
-                       ? "bg-slate-700"
-                       : "bg-slate-700 hover:bg-slate-600 active:bg-slate-800 cursor-pointer"
-                   }`}
+                   w-full sm:w-auto flex items-center justify-center
+                   backdrop-blur-sm border
+                   ${
+            geolocationError
+              ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
+              : gotGeolocation
+                ? "bg-green-500/20 border-green-500/30"
+                : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10 cursor-pointer"
+          }`}
           title={geolocationError ? "Error using GPS" : "Use GPS Location"}
         >
           <span className="block sm:hidden mr-2">Use location</span>
           <CiLocationArrow1
             className={`h-6 w-6 transition-all duration-200 ${
               geolocationError
-                ? "text-red-500"
+                ? "text-red-400"
                 : gotGeolocation
-                ? "text-green-500"
-                : "text-slate-100"
+                  ? "text-green-400"
+                  : "text-slate-100"
             } ${
               gettingGeolocation
                 ? gotGeolocation
-                  ? "text-green-500"
+                  ? "text-green-400"
                   : "animate-pulse text-blue-400"
                 : ""
             }`}
