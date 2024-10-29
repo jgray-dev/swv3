@@ -13,7 +13,8 @@ import {
 import { skyRating } from "~/.server/rating";
 import ColorGrid from "~/components/ColorGrid";
 import {InterpolatedWeather, WeatherLocation} from "~/.server/interfaces";
-import Rating from "~/components/Rating";
+import RatingDisplay from "~/components/RatingDisplay";
+import LocationDisplay from "~/components/LocationDisplay";
 
 export const meta: MetaFunction = () => {
   return [{ title: "swv3" }, { name: "swv3", content: "attempt 6??" }];
@@ -157,10 +158,11 @@ export const action: ActionFunction = async ({ request, context }) => {
 
 export default function Sunwatch() {
   return (
-    <div className={"w-screen min-h-screen bg-gray-950"}>
+    <div className={"w-screen min-h-screen blob"}>
       <div>
         <LocationComponent />
-        <Rating />
+        <LocationDisplay />
+        <RatingDisplay />
         <Details />
         <ColorGrid />
       </div>
