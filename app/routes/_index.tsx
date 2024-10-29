@@ -13,6 +13,7 @@ import {
 import { skyRating } from "~/.server/rating";
 import ColorGrid from "~/components/ColorGrid";
 import {InterpolatedWeather, WeatherLocation} from "~/.server/interfaces";
+import Rating from "~/components/Rating";
 
 export const meta: MetaFunction = () => {
   return [{ title: "swv3" }, { name: "swv3", content: "attempt 6??" }];
@@ -159,6 +160,7 @@ export default function Sunwatch() {
     <div className={"w-screen min-h-screen bg-gray-950"}>
       <div>
         <LocationComponent />
+        <Rating />
         <Details />
         <ColorGrid />
       </div>
