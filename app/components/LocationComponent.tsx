@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import {Form, useFetcher, useRouteLoaderData} from "@remix-run/react";
+import { Form, useFetcher, useRouteLoaderData } from "@remix-run/react";
 import { CiLocationArrow1 } from "react-icons/ci";
+import { MdOutlineManageSearch } from "react-icons/md";
+import {LoaderData} from "~/.server/interfaces";
 
 export interface LocationData {
   type: "geolocation" | "input";
@@ -12,8 +14,9 @@ export default function LocationComponent() {
   const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [gotGeolocation, setGotGeolocation] = useState<boolean>(false);
   const [gettingGeolocation, setGettingGeolocation] = useState<boolean>(false);
-  const data = useRouteLoaderData("routes/_index")
-  const [input, setInput] = useState<string>(data?.city);
+  let allData = useRouteLoaderData<LoaderData>("routes/_index");
+  if (!allData) return null
+  const [input, setInput] = useState<string>(allData.city);
   const fetcher = useFetcher();
   useEffect(() => {
     if (locationData) {
@@ -24,7 +27,6 @@ export default function LocationComponent() {
     }
   }, [locationData]);
 
-  
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLocationData({
@@ -59,13 +61,12 @@ export default function LocationComponent() {
       }
     }
   }
-
   return (
-    <div className="min-h-screen bg-slate-900 p-4 sm:p-6 md:p-8">
+    <div className="bg-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2">
         <Form
           onSubmit={handleManualSubmit}
-          className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto"
+          className="flex flex-row gap-2 w-full sm:w-auto"
         >
           <input
             type="text"
@@ -80,11 +81,12 @@ export default function LocationComponent() {
           />
           <button
             type="submit"
-            className="w-full sm:w-auto px-4 py-2 bg-slate-700 text-slate-100
+            className="px-4 py-2 bg-slate-700 text-slate-100
                    rounded-lg hover:bg-slate-600 active:bg-slate-800
-                   transition-colors duration-200"
+                   transition-colors duration-200 w-auto"
           >
-            Submit
+            <MdOutlineManageSearch className="w-6 h-6 block sm:hidden" />
+            <span className="hidden sm:block">Submit</span>
           </button>
         </Form>
         <button
@@ -126,5 +128,5 @@ export default function LocationComponent() {
         </button>
       </div>
     </div>
-  ); 
+  );
 }
