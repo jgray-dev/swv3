@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, useFetcher } from "@remix-run/react";
+import {Form, useFetcher, useRouteLoaderData} from "@remix-run/react";
 import { CiLocationArrow1 } from "react-icons/ci";
 
 export interface LocationData {
@@ -7,14 +7,14 @@ export interface LocationData {
   data: GeolocationPosition | string;
 }
 
-export default function LocationService() {
+export default function LocationComponent() {
   const [geolocationError, setGeolocationError] = useState<boolean>(false);
   const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [gotGeolocation, setGotGeolocation] = useState<boolean>(false);
   const [gettingGeolocation, setGettingGeolocation] = useState<boolean>(false);
-  const [input, setInput] = useState<string>("");
+  const data = useRouteLoaderData("routes/_index")
+  const [input, setInput] = useState<string>(data?.city);
   const fetcher = useFetcher();
-
   useEffect(() => {
     if (locationData) {
       fetcher.submit(
@@ -24,6 +24,7 @@ export default function LocationService() {
     }
   }, [locationData]);
 
+  
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLocationData({
