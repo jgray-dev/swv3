@@ -2,12 +2,14 @@ import type { MetaFunction } from "@remix-run/cloudflare";
 import LocationComponent from "~/components/LocationComponent";
 import React from "react";
 import { json, LoaderFunction } from "@remix-run/router";
-import { redirect } from "@remix-run/react";
+import { Link, redirect, replace } from "@remix-run/react";
 import { LocationData } from "~/components/LocationComponent";
 import { getSunrise, getSunset } from "sunrise-sunset-js";
 import {
   averageData,
-  generateCoordinateString, getRelative, getStringLiteral,
+  generateCoordinateString,
+  getRelative,
+  getStringLiteral,
   interpolateWeatherData,
 } from "~/.server/data";
 import { skyRating } from "~/.server/rating";
@@ -31,7 +33,10 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const lon = url.searchParams.get("lon");
   const city = url.searchParams.get("city");
   let error = url.searchParams.get("error");
-  if (!lat || !lon || !city) return null;
+  if (!lat || !lon || !city) {
+    console.log("asdas");
+    return null;
+  }
 
   let sunrise = Math.round(
     new Date(getSunrise(parseFloat(lat), parseFloat(lon))).getTime() / 1000
@@ -110,7 +115,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     stats: stats as AveragedValues,
     message: error,
     eventString: getStringLiteral(now, eventTime, eventType),
-    relative: getRelative(now, eventTime)
+    relative: getRelative(now, eventTime),
   };
 };
 
@@ -176,25 +181,43 @@ export const action: ActionFunction = async ({ request, context }) => {
       } else {
         console.error("No geocoding results found");
         return redirect(
-          `/${url.search}&error=${encodeURI(`No results found for ${locationData.data}`)}`
+          appendErrorToUrl(
+            url.search,
+            `No results found for ${locationData.data}`
+          )
         );
       }
     } else {
       return redirect(
-        `/${url.search}&error=${encodeURI("Invalid location data format")}`
+        appendErrorToUrl(url.search, `Invalid location data format`)
       );
     }
   } catch (error) {
     console.error("Error parsing location data:", error);
     return redirect(
-      `/${url.search}&error=${encodeURI(`Error paring location data: ${error}`)}`
+      appendErrorToUrl(url.search, `Error parsing location data: ${error}`)
     );
   }
 };
 
+function appendErrorToUrl(baseUrlSearch: string, error?: string) {
+  const searchParams = new URLSearchParams(
+    baseUrlSearch.startsWith("?") ? baseUrlSearch.slice(1) : baseUrlSearch
+  );
+  if (error) {
+    searchParams.append("error", `${error}`);
+  }
+  return `?${searchParams.toString()}`;
+}
+
 export default function Sunwatch() {
   return (
     <div className={"w-screen min-h-screen blob roboto overflow-x-hidden"}>
+      <div className={"w-screen text-center mx-auto"}>
+        <Link to={"/"} className={"text-white/50 text-xs cursor-pointer"}>
+          SWV3
+        </Link>
+      </div>
       <LocationComponent />
       <Alert />
       <LocationDisplay />
