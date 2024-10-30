@@ -36,7 +36,8 @@ export interface LoaderData {
   allData: WeatherLocation[],
   stats: AveragedValues,
   message?: string,
-  relative: "future" | "past" | "current"
+  relative: "future" | "past" | "current",
+  ok: boolean,
 }
 
 export interface AveragedValues {
