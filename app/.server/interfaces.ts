@@ -32,5 +32,16 @@ export interface LoaderData {
   now: number,
   rating: number,
   weatherData: InterpolatedWeather[],
-  allData: WeatherLocation[]
+  allData: WeatherLocation[],
+  stats: AveragedValues,
+  message?: string,
+}
+
+export interface AveragedValues {
+  cloud_cover: number,
+  high_clouds: number,
+  mid_clouds: number,
+  low_clouds: number,
+  visibility: number,
+  temperature: number
 }
