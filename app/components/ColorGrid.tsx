@@ -6,7 +6,7 @@ const DISTANCES = [0, 20, 40, 60, 80, 100];
 
 export function ColorGrid() {
   let allData = useRouteLoaderData<LoaderData>("routes/_index");
-  if (!allData) return null;
+  if (!allData?.ok) return null;
   const weatherData = allData.weatherData;
   const [showImpact, setShowImpact] = useState(false);
 
