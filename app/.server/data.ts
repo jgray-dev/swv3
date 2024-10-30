@@ -170,3 +170,34 @@ export function averageData(data: InterpolatedWeather[]): AveragedValues {
     temperature: data[0].temperature_2m
   };
 }
+
+
+export function getStringLiteral(currentTime: number, eventTime: number, type: string): string {
+  const differenceInSeconds = eventTime - currentTime;
+  const absoluteDifferenceInHours = Math.abs(differenceInSeconds) / 3600;
+  const absoluteDifferenceInMinutes = Math.abs(differenceInSeconds) / 60;
+
+  // If the difference is less than 1 minute
+  if (absoluteDifferenceInMinutes < 1) {
+    return `${type=="sunset"?"sunsetting":"sunrising"} just now`;
+  }
+
+  // If the difference is less than 1 hour
+  if (absoluteDifferenceInHours < 1) {
+    const minutes = Math.round(absoluteDifferenceInMinutes);
+    return differenceInSeconds < 0
+      ? `${type} ${minutes} minute${minutes === 1 ? '' : 's'} ago`
+      : `${type} in ${minutes} minute${minutes === 1 ? '' : 's'}`;
+  }
+
+  // For hour(s) difference
+  const hours = Math.round(absoluteDifferenceInHours);
+  return differenceInSeconds < 0
+    ? `${type} ${hours} hour${hours === 1 ? '' : 's'} ago`
+    : `${type} in ${hours} hour${hours === 1 ? '' : 's'}`;
+}
+
+export function getRelative(now: number, time: number): string {
+  if (Math.abs(now - time) <= 500) return "current"
+  return now > time? "past" : "future"
+}
