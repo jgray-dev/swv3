@@ -20,3 +20,55 @@ body {
     backdrop-filter: blur(100px);
 }
 
+
+@keyframes sparkle {
+    0% { opacity: 0; transform: scale(0); }
+    50% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0); }
+}
+
+
+.animate-pulse-subtle {
+    animation: subtle-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes subtle-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: .7;
+    }
+}
+
+.default {
+    background: linear-gradient(
+            -45deg,
+            #23d526,
+            #ee7752,
+            #e73c7e,
+            #f98e1d,
+            #23a6d5,
+            #23d5ab,
+            #23d526
+    );
+}
+
+.gradient {
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 250% 250%;
+    animation: gradient 10s ease infinite;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0 50%;
+    }
+}
