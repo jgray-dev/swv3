@@ -78,6 +78,7 @@ export default function LocationComponent() {
             placeholder="Enter location manually"
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onFocus={e => e.target.select()}
           />
           <button
             type="submit"
