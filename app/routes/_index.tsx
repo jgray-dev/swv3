@@ -34,8 +34,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const city = url.searchParams.get("city");
   let error = url.searchParams.get("error");
   if (!lat || !lon || !city) {
-    console.log("asdas");
-    return null;
+    return {ok: false, message: error};
   }
 
   let sunrise = Math.round(
@@ -116,6 +115,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     message: error,
     eventString: getStringLiteral(now, eventTime, eventType),
     relative: getRelative(now, eventTime),
+    ok: true,
   };
 };
 
