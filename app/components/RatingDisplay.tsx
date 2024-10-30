@@ -2,6 +2,7 @@ import { useRouteLoaderData } from "@remix-run/react";
 import { LoaderData } from "~/.server/interfaces";
 import { useEffect, useState, useRef } from "react";
 import StatItem from "~/components/StatItem";
+import SparkleText from "~/components/SparkleText";
 
 export default function RatingDisplay() {
   let allData = useRouteLoaderData<LoaderData>("routes/_index");
@@ -92,9 +93,17 @@ export default function RatingDisplay() {
               {Math.round(displayNumber)}
             </span>
           </div>
-          <span className="text-sm sm:text-base mt-1 absolute bottom-0">
-            {allData.eventType.charAt(0).toUpperCase() +
-              allData.eventType.slice(1)}
+          <span
+            className={`text-sm sm:text-base mt-1 relative rounded px-1 ${
+              allData.relative === "current"
+                ? "gradient default font-bold"
+                : allData.relative === "future"
+                ? "text-green-300"
+                : "text-red-300"
+            }`}
+          >
+             {allData.eventString.charAt(0).toUpperCase() +
+               allData.eventString.slice(1)}
           </span>
         </div>
         <div className="flex-1 sm:basis-2/3 border-t sm:border-t-0 sm:border-l border-white/10 p-4 space-y-2">
