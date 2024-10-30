@@ -5,7 +5,7 @@ import StatItem from "~/components/StatItem";
 
 export default function RatingDisplay() {
   let allData = useRouteLoaderData<LoaderData>("routes/_index");
-  if (!allData) return null;
+  if (!allData?.ok) return null;
 
   const rating = Math.max(0, Math.min(100, allData.rating));
   const [displayNumber, setDisplayNumber] = useState(rating);
