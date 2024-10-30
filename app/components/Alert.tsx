@@ -4,6 +4,7 @@ import { GoAlert } from "react-icons/go";
 
 export default function Alert() {
   let allData = useRouteLoaderData<LoaderData>("routes/_index");
+  console.log(allData)
   if (!allData?.message) return null;
   return (
     <div
