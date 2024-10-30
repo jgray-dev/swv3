@@ -28,6 +28,7 @@ export interface LoaderData {
   lon: number,
   city: string,
   eventType: "sunrise" | "sunset",
+  eventString: string,
   eventTime: number,
   now: number,
   rating: number,
@@ -35,6 +36,7 @@ export interface LoaderData {
   allData: WeatherLocation[],
   stats: AveragedValues,
   message?: string,
+  relative: "future" | "past" | "current"
 }
 
 export interface AveragedValues {
