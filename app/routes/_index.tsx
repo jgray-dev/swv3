@@ -7,7 +7,7 @@ import { LocationData } from "~/components/LocationComponent";
 import { getSunrise, getSunset } from "sunrise-sunset-js";
 import {
   averageData,
-  generateCoordinateString,
+  generateCoordinateString, getRelative, getStringLiteral,
   interpolateWeatherData,
 } from "~/.server/data";
 import { skyRating } from "~/.server/rating";
@@ -109,6 +109,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     allData: weatherData,
     stats: stats as AveragedValues,
     message: error,
+    eventString: getStringLiteral(now, eventTime, eventType),
+    relative: getRelative(now, eventTime)
   };
 };
 
