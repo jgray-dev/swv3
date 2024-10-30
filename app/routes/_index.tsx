@@ -2,22 +2,27 @@ import type { MetaFunction } from "@remix-run/cloudflare";
 import LocationComponent from "~/components/LocationComponent";
 import React from "react";
 import { json, LoaderFunction } from "@remix-run/router";
-import { redirect, useRouteLoaderData } from "@remix-run/react";
+import { redirect } from "@remix-run/react";
 import { LocationData } from "~/components/LocationComponent";
-import { Details } from "~/components/Details";
 import { getSunrise, getSunset } from "sunrise-sunset-js";
 import {
+  averageData,
   generateCoordinateString,
   interpolateWeatherData,
 } from "~/.server/data";
 import { skyRating } from "~/.server/rating";
 import ColorGrid from "~/components/ColorGrid";
-import {InterpolatedWeather, WeatherLocation} from "~/.server/interfaces";
+import {
+  AveragedValues,
+  InterpolatedWeather,
+  WeatherLocation,
+} from "~/.server/interfaces";
 import RatingDisplay from "~/components/RatingDisplay";
 import LocationDisplay from "~/components/LocationDisplay";
+import Alert from "~/components/Alert";
 
 export const meta: MetaFunction = () => {
-  return [{ title: "swv3" }, { name: "swv3", content: "attempt 6??" }];
+  return [{ title: "swv3" }, { name: "swv3", content: "" }];
 };
 
 export const loader: LoaderFunction = async ({ request, context }) => {
@@ -25,8 +30,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const lat = url.searchParams.get("lat");
   const lon = url.searchParams.get("lon");
   const city = url.searchParams.get("city");
+  let error = url.searchParams.get("error");
   if (!lat || !lon || !city) return null;
-  const NINETY_MINUTES_SECONDS = 5400; // 90 minutes in seconds
 
   let sunrise = Math.round(
     new Date(getSunrise(parseFloat(lat), parseFloat(lon))).getTime() / 1000
@@ -36,47 +41,46 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   );
   const now = Math.round(Date.now() / 1000);
 
-// Calculate next day's sunrise if both events are in the past
-  if (sunrise <= now && sunset <= now) {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    sunrise = Math.round(
-      new Date(getSunrise(parseFloat(lat), parseFloat(lon), tomorrow)).getTime() / 1000
-    );
-  }
+  // Calculate next day's sunrise if both events are in the past by > 90 minutes
+  const NINETY_MINUTES_MS = 5400;
 
-  let eventType;
-  let eventTime;
+  let eventType: string = "";
+  let eventTime: number = -1;
 
-// Check for events within last 90 minutes
-  const sunriseRecent = (now - sunrise) <= NINETY_MINUTES_SECONDS && sunrise <= now;
-  const sunsetRecent = (now - sunset) <= NINETY_MINUTES_SECONDS && sunset <= now;
+  // Calculate time differences (positive for future, negative for past)
+  const sunriseDiff = sunrise - now;
+  const sunsetDiff = sunset - now;
 
-  if (sunriseRecent || sunsetRecent) {
-    // Prefer the most recent event if both are within window
-    if (sunriseRecent && sunsetRecent) {
-      eventType = sunrise > sunset ? "sunrise" : "sunset";
-      eventTime = sunrise > sunset ? sunrise : sunset;
+  if (sunriseDiff > 0 && sunsetDiff > 0) {
+    // Both events are in the future, pick the nearest
+    if (sunriseDiff < sunsetDiff) {
+      eventType = "sunrise";
+      eventTime = sunrise;
     } else {
-      eventType = sunriseRecent ? "sunrise" : "sunset";
-      eventTime = sunriseRecent ? sunrise : sunset;
-    }
-  } else if (sunrise > now || sunset > now) {
-    // At least one future event exists
-    if (sunrise > now && sunset > now) {
-      // Both are future events, pick nearest
-      eventType = sunrise < sunset ? "sunrise" : "sunset";
-      eventTime = sunrise < sunset ? sunrise : sunset;
-    } else {
-      // One future event exists, pick it
-      eventType = sunrise > now ? "sunrise" : "sunset";
-      eventTime = sunrise > now ? sunrise : sunset;
+      eventType = "sunset";
+      eventTime = sunset;
     }
   } else {
-    // No recent or future events, use next day's sunrise
-    eventType = "sunrise";
-    eventTime = sunrise;
-    console.error("Both times are in the past (index loader eventType)");
+    // At least one event is in the past
+    const sunriseIsRecent = sunriseDiff >= -NINETY_MINUTES_MS;
+    const sunsetIsRecent = sunsetDiff >= -NINETY_MINUTES_MS;
+
+    if (sunriseIsRecent && sunsetIsRecent) {
+      // Both events are recent, pick the nearest
+      if (Math.abs(sunriseDiff) < Math.abs(sunsetDiff)) {
+        eventType = "sunrise";
+        eventTime = sunrise;
+      } else {
+        eventType = "sunset";
+        eventTime = sunset;
+      }
+    } else if (sunriseIsRecent) {
+      eventType = "sunrise";
+      eventTime = sunrise;
+    } else if (sunsetIsRecent) {
+      eventType = "sunset";
+      eventTime = sunset;
+    }
   }
   const apiKey = context.cloudflare.env.METEO_KEY;
   // @ts-ignore
@@ -91,6 +95,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     eventTime
   );
   const rating = skyRating(interpData as InterpolatedWeather[]);
+  const stats = averageData(interpData);
+  if ((!sunrise || !sunset) && !error) error = "No sunrise or sunset found";
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
@@ -100,7 +106,9 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     now: Math.round(Date.now() / 1000),
     rating: rating,
     weatherData: interpData,
-    allData: weatherData
+    allData: weatherData,
+    stats: stats as AveragedValues,
+    message: error,
   };
 };
 
@@ -117,6 +125,7 @@ export function isLocationData(data: any): data is LocationData {
 
 // @ts-expect-error
 export const action: ActionFunction = async ({ request, context }) => {
+  const url = new URL(request.url);
   const formData = await request.formData();
   const locationDataString = formData.get("locationData");
   if (typeof locationDataString !== "string") {
@@ -163,29 +172,32 @@ export const action: ActionFunction = async ({ request, context }) => {
           )}&city=${encodeURIComponent(data.results[0].formatted_address)}`
         );
       } else {
-        console.log(data);
         console.error("No geocoding results found");
-        return { error: "No results found" };
+        return redirect(
+          `/${url.search}&error=${encodeURI(`No results found for ${locationData.data}`)}`
+        );
       }
     } else {
-      return json({ error: "Invalid location data format" }, { status: 400 });
+      return redirect(
+        `/${url.search}&error=${encodeURI("Invalid location data format")}`
+      );
     }
   } catch (error) {
     console.error("Error parsing location data:", error);
-    return json({ error: "Error parsing location data" }, { status: 400 });
+    return redirect(
+      `/${url.search}&error=${encodeURI(`Error paring location data: ${error}`)}`
+    );
   }
 };
 
 export default function Sunwatch() {
   return (
-    <div className={"w-screen min-h-screen blob"}>
-      <div>
-        <LocationComponent />
-        <LocationDisplay />
-        <RatingDisplay />
-        <Details />
-        <ColorGrid />
-      </div>
+    <div className={"w-screen min-h-screen blob roboto overflow-x-hidden"}>
+      <LocationComponent />
+      <Alert />
+      <LocationDisplay />
+      <RatingDisplay />
+      <ColorGrid />
     </div>
   );
 }
