@@ -1,145 +1,255 @@
+// Constants remain the same as before...
 import {InterpolatedWeather} from "~/.server/interfaces";
 
-export function skyRating(locations: InterpolatedWeather[]): number {
-  // Constants for atmospheric calculations
-  const EARTH_RADIUS_KM = 6371;
-  const MILES_TO_KM = 1.60934;
+const EARTH_RADIUS = 6371000;
+const RAYLEIGH_COEFF = {
+  red: 0.059,
+  green: 0.124,
+  blue: 0.288
+};
+const MILES_TO_METERS = 1609.34;
+const CLOUD_HEIGHTS = {
+  low: 2000,
+  mid: 6000,
+  high: 10000
+};
+const CLOUD_ALBEDO = {
+  low: 0.75,
+  mid: 0.55,
+  high: 0.30
+};
 
-  // Heights of cloud layers (in meters)
-  const CLOUD_HEIGHTS = {
-    low: 2000,    // 0-2km
-    mid: 5000,    // 2-6km
-    high: 9000    // 6-12km
+
+export function skyRating(locations: InterpolatedWeather[]): number {
+  console.log('Starting sky rating calculation with locations:', locations);
+
+  const sunAngleRadians = -0.0145;
+  let totalIntensity = {
+    red: 0,
+    green: 0,
+    blue: 0
+  };
+  let validSamples = 0;
+
+  locations.forEach((location, index) => {
+    console.log(`\nProcessing location ${index}:`, location);
+
+    const distance = index * 20 * MILES_TO_METERS;
+    console.log('Distance (meters):', distance);
+
+    const pathLength = calculateAtmosphericPathLength(distance, sunAngleRadians);
+    console.log('Atmospheric path length:', pathLength);
+
+    if (isNaN(pathLength)) {
+      console.log('WARNING: Invalid path length calculated');
+      return;
+    }
+
+    const baseIntensity = calculateBaseIntensity(pathLength, location.visibility);
+    console.log('Base light intensity:', baseIntensity);
+
+    const cloudEffects = processCloudLayers(
+      location,
+      distance,
+      pathLength,
+      sunAngleRadians
+    );
+    console.log('Cloud effects:', cloudEffects);
+
+    if (!isNaN(cloudEffects.reflection) && !isNaN(baseIntensity.red)) {
+      validSamples++;
+      const distanceWeight = 1 / (1 + index * 0.2);
+      console.log('Distance weight:', distanceWeight);
+
+      Object.keys(totalIntensity).forEach(channel => {
+        const contribution =
+          // @ts-ignore
+          baseIntensity[channel] *
+          cloudEffects.reflection *
+          (1 - cloudEffects.obstruction) *
+          distanceWeight;
+
+        console.log(`${channel} contribution:`, contribution);
+        // @ts-ignore
+        totalIntensity[channel] += contribution;
+      });
+
+      console.log('Running total intensity:', totalIntensity);
+    } else {
+      console.log('WARNING: Invalid values detected, skipping this sample');
+    }
+  });
+
+  console.log('\nValid samples:', validSamples);
+
+  if (validSamples > 0) {
+    Object.keys(totalIntensity).forEach(channel => {
+      // @ts-ignore
+      totalIntensity[channel] = totalIntensity[channel] / validSamples;
+    });
+  }
+
+  console.log('Normalized total intensity:', totalIntensity);
+
+  const finalRating = calculateFinalRating(totalIntensity);
+  console.log('Final rating:', finalRating);
+
+  return finalRating;
+}
+
+function calculateAtmosphericPathLength(distance: number, sunAngle: number): number {
+  console.log('\nCalculating atmospheric path length:');
+  console.log('Input distance:', distance);
+  console.log('Sun angle:', sunAngle);
+
+  if (distance < 1000) {
+    console.log('Short distance, using direct path');
+    return distance;
+  }
+
+  const apparentHeight = Math.sqrt(
+    Math.pow(EARTH_RADIUS + distance * Math.sin(sunAngle), 2) +
+    Math.pow(distance * Math.cos(sunAngle), 2)
+  ) - EARTH_RADIUS;
+
+  console.log('Apparent height:', apparentHeight);
+
+  const pathLength = Math.max(
+    distance / Math.cos(Math.atan2(apparentHeight, distance)),
+    distance
+  );
+
+  console.log('Calculated path length:', pathLength);
+  return pathLength;
+}
+
+function calculateBaseIntensity(pathLength: number, visibility: number) {
+  console.log('\nCalculating base intensity:');
+  console.log('Path length:', pathLength);
+  console.log('Visibility:', visibility);
+
+  const intensity = {
+    red: 0,
+    green: 0,
+    blue: 0
   };
 
-  // Calculate viewing angle to a point given distance
-  function getViewingAngle(distanceMiles: number): number {
-    const distanceKm = distanceMiles * MILES_TO_KM;
-    return Math.atan2(distanceKm, EARTH_RADIUS_KM) * (180 / Math.PI);
-  }
+  const visibilityFactor = Math.max(visibility / 10, 0.1);
+  console.log('Visibility factor:', visibilityFactor);
 
-  // Calculate optimal cloud scores based on distance and height
-  function getCloudPositionScore(location: InterpolatedWeather, distanceMiles: number): number {
-    const { cloud_cover_low, cloud_cover_mid, cloud_cover_high } = location;
-    const viewingAngle = getViewingAngle(distanceMiles);
-
-    // Near clouds (0-20 miles) should be minimal to avoid blocking
-    if (distanceMiles <= 20) {
-      // Severe penalties for any low clouds near the observer
-      const lowCloudPenalty = Math.pow(cloud_cover_low / 100, 2) * 100;
-      // Moderate penalties for mid clouds
-      const midCloudPenalty = Math.pow(cloud_cover_mid / 100, 1.5) * 50;
-
-      return Math.max(0, 100 - lowCloudPenalty - midCloudPenalty);
-    }
-
-    // Mid-distance clouds (20-60 miles) are ideal for color reflection
-    if (distanceMiles > 20 && distanceMiles <= 60) {
-      // High clouds are ideal at this distance
-      const highCloudScore = cloud_cover_high <= 70
-        ? Math.sin((cloud_cover_high / 70) * Math.PI) * 100  // Peak at ~45%
-        : Math.max(0, 100 - (cloud_cover_high - 70) * 3);
-
-      // Mid clouds can add texture if not too dense
-      const midCloudScore = cloud_cover_mid <= 40
-        ? cloud_cover_mid * 2
-        : Math.max(0, 100 - (cloud_cover_mid - 40) * 3);
-
-      // Low clouds should still be minimal
-      const lowCloudPenalty = Math.pow(cloud_cover_low / 100, 2) * 70;
-
-      return Math.max(0, (highCloudScore * 0.6 + midCloudScore * 0.4) * (1 - lowCloudPenalty / 100));
-    }
-
-    // Far clouds (60-100 miles) need to be properly positioned for sunlight reflection
-    const optimalHeight = Math.tan(viewingAngle * (Math.PI / 180)) * (distanceMiles * MILES_TO_KM * 1000);
-
-    // Score based on cloud presence at optimal viewing height
-    let heightScore: number;
-    if (optimalHeight <= CLOUD_HEIGHTS.low) {
-      heightScore = 100 - cloud_cover_low; // Want clear skies at low height
-    } else if (optimalHeight <= CLOUD_HEIGHTS.mid) {
-      heightScore = cloud_cover_mid <= 60 ? cloud_cover_mid : Math.max(0, 100 - (cloud_cover_mid - 60) * 2);
-    } else {
-      heightScore = cloud_cover_high <= 70 ? cloud_cover_high : Math.max(0, 100 - (cloud_cover_high - 70) * 2);
-    }
-
-    return heightScore;
-  }
-
-  // Calculate visibility impact on light transmission
-  function getVisibilityScore(visibility: number, distanceMiles: number): number {
-    // Convert visibility to km
-    const visibilityKm = visibility / 1000;
-    const distanceKm = distanceMiles * MILES_TO_KM;
-
-    // Calculate atmospheric attenuation
-    const attenuationFactor = Math.exp(-distanceKm / visibilityKm);
-
-    // More forgiving for closer distances
-    const distanceWeight = Math.max(0.3, 1 - (distanceMiles / 100));
-
-    return attenuationFactor * 100 * distanceWeight;
-  }
-
-  // Calculate light interaction potential based on cloud arrangements
-  function getLightInteractionScore(locations: InterpolatedWeather[]): number {
-    let score = 0;
-    const distances = [0, 20, 40, 60, 80, 100];
-
-    // Look for optimal arrangements of clouds for light reflection
-    for (let i = 0; i < locations.length - 1; i++) {
-      const curr = locations[i];
-      const next = locations[i + 1];
-      const distance = distances[i];
-
-      // Check for clear path for initial light entry
-      if (distance < 40) {
-        // Want minimal low/mid clouds for light to enter
-        const clearPath = (100 - curr.cloud_cover_low) * (100 - curr.cloud_cover_mid) / 100;
-        score += clearPath * 0.3;
-      } else {
-        // Want high clouds for reflection but not complete coverage
-        const reflectionPotential = curr.cloud_cover_high <= 70
-          ? curr.cloud_cover_high
-          : Math.max(0, 100 - (curr.cloud_cover_high - 70) * 2);
-        score += reflectionPotential * 0.7;
-      }
-    }
-
-    return Math.min(100, score / locations.length);
-  }
-
-  // Calculate final score with distance-weighted components
-  const distances = [0, 20, 40, 60, 80, 100];
-  let finalScore = 0;
-  let totalWeight = 0;
-
-  // Analyze each location with distance-appropriate weighting
-  for (let i = 0; i < locations.length; i++) {
-    const distance = distances[i];
-    // Closer locations matter more for overall visibility
-    const distanceWeight = Math.exp(-distance / 60);
-    totalWeight += distanceWeight;
-
-    const cloudScore = getCloudPositionScore(locations[i], distance);
-    const visibilityScore = getVisibilityScore(locations[i].visibility, distance);
-
-    finalScore += distanceWeight * (
-      cloudScore * 0.6 +
-      visibilityScore * 0.4
+  Object.keys(RAYLEIGH_COEFF).forEach(channel => {
+    // @ts-ignore
+    const scatteringCoeff = RAYLEIGH_COEFF[channel];
+    const extinction = Math.exp(
+      -scatteringCoeff * pathLength / 1000 * (1 / visibilityFactor)
     );
-  }
 
-  // Normalize by weights
-  finalScore = finalScore / totalWeight;
+    console.log(`${channel} extinction:`, extinction);
 
-  // Add light interaction component
-  const lightScore = getLightInteractionScore(locations);
-  finalScore = finalScore * 0.7 + lightScore * 0.3;
+    const scattering = (1 - extinction) * visibilityFactor;
+    console.log(`${channel} scattering:`, scattering);
 
-  // Apply slight sigmoid curve to enhance separation
-  const curvedScore = (1 / (1 + Math.exp(-0.07 * (finalScore - 50)))) * 100;
+    // @ts-ignore
+    intensity[channel] = Math.min(extinction + scattering, 1);
+    // @ts-ignore
+    console.log(`${channel} final intensity:`, intensity[channel]);
+  });
 
-  return Math.round(Math.max(0, Math.min(100, curvedScore)));
+  return intensity;
+}
+
+function processCloudLayers(
+  weather: InterpolatedWeather,
+  distance: number,
+  pathLength: number,
+  sunAngle: number
+): { reflection: number; obstruction: number } {
+  console.log('\nProcessing cloud layers:');
+  console.log('Weather data:', weather);
+  console.log('Distance:', distance);
+  console.log('Path length:', pathLength);
+  console.log('Sun angle:', sunAngle);
+
+  let totalReflection = 0;
+  let totalObstruction = 0;
+  let availableLight = 1.0;
+
+  const layers = [
+    { height: CLOUD_HEIGHTS.low, coverage: weather.cloud_cover_low, albedo: CLOUD_ALBEDO.low },
+    { height: CLOUD_HEIGHTS.mid, coverage: weather.cloud_cover_mid, albedo: CLOUD_ALBEDO.mid },
+    { height: CLOUD_HEIGHTS.high, coverage: weather.cloud_cover_high, albedo: CLOUD_ALBEDO.high }
+  ];
+
+  layers.forEach((layer, idx) => {
+    if (layer.coverage <= 0) {
+      console.log(`Layer ${idx}: No clouds, skipping`);
+      return;
+    }
+
+    console.log(`\nProcessing layer ${idx}:`);
+    console.log('Layer data:', layer);
+    console.log('Available light:', availableLight);
+
+    const incidenceAngle = Math.abs(
+      Math.atan2(layer.height, distance) + sunAngle
+    );
+    console.log('Incidence angle:', incidenceAngle);
+
+    const fresnelFactor = Math.pow(Math.sin(incidenceAngle), 2);
+    console.log('Fresnel factor:', fresnelFactor);
+
+    const cloudPathLength = layer.height / Math.cos(incidenceAngle);
+    console.log('Cloud path length:', cloudPathLength);
+
+    const coverageFactor = layer.coverage / 100;
+    console.log('Coverage factor:', coverageFactor);
+
+    const reflection = availableLight * coverageFactor * layer.albedo * (1 + fresnelFactor);
+    console.log('Layer reflection:', reflection);
+
+    const obstruction = availableLight * coverageFactor * (1 - layer.albedo) *
+      (cloudPathLength / Math.max(pathLength, 1));
+    console.log('Layer obstruction:', obstruction);
+
+    totalReflection += reflection;
+    totalObstruction += obstruction;
+    availableLight *= (1 - coverageFactor);
+  });
+
+  const result = {
+    reflection: Math.min(Math.max(totalReflection, 0), 1),
+    obstruction: Math.min(Math.max(totalObstruction, 0), 1)
+  };
+
+  console.log('Final cloud effects:', result);
+  return result;
+}
+
+function calculateFinalRating(intensity: { red: number; green: number; blue: number }): number {
+  console.log('\nCalculating final rating:');
+  console.log('Input intensities:', intensity);
+
+  const colorScore = Math.max(
+    intensity.red * 0.5 +
+    intensity.green * 0.3 +
+    intensity.blue * 0.2,
+    0.001
+  );
+  console.log('Color score:', colorScore);
+
+  const redToBlueRatio = intensity.red / Math.max(intensity.blue, 0.001);
+  const redToGreenRatio = intensity.red / Math.max(intensity.green, 0.001);
+  console.log('Red/Blue ratio:', redToBlueRatio);
+  console.log('Red/Green ratio:', redToGreenRatio);
+
+  const colorBalance = Math.min((redToBlueRatio + redToGreenRatio) / 4, 1);
+  console.log('Color balance:', colorBalance);
+
+  const rating = (colorScore * 70 + colorBalance * 30);
+  console.log('Raw rating:', rating);
+
+  const finalRating = Math.min(Math.max(rating, 0), 100);
+  console.log('Final bounded rating:', finalRating);
+
+  return finalRating;
 }
