@@ -37,11 +37,9 @@ export default function LocationComponent() {
   function handleGeolocation() {
     if (!geolocationError) {
       setGettingGeolocation(true);
-      console.log("Using geolocation function");
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            console.log(position);
             setGotGeolocation(true);
             setLocationData({
               type: "geolocation",
