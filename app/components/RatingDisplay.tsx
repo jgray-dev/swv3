@@ -2,7 +2,6 @@ import { useRouteLoaderData } from "@remix-run/react";
 import { LoaderData } from "~/.server/interfaces";
 import { useEffect, useState, useRef } from "react";
 import StatItem from "~/components/StatItem";
-import SparkleText from "~/components/SparkleText";
 
 export default function RatingDisplay() {
   let allData = useRouteLoaderData<LoaderData>("routes/_index");
