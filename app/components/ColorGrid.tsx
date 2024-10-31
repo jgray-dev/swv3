@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useRouteLoaderData } from "@remix-run/react";
 import { LoaderData } from "~/.server/interfaces";
 
