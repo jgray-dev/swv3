@@ -20,6 +20,7 @@ export default function LocationComponent() {
   const fetcher = useFetcher();
   useEffect(() => {
     if (locationData) {
+      console.log(locationData)
       fetcher.submit(
         { locationData: JSON.stringify(locationData) },
         { method: "post" }
@@ -28,6 +29,7 @@ export default function LocationComponent() {
   }, [locationData]);
 
   const handleManualSubmit = (e: React.FormEvent) => {
+    console.log(input)
     e.preventDefault();
     setLocationData({
       type: "input",
@@ -41,6 +43,7 @@ export default function LocationComponent() {
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
+            console.log(position)
             setGotGeolocation(true);
             setLocationData({
               type: "geolocation",
