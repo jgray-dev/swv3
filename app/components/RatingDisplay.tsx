@@ -111,9 +111,9 @@ export default function RatingDisplay() {
           </span>
         </div>
         <div className="flex-1 sm:basis-2/3 border-t sm:border-t-0 sm:border-l border-white/10 p-4 space-y-2" role="region" aria-label="Weather Statistics">
-          <h3 className="text-lg font-medium text-slate-100 mb-4">
+          <h2 className="text-lg font-medium text-slate-100 mb-4">
             Condition Details
-          </h3>
+          </h2>
           <StatItem label="Cloud Cover" value={allData.stats.cloud_cover} />
           <StatItem label="High Clouds" value={allData.stats.high_clouds} />
           <StatItem label="Mid Clouds" value={allData.stats.mid_clouds} />
