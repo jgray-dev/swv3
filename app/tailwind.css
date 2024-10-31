@@ -72,3 +72,21 @@ body {
         background-position: 0 50%;
     }
 }
+
+@font-face {
+    font-family: 'InterFallback';
+    src: local(system-ui);
+    ascent-override: 90%;
+    descent-override: 22.43%;
+    line-gap-override: 0%;
+    size-adjust: 107.64%;
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/fonts/Inter-VariableFont_opsz,wght.ttf') format('truetype-variations');
+    font-variation-settings: 'opsz' 14;
+}
+
