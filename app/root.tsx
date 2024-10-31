@@ -18,7 +18,6 @@ export const links: LinksFunction = () => [
     type: "font/ttf",
     crossOrigin: "anonymous"
   },
-  { rel: "stylesheet", href: ('app/tailwind.css') },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
