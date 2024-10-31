@@ -3,7 +3,6 @@ import { Form, useFetcher, useRouteLoaderData } from "@remix-run/react";
 import { CiLocationArrow1 } from "react-icons/ci";
 import {LoaderData} from "~/.server/interfaces";
 import {FaSearchLocation} from "react-icons/fa";
-import {GiMoebiusTriangle} from "react-icons/gi";
 
 export interface LocationData {
   type: "geolocation" | "input";
