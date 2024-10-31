@@ -68,7 +68,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     now: Math.round(Date.now() / 1000),
     rating: rating,
     weatherData: interpData,
-    allData: weatherData,
     stats: stats as AveragedValues,
     message: error,
     eventString: getStringLiteral(
