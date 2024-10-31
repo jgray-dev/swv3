@@ -22,6 +22,8 @@ export default function StatItem({ label, value, maxValue, unit, isVisibility = 
         </div>
         <div
           role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={52800}
           aria-valuenow={value}
           aria-valuetext={`${visibilityMiles} miles visibility`}
           className="h-2 bg-white/5 rounded-full"
@@ -54,6 +56,7 @@ export default function StatItem({ label, value, maxValue, unit, isVisibility = 
       </div>
       <div
         role="progressbar"
+        aria-valuemin={0}
         aria-valuemax={maxValue || 100}
         aria-valuenow={value}
         aria-valuetext={`${displayValue}`}
