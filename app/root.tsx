@@ -11,12 +11,6 @@ import "./tailwind.css";
 import React from "react";
 
 export const links: LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
   {
     rel: "preload",
     href: "/fonts/Inter-VariableFont_opsz,wght.ttf",
