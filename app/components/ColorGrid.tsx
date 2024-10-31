@@ -128,11 +128,7 @@ export function ColorGrid() {
           return (
             <div
               key={index}
-              className={`bg-gray-300 min-h-12 min-w-12 ${
-                isObservingLocation
-                  ? "border-2 border-white"
-                  : "border border-black"
-              } text-center pt-1 text-white`}
+              className={`bg-gray-300 min-h-12 min-w-12 border border-black text-center pt-1 text-black`}
               title={`Impact: ${impact}${
                 isObservingLocation ? "\nObserving location" : ""
               }`}
