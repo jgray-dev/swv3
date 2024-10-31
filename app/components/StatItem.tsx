@@ -27,7 +27,9 @@ export default function StatItem({ label, value, maxValue, unit, isVisibility = 
           aria-valuenow={value}
           aria-valuetext={`${visibilityMiles} miles visibility`}
           className="h-2 bg-white/5 rounded-full"
-          id={`${label}`}
+          id={label}
+          aria-label={label}
+          title={label}
         >
           <div
             className="h-full bg-white/30 rounded-full transition-all duration-300"
@@ -60,9 +62,11 @@ export default function StatItem({ label, value, maxValue, unit, isVisibility = 
         aria-valuemin={0}
         aria-valuemax={maxValue || 100}
         aria-valuenow={value}
-        aria-valuetext={`${displayValue}`}
+        aria-valuetext={displayValue}
+        aria-label={label}
         className="h-2 bg-white/5 rounded-full"
-        id={`${label}`}
+        id={label}
+        title={label}
       >
         <div
           className="h-full bg-white/30 rounded-full transition-all duration-300"
