@@ -8,11 +8,6 @@ export function ColorGrid() {
   let allData = useRouteLoaderData<LoaderData>("routes/_index");
   if (!allData?.ok) return null;
   const weatherData = allData.weatherData;
-  const [showImpact, setShowImpact] = useState(false);
-
-  const getDirection = (data: any): string => {
-    return data.eventType === "sunset" ? "flex-row-reverse" : "flex-row";
-  };
 
   const getHighCloudImpact = (coverage: number, index: number): number => {
     const isInFarZone = index >= 3; // 60 miles or more
@@ -43,23 +38,7 @@ export function ColorGrid() {
 
   return (
     <div className="bg-transparent mt-12 w-screen min-h-16 flex flex-col font-semibold">
-      <div className="flex justify-center px-4 py-2">
-        <label className="inline-flex items-center cursor-pointer">
-          <span className="mr-3 text-sm">Default</span>
-          <div className="relative">
-            <input
-              type="checkbox"
-              className="sr-only peer"
-              checked={showImpact}
-              onChange={() => setShowImpact(!showImpact)}
-            />
-            <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
-          </div>
-          <span className="ml-3 text-sm">Impact</span>
-        </label>
-      </div>
-
-      <div className={`flex justify-center ${getDirection(allData)}`}>
+      <div className={`flex justify-center flex-row`}>
         <div className="bg-transparent min-h-12 min-w-12 text-center pt-4"></div>
         {DISTANCES.map((distance) => (
           <div
@@ -76,7 +55,7 @@ export function ColorGrid() {
       </div>
 
       {/* High clouds row */}
-      <div className={`flex justify-center ${getDirection(allData)}`}>
+      <div className={`flex justify-center flex-row`}>
         <div className="bg-transparent min-h-12 min-w-12 text-center pt-2">
           High
         </div>
@@ -96,8 +75,7 @@ export function ColorGrid() {
         <div className="bg-transparent min-h-12 min-w-12 text-center pt-2"></div>
       </div>
 
-      {/* Mid clouds row */}
-      <div className={`flex justify-center ${getDirection(allData)}`}>
+      <div className={`flex justify-center flex-row`}>
         <div className="bg-transparent min-h-12 min-w-12 text-center pt-2">
           Mid
         </div>
@@ -118,7 +96,7 @@ export function ColorGrid() {
       </div>
 
       {/* Low clouds row */}
-      <div className={`flex justify-center ${getDirection(allData)}`}>
+      <div className={`flex justify-center flex-row`}>
         <div className="bg-transparent min-h-12 min-w-12 text-center pt-2">
           Low
         </div>
@@ -143,7 +121,7 @@ export function ColorGrid() {
           title="Sun"
         ></div>
       </div>
-      <div className={`flex justify-center ${getDirection(allData)}`}>
+      <div className={`flex justify-center flex-row`}>
         <div className="bg-transparent min-h-12 min-w-12 text-center pt-2">
           {allData.eventType == "sunrise" ? "Cloud " : " height"}
         </div>
