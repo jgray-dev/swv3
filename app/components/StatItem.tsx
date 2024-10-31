@@ -27,6 +27,7 @@ export default function StatItem({ label, value, maxValue, unit, isVisibility = 
           aria-valuenow={value}
           aria-valuetext={`${visibilityMiles} miles visibility`}
           className="h-2 bg-white/5 rounded-full"
+          id={`${label}`}
         >
           <div
             className="h-full bg-white/30 rounded-full transition-all duration-300"
@@ -61,6 +62,7 @@ export default function StatItem({ label, value, maxValue, unit, isVisibility = 
         aria-valuenow={value}
         aria-valuetext={`${displayValue}`}
         className="h-2 bg-white/5 rounded-full"
+        id={`${label}`}
       >
         <div
           className="h-full bg-white/30 rounded-full transition-all duration-300"
