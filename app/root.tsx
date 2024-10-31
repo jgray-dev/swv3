@@ -12,7 +12,7 @@ import React from "react";
 
 export const links: LinksFunction = () => [
   {
-    rel: "preload",
+    rel: "prefetch",
     href: "/fonts/Inter-VariableFont_opsz,wght.ttf",
     as: "font",
     type: "font/ttf",
@@ -29,7 +29,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className={"text-white"}>
         {children}
         <ScrollRestoration />
         <Scripts />
