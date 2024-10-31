@@ -13,7 +13,6 @@ import {
   interpolateWeatherData,
 } from "~/.server/data";
 import { skyRating } from "~/.server/rating";
-import ColorGrid from "~/components/ColorGrid";
 import {
   AveragedValues,
   InterpolatedWeather,
@@ -22,6 +21,7 @@ import {
 import RatingDisplay from "~/components/RatingDisplay";
 import LocationDisplay from "~/components/LocationDisplay";
 import Alert from "~/components/Alert";
+import CloudCoverDisplay from "~/components/CloudCoverDisplay";
 
 export const meta: MetaFunction = () => {
   return [
@@ -81,6 +81,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       eventTime,
       eventType
     ),
+    allData: weatherData,
     relative: getRelative(Math.round(Date.now() / 1000), eventTime),
     ok: true,
   };
@@ -189,7 +190,7 @@ export default function Sunwatch() {
       <Alert />
       <LocationDisplay />
       <RatingDisplay />
-      <ColorGrid />
+      <CloudCoverDisplay />
     </div>
   );
 }
