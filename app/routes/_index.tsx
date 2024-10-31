@@ -9,6 +9,7 @@ import {
   averageData,
   generateCoordinateString,
   getRelative,
+  getRelevantSunEvent,
   getStringLiteral,
   interpolateWeatherData,
 } from "~/.server/data";
@@ -34,58 +35,13 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const city = url.searchParams.get("city");
   let error = url.searchParams.get("error");
   if (!lat || !lon || !city) {
-    return {ok: false, message: error};
+    return { ok: false, message: error };
   }
 
-  let sunrise = Math.round(
-    new Date(getSunrise(parseFloat(lat), parseFloat(lon))).getTime() / 1000
+  const { type: eventType, time: eventTime } = getRelevantSunEvent(
+    Number(lat),
+    Number(lon)
   );
-  let sunset = Math.round(
-    new Date(getSunset(parseFloat(lat), parseFloat(lon))).getTime() / 1000
-  );
-  const now = Math.round(Date.now() / 1000);
-
-  // Calculate next day's sunrise if both events are in the past by > 90 minutes
-  const NINETY_MINUTES_MS = 5400;
-
-  let eventType: string = "";
-  let eventTime: number = -1;
-
-  // Calculate time differences (positive for future, negative for past)
-  const sunriseDiff = sunrise - now;
-  const sunsetDiff = sunset - now;
-
-  if (sunriseDiff > 0 && sunsetDiff > 0) {
-    // Both events are in the future, pick the nearest
-    if (sunriseDiff < sunsetDiff) {
-      eventType = "sunrise";
-      eventTime = sunrise;
-    } else {
-      eventType = "sunset";
-      eventTime = sunset;
-    }
-  } else {
-    // At least one event is in the past
-    const sunriseIsRecent = sunriseDiff >= -NINETY_MINUTES_MS;
-    const sunsetIsRecent = sunsetDiff >= -NINETY_MINUTES_MS;
-
-    if (sunriseIsRecent && sunsetIsRecent) {
-      // Both events are recent, pick the nearest
-      if (Math.abs(sunriseDiff) < Math.abs(sunsetDiff)) {
-        eventType = "sunrise";
-        eventTime = sunrise;
-      } else {
-        eventType = "sunset";
-        eventTime = sunset;
-      }
-    } else if (sunriseIsRecent) {
-      eventType = "sunrise";
-      eventTime = sunrise;
-    } else if (sunsetIsRecent) {
-      eventType = "sunset";
-      eventTime = sunset;
-    }
-  }
   const apiKey = context.cloudflare.env.METEO_KEY;
   // @ts-ignore
   const coords = generateCoordinateString(lat, lon, eventType);
@@ -100,7 +56,9 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   );
   const rating = skyRating(interpData as InterpolatedWeather[]);
   const stats = averageData(interpData);
-  if ((!sunrise || !sunset) && !error) error = "No sunrise or sunset found";
+  if ((!eventTime || !eventType) && !error)
+    error = "No sunrise or sunset found";
+
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
@@ -113,8 +71,12 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     allData: weatherData,
     stats: stats as AveragedValues,
     message: error,
-    eventString: getStringLiteral(now, eventTime, eventType),
-    relative: getRelative(now, eventTime),
+    eventString: getStringLiteral(
+      Math.round(Date.now() / 1000),
+      eventTime,
+      eventType
+    ),
+    relative: getRelative(Math.round(Date.now() / 1000), eventTime),
     ok: true,
   };
 };
