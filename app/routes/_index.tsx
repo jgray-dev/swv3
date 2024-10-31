@@ -2,9 +2,8 @@ import type { MetaFunction } from "@remix-run/cloudflare";
 import LocationComponent from "~/components/LocationComponent";
 import React from "react";
 import { json, LoaderFunction } from "@remix-run/router";
-import { Link, redirect, replace } from "@remix-run/react";
+import { Link, redirect } from "@remix-run/react";
 import { LocationData } from "~/components/LocationComponent";
-import { getSunrise, getSunset } from "sunrise-sunset-js";
 import {
   averageData,
   generateCoordinateString,
@@ -25,7 +24,7 @@ import LocationDisplay from "~/components/LocationDisplay";
 import Alert from "~/components/Alert";
 
 export const meta: MetaFunction = () => {
-  return [{ title: "swv3" }, { name: "swv3", content: "" }];
+  return [{ title: "SWV3" }, { name: "SWV3", content: "Sunwatch. An app designed to show visual ratings for sunrises and sunsets around the world." }];
 };
 
 export const loader: LoaderFunction = async ({ request, context }) => {
