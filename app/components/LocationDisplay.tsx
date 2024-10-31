@@ -12,6 +12,7 @@ export default function LocationDisplay() {
       }
       role="heading"
       aria-label={`Current city: ${allData.city}`}
+      aria-level={1}
     >
       {allData.city}
     </div>
