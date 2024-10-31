@@ -4,13 +4,15 @@ import { useEffect, useState, useRef } from "react";
 import StatItem from "~/components/StatItem";
 
 export default function RatingDisplay() {
-  let allData = useRouteLoaderData<LoaderData>("routes/_index");
+  const allData = useRouteLoaderData<LoaderData>("routes/_index");
+  const [displayNumber, setDisplayNumber] = useState(0);
+  const startTimeRef = useRef<number>(0);
+  const startValueRef = useRef(displayNumber);
+
+  // Return null after hooks are declared
   if (!allData?.ok) return null;
 
   const rating = Math.max(0, Math.min(100, allData.rating));
-  const [displayNumber, setDisplayNumber] = useState(rating);
-  const startTimeRef = useRef<number>(0);
-  const startValueRef = useRef(displayNumber);
   const ANIMATION_DURATION = 500;
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
