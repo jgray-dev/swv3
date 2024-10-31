@@ -24,7 +24,14 @@ import LocationDisplay from "~/components/LocationDisplay";
 import Alert from "~/components/Alert";
 
 export const meta: MetaFunction = () => {
-  return [{ title: "SWV3" }, { name: "SWV3", content: "Sunwatch. An app designed to show visual ratings for sunrises and sunsets around the world." }];
+  return [
+    { title: "SWV3" },
+    {
+      name: "SWV3",
+      content:
+        "Sunwatch. An app designed to show visual ratings for sunrises and sunsets around the world.",
+    },
+  ];
 };
 
 export const loader: LoaderFunction = async ({ request, context }) => {

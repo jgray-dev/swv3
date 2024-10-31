@@ -54,14 +54,20 @@ export default function RatingDisplay() {
 
   return (
     <main className="w-screen flex justify-center" role="main">
-      <div className="w-full bg-white/10 backdrop-blur-sm border border-white/20 sm:w-[36rem] sm:mt-4 mt-8 mx-4 min-h-32 rounded-lg flex flex-col sm:flex-row" role="region" aria-label="Weather Conditions Panel">
+      <div
+        className="w-full bg-white/10 backdrop-blur-sm border border-white/20 sm:w-[36rem] sm:mt-4 mt-8 mx-4 min-h-32 rounded-lg flex flex-col sm:flex-row"
+        role="region"
+        aria-label="Weather Conditions Panel"
+      >
         <div className="sm:basis-1/3 h-40 sm:h-auto sm:aspect-square mx-2 my-3 sm:mx-3 sm:my-4 relative flex flex-col items-center justify-center">
           <svg
             className="w-32 h-32 sm:w-2/3 sm:h-2/3 -rotate-90"
             viewBox="0 0 100 100"
             preserveAspectRatio="xMidYMid meet"
             role="img"
-            aria-label={`Rating indicator showing ${Math.round(displayNumber)}%`}
+            aria-label={`Rating indicator showing ${Math.round(
+              displayNumber
+            )}%`}
           >
             {rating < 100 && (
               <circle
@@ -92,7 +98,10 @@ export default function RatingDisplay() {
             />
           </svg>
           <div className="absolute flex items-center justify-center">
-            <span className="text-2xl sm:text-4xl font-bold md:-translate-y-3 -translate-y-2" aria-live="polite">
+            <span
+              className="text-2xl sm:text-4xl font-bold md:-translate-y-3 -translate-y-2"
+              aria-live="polite"
+            >
               {Math.round(displayNumber)}
             </span>
           </div>
@@ -101,8 +110,8 @@ export default function RatingDisplay() {
               allData.relative === "current"
                 ? "gradient default font-bold"
                 : allData.relative === "future"
-                  ? "text-green-300"
-                  : "text-red-300"
+                ? "text-green-300"
+                : "text-red-300"
             }`}
             aria-label={`Event timing: ${allData.eventString}`}
           >
@@ -110,7 +119,11 @@ export default function RatingDisplay() {
               allData.eventString.slice(1)}
           </span>
         </div>
-        <div className="flex-1 sm:basis-2/3 border-t sm:border-t-0 sm:border-l border-white/10 p-4 space-y-2" role="region" aria-label="Weather Statistics">
+        <div
+          className="flex-1 sm:basis-2/3 border-t sm:border-t-0 sm:border-l border-white/10 p-4 space-y-2"
+          role="region"
+          aria-label="Weather Statistics"
+        >
           <h2 className="text-lg font-medium text-slate-100 mb-4">
             Condition Details
           </h2>

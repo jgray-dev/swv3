@@ -16,7 +16,7 @@ export const links: LinksFunction = () => [
     href: "/fonts/Inter-VariableFont_opsz,wght.ttf",
     as: "font",
     type: "font/ttf",
-    crossOrigin: "anonymous"
+    crossOrigin: "anonymous",
   },
 ];
 

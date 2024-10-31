@@ -6,17 +6,35 @@ interface StatItemProps {
   isVisibility?: boolean;
 }
 
-export default function StatItem({ label, value, maxValue, unit, isVisibility = false }: StatItemProps) {
+export default function StatItem({
+  label,
+  value,
+  maxValue,
+  unit,
+  isVisibility = false,
+}: StatItemProps) {
   // Handle visibility special case
   if (isVisibility) {
-    const feetToMiles = (feet: number) => Math.round(feet / 5280 * 10) / 10;
+    const feetToMiles = (feet: number) => Math.round((feet / 5280) * 10) / 10;
     const visibilityMiles = feetToMiles(value);
-    const progress = Math.min(100, Math.max(0, (Math.min(value, 52800) / 52800) * 100));
+    const progress = Math.min(
+      100,
+      Math.max(0, (Math.min(value, 52800) / 52800) * 100)
+    );
     return (
-      <div className="flex flex-col space-y-1 py-1" role="group" aria-labelledby="visibility-label">
+      <div
+        className="flex flex-col space-y-1 py-1"
+        role="group"
+        aria-labelledby="visibility-label"
+      >
         <div className="flex justify-between items-center">
-          <span id="visibility-label" className="text-sm text-slate-200">{label}</span>
-          <span className="text-sm font-medium text-slate-100" aria-live="polite">
+          <span id="visibility-label" className="text-sm text-slate-200">
+            {label}
+          </span>
+          <span
+            className="text-sm font-medium text-slate-100"
+            aria-live="polite"
+          >
             {visibilityMiles} miles
           </span>
         </div>
@@ -42,7 +60,7 @@ export default function StatItem({ label, value, maxValue, unit, isVisibility = 
 
   // Handle regular stats
   const displayValue = maxValue
-    ? `${Math.round(value)}${unit || ''}`
+    ? `${Math.round(value)}${unit || ""}`
     : `${Math.round(value)}%`;
 
   const percentage = maxValue
@@ -50,9 +68,15 @@ export default function StatItem({ label, value, maxValue, unit, isVisibility = 
     : Math.min(100, value);
 
   return (
-    <div className="flex flex-col space-y-1 py-1" role="group" aria-labelledby="stat-label">
+    <div
+      className="flex flex-col space-y-1 py-1"
+      role="group"
+      aria-labelledby="stat-label"
+    >
       <div className="flex justify-between items-center">
-        <span id="stat-label" className="text-sm text-slate-200">{label}</span>
+        <span id="stat-label" className="text-sm text-slate-200">
+          {label}
+        </span>
         <span className="text-sm font-medium text-slate-100" aria-live="polite">
           {displayValue}
         </span>

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Form, useFetcher, useRouteLoaderData } from "@remix-run/react";
 import { CiLocationArrow1 } from "react-icons/ci";
-import {LoaderData} from "~/.server/interfaces";
-import {FaSearchLocation} from "react-icons/fa";
+import { LoaderData } from "~/.server/interfaces";
+import { FaSearchLocation } from "react-icons/fa";
 
 export interface LocationData {
   type: "geolocation" | "input";
@@ -15,11 +15,11 @@ export default function LocationComponent() {
   const [gotGeolocation, setGotGeolocation] = useState<boolean>(false);
   const [gettingGeolocation, setGettingGeolocation] = useState<boolean>(false);
   let allData = useRouteLoaderData<LoaderData>("routes/_index");
-  const [input, setInput] = useState<string>(allData? allData.city:"");
+  const [input, setInput] = useState<string>(allData ? allData.city : "");
   const fetcher = useFetcher();
   useEffect(() => {
     if (locationData) {
-      console.log(locationData)
+      console.log(locationData);
       fetcher.submit(
         { locationData: JSON.stringify(locationData) },
         { method: "post" }
@@ -28,7 +28,7 @@ export default function LocationComponent() {
   }, [locationData]);
 
   const handleManualSubmit = (e: React.FormEvent) => {
-    console.log(input)
+    console.log(input);
     e.preventDefault();
     setLocationData({
       type: "input",
@@ -42,7 +42,7 @@ export default function LocationComponent() {
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            console.log(position)
+            console.log(position);
             setGotGeolocation(true);
             setLocationData({
               type: "geolocation",
@@ -62,7 +62,11 @@ export default function LocationComponent() {
     }
   }
   return (
-    <div className="p-4 sm:p-6 md:p-8" role="region" aria-label="Location Search">
+    <div
+      className="p-4 sm:p-6 md:p-8"
+      role="region"
+      aria-label="Location Search"
+    >
       <div className="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2">
         <Form
           onSubmit={handleManualSubmit}
@@ -85,7 +89,7 @@ export default function LocationComponent() {
             placeholder="Enter location manually"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onFocus={e => e.target.select()}
+            onFocus={(e) => e.target.select()}
             aria-label="Location input"
           />
           <button
@@ -99,7 +103,10 @@ export default function LocationComponent() {
                      text-slate-100"
             aria-label="Submit location search"
           >
-            <FaSearchLocation className="w-6 h-6 block sm:hidden" aria-hidden="true" />
+            <FaSearchLocation
+              className="w-6 h-6 block sm:hidden"
+              aria-hidden="true"
+            />
             <span className="hidden sm:block">Submit</span>
           </button>
         </Form>
@@ -108,28 +115,28 @@ export default function LocationComponent() {
             geolocationError
               ? alert("Unable to use GPS. Did you deny the permission?")
               : gettingGeolocation
-                ? null
-                : gotGeolocation
-                  ? null
-                  : handleGeolocation();
+              ? null
+              : gotGeolocation
+              ? null
+              : handleGeolocation();
           }}
           className={`py-2 px-4 rounded-lg transition-all duration-200 sm:ml-2 
                    w-full sm:w-auto flex items-center justify-center
                    backdrop-blur-sm border
                    ${
-            geolocationError
-              ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
-              : gotGeolocation
-                ? "bg-green-500/20 border-green-500/30"
-                : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10 cursor-pointer"
-          }`}
+                     geolocationError
+                       ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
+                       : gotGeolocation
+                       ? "bg-green-500/20 border-green-500/30"
+                       : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10 cursor-pointer"
+                   }`}
           disabled={geolocationError || gettingGeolocation || gotGeolocation}
           aria-label={
             geolocationError
               ? "GPS location unavailable"
               : gotGeolocation
-                ? "GPS location acquired"
-                : "Use GPS location"
+              ? "GPS location acquired"
+              : "Use GPS location"
           }
           aria-live="polite"
         >
@@ -139,8 +146,8 @@ export default function LocationComponent() {
               geolocationError
                 ? "text-red-400"
                 : gotGeolocation
-                  ? "text-green-400"
-                  : "text-slate-100"
+                ? "text-green-400"
+                : "text-slate-100"
             } ${
               gettingGeolocation
                 ? gotGeolocation

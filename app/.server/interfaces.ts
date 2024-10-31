@@ -24,27 +24,27 @@ export interface WeatherLocation {
 }
 
 export interface LoaderData {
-  lat: number,
-  lon: number,
-  city: string,
-  eventType: "sunrise" | "sunset",
-  eventString: string,
-  eventTime: number,
-  now: number,
-  rating: number,
-  weatherData: InterpolatedWeather[],
-  allData: WeatherLocation[],
-  stats: AveragedValues,
-  message?: string,
-  relative: "future" | "past" | "current",
-  ok: boolean,
+  lat: number;
+  lon: number;
+  city: string;
+  eventType: "sunrise" | "sunset";
+  eventString: string;
+  eventTime: number;
+  now: number;
+  rating: number;
+  weatherData: InterpolatedWeather[];
+  allData: WeatherLocation[];
+  stats: AveragedValues;
+  message?: string;
+  relative: "future" | "past" | "current";
+  ok: boolean;
 }
 
 export interface AveragedValues {
-  cloud_cover: number,
-  high_clouds: number,
-  mid_clouds: number,
-  low_clouds: number,
-  visibility: number,
-  temperature: number
+  cloud_cover: number;
+  high_clouds: number;
+  mid_clouds: number;
+  low_clouds: number;
+  visibility: number;
+  temperature: number;
 }
