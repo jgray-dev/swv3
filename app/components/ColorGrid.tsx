@@ -36,57 +36,9 @@ export function ColorGrid() {
 
   const getLowCloudImpact = (coverage: number, index: number): number => {
     if (index <= 2) {
-      // 0-40 miles
       return Math.round(-coverage * 0.8);
     }
     return Math.round(-coverage * 0.2);
-  };
-
-  const getImpactColor = (impact: number): string => {
-    if (impact <= -50) return "bg-red-700";
-    if (impact <= -40) return "bg-red-600";
-    if (impact <= -30) return "bg-red-500";
-    if (impact <= -20) return "bg-red-400";
-    if (impact <= -10) return "bg-red-300";
-    if (impact < 0) return "bg-red-200";
-    if (impact === 0) return "bg-gray-200";
-    if (impact > 0 && impact < 10) return "bg-green-200";
-    if (impact <= 10) return "bg-green-300";
-    if (impact <= 20) return "bg-green-400";
-    if (impact <= 30) return "bg-green-500";
-    if (impact <= 40) return "bg-green-600";
-    if (impact <= 50) return "bg-green-700";
-    return "bg-green-600";
-  };
-
-  const getDefaultColor = (height: string, index: number): string => {
-    const colors = {
-      high: [
-        "bg-red-200",
-        "bg-orange-200",
-        "bg-yellow-300",
-        "bg-green-300",
-        "bg-green-400",
-        "bg-blue-200",
-      ],
-      mid: [
-        "bg-red-300",
-        "bg-orange-300",
-        "bg-yellow-400",
-        "bg-green-200",
-        "bg-green-200",
-        "bg-blue-100",
-      ],
-      low: [
-        "bg-red-600",
-        "bg-red-500",
-        "bg-red-400",
-        "bg-yellow-200",
-        "bg-yellow-100",
-        "bg-gray-200",
-      ],
-    };
-    return colors[height as keyof typeof colors][index];
   };
 
   return (
@@ -130,13 +82,10 @@ export function ColorGrid() {
         </div>
         {weatherData.map((weather, index) => {
           const impact = getHighCloudImpact(weather.cloud_cover_high, index);
-          const bgColor = showImpact
-            ? getImpactColor(impact)
-            : getDefaultColor("high", index);
           return (
             <div
               key={index}
-              className={`${bgColor} min-h-12 min-w-12 border border-black text-center pt-1 text-black`}
+              className={`bg-gray-300 min-h-12 min-w-12 border border-black text-center pt-1 text-black shadow-2xl`}
               title={`Impact: ${impact}`}
             >
               {Math.round(weather.cloud_cover_high)}%
@@ -154,13 +103,10 @@ export function ColorGrid() {
         </div>
         {weatherData.map((weather, index) => {
           const impact = getMidCloudImpact(weather.cloud_cover_mid, index);
-          const bgColor = showImpact
-            ? getImpactColor(impact)
-            : getDefaultColor("mid", index);
           return (
             <div
               key={index}
-              className={`${bgColor} min-h-12 min-w-12 border border-black text-center pt-1 text-black`}
+              className={`bg-gray-300 min-h-12 min-w-12 border border-black text-center pt-1 text-black`}
               title={`Impact: ${impact}`}
             >
               {Math.round(weather.cloud_cover_mid)}%
@@ -178,18 +124,15 @@ export function ColorGrid() {
         </div>
         {weatherData.map((weather, index) => {
           const impact = getLowCloudImpact(weather.cloud_cover_low, index);
-          const bgColor = showImpact
-            ? getImpactColor(impact)
-            : getDefaultColor("low", index);
           const isObservingLocation = index === 0;
           return (
             <div
               key={index}
-              className={`${bgColor} min-h-12 min-w-12 ${
+              className={`bg-gray-300 min-h-12 min-w-12 ${
                 isObservingLocation
                   ? "border-2 border-white"
                   : "border border-black"
-              } text-center pt-1 text-black`}
+              } text-center pt-1 text-white`}
               title={`Impact: ${impact}${
                 isObservingLocation ? "\nObserving location" : ""
               }`}
