@@ -11,6 +11,7 @@ export default function RatingDisplay() {
 
   // Return null after hooks are declared
   if (!allData?.ok) return null;
+  // console.log(allData)
 
   const rating = Math.max(0, Math.min(100, allData.rating));
   const ANIMATION_DURATION = 500;
