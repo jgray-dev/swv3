@@ -62,7 +62,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     weatherData as WeatherLocation[],
     eventTime
   );
-  const rating = skyRating(interpData as InterpolatedWeather[]);
+  let {rating, debugData} = skyRating(interpData as InterpolatedWeather[]);
+  if (isNaN(rating)) rating = 0
   const stats = averageData(interpData);
   if ((!eventTime || !eventType) && !error)
     error = "No sunrise or sunset found";
@@ -78,6 +79,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     weatherData: interpData,
     stats: stats as AveragedValues,
     message: error,
+    ratingDebug: debugData,
     eventString: getStringLiteral(
       Math.round(Date.now() / 1000),
       eventTime,
