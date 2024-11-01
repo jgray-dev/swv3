@@ -51,4 +51,6 @@ export interface AveragedValues {
   low_clouds: number;
   visibility: number;
   temperature: number;
+  freezing_height: number;
+  zone: "near" | "horizon" | "far";
 }
