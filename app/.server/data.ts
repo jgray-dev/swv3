@@ -162,10 +162,28 @@ export function interpolateWeatherData(
     }
   });
 }
-
 export function averageData(data: InterpolatedWeather[]): AveragedValues {
   if (!data.length) {
-    throw new Error("Data array cannot be empty");
+    console.error("averageData ERROR: !data.length")
+    
+    return {
+      //@ts-ignore
+      cloud_cover: data.cloud_cover,
+      //@ts-ignore
+      high_clouds: data.cloud_cover_high,
+      //@ts-ignore
+      mid_clouds: data.cloud_cover_mid,
+      //@ts-ignore
+      low_clouds: data.cloud_cover_low,
+      //@ts-ignore
+      visibility: data.visibility,
+      //@ts-ignore
+      temperature: data.temperature_2m,
+      //@ts-ignore
+      freezing_height: data.freezing_height,
+      //@ts-ignore
+      zone: data.zone,
+    }
   }
 
   const totalEntries = data.length;
@@ -191,6 +209,8 @@ export function averageData(data: InterpolatedWeather[]): AveragedValues {
     low_clouds: cloudSums.low_clouds / totalEntries,
     visibility: data[0].visibility,
     temperature: data[0].temperature_2m,
+    zone: data[0].zone,
+    freezing_height: data[0].freezing_height,
   };
 }
 
