@@ -6,10 +6,13 @@ export interface InterpolatedWeather {
   cloud_cover_low: number;
   cloud_cover_mid: number;
   cloud_cover_high: number;
+  freezing_height: number;
   visibility: number;
+  zone: "near" | "horizon" | "far";
 }
 
 export interface WeatherLocation {
+  zone: "near" | "horizon" | "far";
   latitude: number;
   longitude: number;
   hourly: {
@@ -20,6 +23,7 @@ export interface WeatherLocation {
     cloud_cover_mid: number[];
     cloud_cover_high: number[];
     visibility: number[];
+    freezing_level_height: number[];
   };
 }
 
