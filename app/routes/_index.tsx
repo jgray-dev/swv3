@@ -10,7 +10,7 @@ import {
   getRelative,
   getRelevantSunEvent,
   getStringLiteral,
-  interpolateWeatherData,
+  interpolateWeatherData, purgeDuplicates,
 } from "~/.server/data";
 import { skyRating } from "~/.server/rating";
 import {
@@ -22,6 +22,7 @@ import RatingDisplay from "~/components/RatingDisplay";
 import LocationDisplay from "~/components/LocationDisplay";
 import Alert from "~/components/Alert";
 import CloudCoverDisplay from "~/components/CloudCoverDisplay";
+import Visualize from "~/components/Visualize";
 
 export const meta: MetaFunction = () => {
   return [
@@ -52,10 +53,11 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   // @ts-ignore
   const coords = generateCoordinateString(lat, lon, eventType);
   const response = await fetch(
-    `https://customer-api.open-meteo.com/v1/forecast?${coords}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&past_days=1&forecast_days=2&apikey=${apiKey}`
+    `https://customer-api.open-meteo.com/v1/forecast?${coords}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&past_days=1&forecast_days=2&apikey=${apiKey}`
   );
-  const weatherData = await response.json();
+  let weatherData = await response.json();
   if (!eventTime) return null;
+  weatherData = purgeDuplicates(weatherData as WeatherLocation[], eventType)
   const interpData = interpolateWeatherData(
     weatherData as WeatherLocation[],
     eventTime
@@ -191,6 +193,7 @@ export default function Sunwatch() {
       <LocationDisplay />
       <RatingDisplay />
       <CloudCoverDisplay />
+      <Visualize />
     </div>
   );
 }
