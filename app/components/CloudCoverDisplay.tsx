@@ -128,9 +128,11 @@ export default function CloudCoverDisplay() {
   const data = useRouteLoaderData<LoaderData>("routes/_index");
   if (!data?.ok) return null;
 
-  const nearLocations = data.weatherData.filter(loc => loc.zone === "near");
-  const horizonLocations = data.weatherData.filter(loc => loc.zone === "horizon");
-  const farLocations = data.weatherData.filter(loc => loc.zone === "far");
+  const nearLocations = data.weatherData.filter((loc) => loc.zone === "near");
+  const horizonLocations = data.weatherData.filter(
+    (loc) => loc.zone === "horizon"
+  );
+  const farLocations = data.weatherData.filter((loc) => loc.zone === "far");
 
   let currentIndex = 0;
 
