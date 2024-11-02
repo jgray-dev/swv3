@@ -1,8 +1,10 @@
-import React from 'react';
-import {useRouteLoaderData} from "@remix-run/react";
-import {LoaderData} from "~/.server/interfaces";
+import React from "react";
+import { useRouteLoaderData } from "@remix-run/react";
+import { LoaderData } from "~/.server/interfaces";
 
-{/*@ts-ignore*/}
+{
+  /*@ts-ignore*/
+}
 const WeatherVisualization = ({ weatherData }) => {
   const maxHeight = 35000; // feet
   const pixelsPerFoot = 0.0115; // Increased scale factor for height
@@ -25,7 +27,7 @@ const WeatherVisualization = ({ weatherData }) => {
               bottom: `${height * pixelsPerFoot}px`,
             }}
           >
-            <span className="text-xs mr-2 text-gray-300">{(height / 1000)}k</span>
+            <span className="text-xs mr-2 text-gray-300">{height / 1000}k</span>
             <div className="w-2 h-px bg-gray-600" />
           </div>
         ))}
@@ -57,7 +59,7 @@ const WeatherVisualization = ({ weatherData }) => {
             className="absolute bottom-0"
             style={{
               left: `${index * pixelsPerMile}px`,
-              width: `${pixelsPerMile - 4}px` // Slight gap between columns
+              width: `${pixelsPerMile - 4}px`, // Slight gap between columns
             }}
           >
             {/* High clouds */}
@@ -84,7 +86,7 @@ const WeatherVisualization = ({ weatherData }) => {
             <div
               className="absolute w-full bg-white transition-opacity"
               style={{
-                bottom: '0px',
+                bottom: "0px",
                 height: `${lowCloudMax * pixelsPerFoot}px`,
                 opacity: data.cloud_cover_low / 100,
               }}
@@ -111,7 +113,9 @@ const WeatherVisualization = ({ weatherData }) => {
           </div>
           <div className="flex items-center">
             <div className="w-4 h-4 bg-white opacity-50 mr-2" />
-            <span className="text-xs text-gray-300">Mid Clouds (10k-26k ft)</span>
+            <span className="text-xs text-gray-300">
+              Mid Clouds (10k-26k ft)
+            </span>
           </div>
           <div className="flex items-center">
             <div className="w-4 h-4 bg-white opacity-50 mr-2" />
