@@ -29,7 +29,7 @@ const CloudLevel: React.FC<CloudLevelProps> = ({ coverage, label }) => {
     <div
       className={`
         relative flex flex-col items-center p-3 rounded-xl
-        backdrop-blur-sm border
+         border
         ${stateClass}
         transition-all duration-300 hover:scale-105
         text-slate-100
@@ -74,7 +74,7 @@ const LocationCard: React.FC<LocationCardProps> = ({ location, index }) => {
     <div
       className={`
         flex flex-col p-5 rounded-2xl
-        bg-white/10 backdrop-blur-sm
+        bg-white/10 
         border ${getZoneBorderClass(location.zone)}
         transition-all duration-300
         hover:bg-white/15
@@ -88,7 +88,7 @@ const LocationCard: React.FC<LocationCardProps> = ({ location, index }) => {
         <span
           className={`
             px-3 py-1 rounded-full text-sm font-medium
-            backdrop-blur-sm border
+             border
             ${getTotalCoverageState(location.cloud_cover)}
             transition-all duration-200
           `}
