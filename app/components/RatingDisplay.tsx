@@ -62,7 +62,7 @@ export default function RatingDisplay() {
   return (
     <main className="w-screen flex justify-center" role="main">
       <div
-        className="w-full bg-white/10 backdrop-blur-sm border border-white/20 sm:w-[36rem] sm:mt-4 mt-8 mx-4 min-h-32 rounded-lg flex flex-col sm:flex-row"
+        className="w-full bg-white/10  border border-white/20 sm:w-[36rem] sm:mt-4 mt-8 mx-4 min-h-32 rounded-lg flex flex-col sm:flex-row"
         role="region"
         aria-label="Weather Conditions Panel"
       >
