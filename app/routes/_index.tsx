@@ -1,21 +1,25 @@
 import type { MetaFunction } from "@remix-run/cloudflare";
 import LocationComponent from "~/components/LocationComponent";
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import { json, LoaderFunction } from "@remix-run/router";
-import {Link, redirect, useRouteLoaderData} from "@remix-run/react";
+import { Link, redirect, useRouteLoaderData } from "@remix-run/react";
 import { LocationData } from "~/components/LocationComponent";
 import {
   averageData,
+  findNextSunEvent,
   generateCoordinateString,
   getRelative,
   getRelevantSunEvent,
   getStringLiteral,
-  interpolateWeatherData, purgeDuplicates,
+  interpolateWeatherData,
+  purgeDuplicates,
+  unixToApproximateString,
 } from "~/.server/data";
 import { skyRating } from "~/.server/rating";
 import {
   AveragedValues,
-  InterpolatedWeather, LoaderData,
+  InterpolatedWeather,
+  LoaderData,
   WeatherLocation,
 } from "~/.server/interfaces";
 import RatingDisplay from "~/components/RatingDisplay";
@@ -23,7 +27,6 @@ import LocationDisplay from "~/components/LocationDisplay";
 import Alert from "~/components/Alert";
 import CloudCoverDisplay from "~/components/CloudCoverDisplay";
 import Visualize from "~/components/Visualize";
-import {useLoaderData} from "react-router";
 
 export const meta: MetaFunction = () => {
   return [
@@ -50,25 +53,38 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     Number(lat),
     Number(lon)
   );
+  if (!eventType) {
+    return {
+      message: "No sunrise or sunsets found in the next 48 hours.",
+      ok: false,
+    };
+  }
+  if (!eventTime) {
+    const next = unixToApproximateString(
+      findNextSunEvent(Number(lat), Number(lon))
+    );
+    return {
+      message: `No ${eventType} time found | Next event in approximately ${next}`,
+      ok: false,
+    };
+  }
   const apiKey = context.cloudflare.env.METEO_KEY;
-  // @ts-ignore
-  const coords = generateCoordinateString(lat, lon, eventType);
+  const coords = generateCoordinateString(Number(lat), Number(lon), eventType);
   const response = await fetch(
     `https://customer-api.open-meteo.com/v1/forecast?${coords}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&past_days=1&forecast_days=2&apikey=${apiKey}`
   );
   let weatherData = await response.json();
   if (!eventTime) return null;
-  weatherData = purgeDuplicates(weatherData as WeatherLocation[], eventType)
+  weatherData = purgeDuplicates(weatherData as WeatherLocation[], eventType);
   const interpData = interpolateWeatherData(
     weatherData as WeatherLocation[],
     eventTime
   );
-  let {rating, debugData} = skyRating(interpData as InterpolatedWeather[]);
-  if (isNaN(rating)) rating = 0
+  let { rating, debugData } = skyRating(interpData as InterpolatedWeather[]);
+  if (isNaN(rating)) rating = 0;
   const stats = averageData(interpData);
   if ((!eventTime || !eventType) && !error)
     error = "No sunrise or sunset found";
-
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
@@ -183,96 +199,109 @@ function appendErrorToUrl(baseUrlSearch: string, error?: string) {
   return `?${searchParams.toString()}`;
 }
 
-
-
-
 const getBackgroundColors = (rating: number | null) => {
-  if (rating === null) return {
-    base: 'hsl(220, 48%, 6%)',
-    gradient1: 'hsla(225, 69%, 20%, 0.75)',
-    gradient2: 'hsla(262, 68%, 19%, 0.45)'
-  };
-  if (rating <= 10) return {
-    base: 'hsl(0, 45%, 8%)',
-    gradient1: 'hsla(0, 55%, 32%, 0.35)',
-    gradient2: 'hsla(0, 55%, 22%, 0.25)'
-  };
-  if (rating <= 20) return {
-    base: 'hsl(4, 45%, 9%)',
-    gradient1: 'hsla(4, 55%, 35%, 0.35)',
-    gradient2: 'hsla(4, 55%, 25%, 0.25)'
-  };
-  if (rating <= 30) return {
-    base: 'hsl(8, 45%, 10%)',
-    gradient1: 'hsla(8, 55%, 38%, 0.35)',
-    gradient2: 'hsla(8, 55%, 28%, 0.25)'
-  };
-  if (rating <= 45) return {
-    base: 'hsl(24, 45%, 10%)',
-    gradient1: 'hsla(24, 55%, 38%, 0.35)',
-    gradient2: 'hsla(24, 55%, 28%, 0.25)'
-  };
-  if (rating <= 60) return {
-    base: 'hsl(36, 45%, 10%)',
-    gradient1: 'hsla(36, 55%, 38%, 0.35)',
-    gradient2: 'hsla(36, 55%, 28%, 0.25)'
-  };
-  if (rating <= 70) return {
-    base: 'hsl(48, 45%, 10%)',
-    gradient1: 'hsla(48, 55%, 38%, 0.35)',
-    gradient2: 'hsla(48, 55%, 28%, 0.25)'
-  };
-  if (rating <= 80) return {
-    base: 'hsl(84, 45%, 10%)',
-    gradient1: 'hsla(84, 55%, 38%, 0.35)',
-    gradient2: 'hsla(84, 55%, 28%, 0.25)'
-  };
-  if (rating <= 85) return {
-    base: 'hsl(142, 45%, 10%)',
-    gradient1: 'hsla(142, 55%, 38%, 0.35)',
-    gradient2: 'hsla(142, 55%, 28%, 0.25)'
-  };
-  if (rating <= 95) return {
-    base: 'hsl(152, 45%, 11%)',
-    gradient1: 'hsla(152, 55%, 40%, 0.35)',
-    gradient2: 'hsla(152, 55%, 30%, 0.25)'
-  };
+  if (rating === null)
+    return {
+      base: "hsl(220, 48%, 6%)",
+      gradient1: "hsla(225, 69%, 20%, 0.75)",
+      gradient2: "hsla(262, 68%, 19%, 0.45)",
+    };
+  if (rating <= 10)
+    return {
+      base: "hsl(0, 45%, 8%)",
+      gradient1: "hsla(0, 55%, 32%, 0.35)",
+      gradient2: "hsla(0, 55%, 22%, 0.25)",
+    };
+  if (rating <= 20)
+    return {
+      base: "hsl(4, 45%, 9%)",
+      gradient1: "hsla(4, 55%, 35%, 0.35)",
+      gradient2: "hsla(4, 55%, 25%, 0.25)",
+    };
+  if (rating <= 30)
+    return {
+      base: "hsl(8, 45%, 10%)",
+      gradient1: "hsla(8, 55%, 38%, 0.35)",
+      gradient2: "hsla(8, 55%, 28%, 0.25)",
+    };
+  if (rating <= 45)
+    return {
+      base: "hsl(24, 45%, 10%)",
+      gradient1: "hsla(24, 55%, 38%, 0.35)",
+      gradient2: "hsla(24, 55%, 28%, 0.25)",
+    };
+  if (rating <= 60)
+    return {
+      base: "hsl(36, 45%, 10%)",
+      gradient1: "hsla(36, 55%, 38%, 0.35)",
+      gradient2: "hsla(36, 55%, 28%, 0.25)",
+    };
+  if (rating <= 70)
+    return {
+      base: "hsl(48, 45%, 10%)",
+      gradient1: "hsla(48, 55%, 38%, 0.35)",
+      gradient2: "hsla(48, 55%, 28%, 0.25)",
+    };
+  if (rating <= 80)
+    return {
+      base: "hsl(84, 45%, 10%)",
+      gradient1: "hsla(84, 55%, 38%, 0.35)",
+      gradient2: "hsla(84, 55%, 28%, 0.25)",
+    };
+  if (rating <= 85)
+    return {
+      base: "hsl(142, 45%, 10%)",
+      gradient1: "hsla(142, 55%, 38%, 0.35)",
+      gradient2: "hsla(142, 55%, 28%, 0.25)",
+    };
+  if (rating <= 95)
+    return {
+      base: "hsl(152, 45%, 11%)",
+      gradient1: "hsla(152, 55%, 40%, 0.35)",
+      gradient2: "hsla(152, 55%, 30%, 0.25)",
+    };
   return {
-    base: 'hsl(160, 45%, 11%)',
-    gradient1: 'hsla(160, 55%, 40%, 0.35)',
-    gradient2: 'hsla(160, 55%, 30%, 0.25)'
+    base: "hsl(160, 45%, 11%)",
+    gradient1: "hsla(160, 55%, 40%, 0.35)",
+    gradient2: "hsla(160, 55%, 30%, 0.25)",
   };
 };
 
-
 export default function Sunwatch() {
-  
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
-  
+
   useEffect(() => {
     if (allData?.rating) {
-      const colors = getBackgroundColors(!allData.lat && !allData.lon ? null : allData.rating);
+      const colors = getBackgroundColors(
+        !allData.lat && !allData.lon ? null : allData.rating
+      );
       const root = document.documentElement;
 
-      root.style.setProperty('--bg-base-color', colors.base);
-      root.style.setProperty('--gradient-1-color', colors.gradient1);
-      root.style.setProperty('--gradient-2-color', colors.gradient2);
-      
+      root.style.setProperty("--bg-base-color", colors.base);
+      root.style.setProperty("--gradient-1-color", colors.gradient1);
+      root.style.setProperty("--gradient-2-color", colors.gradient2);
     }
   }, [allData?.rating, allData?.lat, allData?.lon]);
+
+  useEffect(() => {
+    console.log(allData);
+  }, []);
 
   return (
     <div className={"w-screen min-h-screen blob roboto overflow-x-hidden"}>
       <div className={"w-screen text-center mx-auto"}>
-        <Link to={"/"} className={"text-white/50 text-xs cursor-pointer"} onClick={()=>{
-          const colors = getBackgroundColors(null);
-          const root = document.documentElement;
+        <Link
+          to={"/"}
+          className={"text-white/50 text-xs cursor-pointer"}
+          onClick={() => {
+            const colors = getBackgroundColors(null);
+            const root = document.documentElement;
 
-          root.style.setProperty('--bg-base-color', colors.base);
-          root.style.setProperty('--gradient-1-color', colors.gradient1);
-          root.style.setProperty('--gradient-2-color', colors.gradient2);
-          
-        }}>
+            root.style.setProperty("--bg-base-color", colors.base);
+            root.style.setProperty("--gradient-1-color", colors.gradient1);
+            root.style.setProperty("--gradient-2-color", colors.gradient2);
+          }}
+        >
           SWV3
         </Link>
       </div>
