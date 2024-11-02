@@ -9,6 +9,9 @@ export default function RatingDisplay() {
   const startTimeRef = useRef<number>(0);
   const startValueRef = useRef(displayNumber);
 
+  useEffect(() => {
+    console.log(allData)
+  }, []);
   // Move useEffect here, before any conditional returns
   useEffect(() => {
     if (!allData?.ok) return; // Add early return inside useEffect
@@ -40,7 +43,6 @@ export default function RatingDisplay() {
 
   // Return null after ALL hooks are declared
   if (!allData?.ok) return null;
-  console.log(allData)
 
   const rating = Math.max(0, Math.min(100, allData.rating));
   const ANIMATION_DURATION = 50;
@@ -50,12 +52,11 @@ export default function RatingDisplay() {
   const dashOffset = circumference - progress;
 
   const getColor = (rating: number) => {
-    if (rating <= 10) return "stroke-[#991b1b]";
-    if (rating <= 30) return "stroke-[#dc2626]";
-    if (rating <= 50) return "stroke-[#ea580c]";
-    if (rating <= 70) return "stroke-[#eab308]";
-    if (rating <= 90) return "stroke-[#22c55e]";
-    return "stroke-[#059669]";
+    if (rating <= 20) return "stroke-red-500";
+    if (rating <= 40) return "stroke-orange-500";
+    if (rating <= 60) return "stroke-sky-500";
+    if (rating <= 80) return "stroke-blue-500";
+    return "stroke-indigo-500";
   };
 
   return (
