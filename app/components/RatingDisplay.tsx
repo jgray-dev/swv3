@@ -52,17 +52,22 @@ export default function RatingDisplay() {
   const dashOffset = circumference - progress;
 
   const getColor = (rating: number) => {
-    if (rating <= 20) return "stroke-red-500";
-    if (rating <= 40) return "stroke-orange-500";
-    if (rating <= 60) return "stroke-sky-500";
-    if (rating <= 80) return "stroke-blue-500";
-    return "stroke-indigo-500";
+    if (rating <= 10) return "stroke-red-700";
+    if (rating <= 20) return "stroke-red-600";
+    if (rating <= 30) return "stroke-red-500";
+    if (rating <= 45) return "stroke-orange-500";
+    if (rating <= 60) return "stroke-orange-400";
+    if (rating <= 70) return "stroke-yellow-500";
+    if (rating <= 80) return "stroke-lime-500";
+    if (rating <= 85) return "stroke-green-500";
+    if (rating <= 95) return "stroke-green-600";
+    return "stroke-emerald-700";
   };
 
   return (
     <main className="w-screen flex justify-center" role="main">
       <div
-        className="w-full bg-white/10  border border-white/20 sm:w-[36rem] sm:mt-4 mt-8 mx-4 min-h-32 rounded-lg flex flex-col sm:flex-row"
+        className="w-full bg-white/10 border border-white/20 sm:w-[36rem] sm:mt-4 mt-8 mx-4 min-h-32 rounded-lg flex flex-col sm:flex-row"
         role="region"
         aria-label="Weather Conditions Panel"
       >
