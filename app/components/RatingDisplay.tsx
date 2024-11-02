@@ -9,9 +9,6 @@ export default function RatingDisplay() {
   const startTimeRef = useRef<number>(0);
   const startValueRef = useRef(displayNumber);
 
-  useEffect(() => {
-    console.log(allData)
-  }, []);
   // Move useEffect here, before any conditional returns
   useEffect(() => {
     if (!allData?.ok) return; // Add early return inside useEffect
@@ -39,7 +36,7 @@ export default function RatingDisplay() {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [allData?.rating, displayNumber]);  // Updated dependencies
+  }, [allData?.rating, displayNumber]); // Updated dependencies
 
   // Return null after ALL hooks are declared
   if (!allData?.ok) return null;
