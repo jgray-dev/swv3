@@ -9,18 +9,10 @@ export default function RatingDisplay() {
   const startTimeRef = useRef<number>(0);
   const startValueRef = useRef(displayNumber);
 
-  // Return null after hooks are declared
-  if (!allData?.ok) return null;
-  // console.log(allData)
-
-  const rating = Math.max(0, Math.min(100, allData.rating));
-  const ANIMATION_DURATION = 500;
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius;
-  const progress = (rating / 100) * circumference;
-  const dashOffset = circumference - progress;
-
+  // Move useEffect here, before any conditional returns
   useEffect(() => {
+    if (!allData?.ok) return; // Add early return inside useEffect
+
     startTimeRef.current = performance.now();
     startValueRef.current = displayNumber;
     let animationFrameId: number;
@@ -44,7 +36,18 @@ export default function RatingDisplay() {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [rating]);
+  }, [allData?.rating, displayNumber]);  // Updated dependencies
+
+  // Return null after ALL hooks are declared
+  if (!allData?.ok) return null;
+  console.log(allData)
+
+  const rating = Math.max(0, Math.min(100, allData.rating));
+  const ANIMATION_DURATION = 50;
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (rating / 100) * circumference;
+  const dashOffset = circumference - progress;
 
   const getColor = (rating: number) => {
     if (rating <= 10) return "stroke-[#991b1b]";
