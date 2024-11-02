@@ -6,46 +6,38 @@ import {
 } from "~/.server/interfaces";
 import { getSunrise, getSunset } from "sunrise-sunset-js";
 
+//Helper function for crafting the URL to fetch from open-meteo
 export function generateCoordinateString(
   lat: number,
   lon: number,
   eventType: "sunrise" | "sunset"
 ): string {
-  // Input validation
   if (lat < -90 || lat > 90) throw new Error("Invalid latitude");
   if (lon < -180 || lon > 180) throw new Error("Invalid longitude");
-
   const bearing = eventType === "sunrise" ? 90 : 270;
-
-  // Separate arrays for latitudes and longitudes
   const latitudes: number[] = [];
   const longitudes: number[] = [];
-
   const distances = [0, 3, 5, 6.5, 8, 9.5, 11, 13, 15, 18, 21, 24];
-  // Generate 6 points (including starting point)
   for (let i = 0; i < 12; i++) {
     const distance = distances[i] * 1609.34;
-
     const point = computeDestinationPoint(
       { latitude: lat, longitude: lon },
       distance,
       bearing
     );
-
     latitudes.push(Number(point.latitude.toFixed(6)));
     longitudes.push(Number(point.longitude.toFixed(6)));
   }
   return `latitude=${latitudes.join(",")}&longitude=${longitudes.join(",")}`;
 }
 
+//Helper function for interpolating (below)
 function findBoundingTimeIndices(
   times: number[],
   targetTime: number
 ): [number, number] {
-  // Binary search for more efficient lookup
   let left = 0;
   let right = times.length - 1;
-  // Handle out of bounds cases
   if (targetTime <= times[left]) return [0, 0];
   if (targetTime >= times[right]) return [right, right];
   while (left <= right) {
@@ -53,16 +45,17 @@ function findBoundingTimeIndices(
     if (times[mid] <= targetTime && times[mid + 1] > targetTime) {
       return [mid, mid + 1];
     }
-
     if (times[mid] > targetTime) {
       right = mid - 1;
     } else {
       left = mid + 1;
     }
   }
-  // Fallback (should never reach here with valid data)
+  console.error("Unable to find bounding times")
   throw new Error("Unable to find bounding times");
 }
+
+//Helper function for interpolating (below)
 function calculateInterpolationWeight(
   time1: number,
   time2: number,
@@ -78,6 +71,8 @@ function lerp(a: number, b: number, weight: number): number {
   }
   return a + (b - a) * weight;
 }
+
+// Function to interpolate weather data when a sunrise/sunset falls between 2 hours (59/60 chance - hence why this is needed lol)
 export function interpolateWeatherData(
   apiResponse: WeatherLocation[],
   targetTime: number
@@ -90,17 +85,12 @@ export function interpolateWeatherData(
       throw new Error("Invalid location data structure");
     }
     const { time } = location.hourly;
-
-    // Find bounding indices using binary search
     const [lowerIndex, upperIndex] = findBoundingTimeIndices(time, targetTime);
-
-    // Calculate interpolation weight
     const weight = calculateInterpolationWeight(
       time[lowerIndex],
       time[upperIndex],
       targetTime
     );
-
     try {
       return {
         latitude: location.latitude,
@@ -155,7 +145,7 @@ export function interpolateWeatherData(
           )
         ),
         zone: location.zone,
-        distance: location.distance
+        distance: location.distance,
       };
     } catch (error) {
       // @ts-ignore
@@ -163,30 +153,42 @@ export function interpolateWeatherData(
     }
   });
 }
+
+// Function to average data 
 export function averageData(data: InterpolatedWeather[]): AveragedValues {
   if (!data.length) {
-    console.error("averageData ERROR: !data.length")
-    
-    return {
-      //@ts-ignore
-      cloud_cover: data.cloud_cover,
-      //@ts-ignore
-      high_clouds: data.cloud_cover_high,
-      //@ts-ignore
-      mid_clouds: data.cloud_cover_mid,
-      //@ts-ignore
-      low_clouds: data.cloud_cover_low,
-      //@ts-ignore
-      visibility: data.visibility,
-      //@ts-ignore
-      temperature: data.temperature_2m,
-      //@ts-ignore
-      freezing_height: data.freezing_height,
-      //@ts-ignore
-      zone: data.zone,
+    console.error("averageData ERROR: !data.length");
+    try {
+      return {
+        cloud_cover: data[0].cloud_cover,
+        high_clouds: data[0].cloud_cover_high,
+        mid_clouds: data[0].cloud_cover_mid,
+        low_clouds: data[0].cloud_cover_low,
+        visibility: data[0].visibility,
+        temperature: data[0].temperature_2m,
+        freezing_height: data[0].freezing_height,
+        zone: data[0].zone,
+      };
+    } catch {
+      return {
+        cloud_cover: data[0].cloud_cover,
+        //@ts-ignore
+        high_clouds: data.cloud_cover_high,
+        //@ts-ignore
+        mid_clouds: data.cloud_cover_mid,
+        //@ts-ignore
+        low_clouds: data.cloud_cover_low,
+        //@ts-ignore
+        visibility: data.visibility,
+        //@ts-ignore
+        temperature: data.temperature_2m,
+        //@ts-ignore
+        freezing_height: data.freezing_height,
+        //@ts-ignore
+        zone: data.zone,
+      };
     }
   }
-
   const totalEntries = data.length;
   const cloudSums = data.reduce(
     (acc, curr) => ({
@@ -202,7 +204,6 @@ export function averageData(data: InterpolatedWeather[]): AveragedValues {
       low_clouds: 0,
     }
   );
-
   return {
     cloud_cover: cloudSums.cloud_cover / totalEntries,
     high_clouds: cloudSums.high_clouds / totalEntries,
@@ -215,6 +216,7 @@ export function averageData(data: InterpolatedWeather[]): AveragedValues {
   };
 }
 
+// Converts the eventTime to a string literal describing when the event is.
 export function getStringLiteral(
   currentTime: number,
   eventTime: number,
@@ -223,27 +225,22 @@ export function getStringLiteral(
   const differenceInSeconds = eventTime - currentTime;
   const absoluteDifferenceInHours = Math.abs(differenceInSeconds) / 3600;
   const absoluteDifferenceInMinutes = Math.abs(differenceInSeconds) / 60;
-
-  // If the difference is less than 1 minute
   if (absoluteDifferenceInMinutes < 1) {
     return `${type == "sunset" ? "sunsetting" : "sunrising"} just now`;
   }
-
-  // If the difference is less than 1 hour
   if (absoluteDifferenceInHours < 1) {
     const minutes = Math.round(absoluteDifferenceInMinutes);
     return differenceInSeconds < 0
       ? `${type} ${minutes} minute${minutes === 1 ? "" : "s"} ago`
       : `${type} in ${minutes} minute${minutes === 1 ? "" : "s"}`;
   }
-
-  // For hour(s) difference
   const hours = Math.round(absoluteDifferenceInHours);
   return differenceInSeconds < 0
     ? `${type} ${hours} hour${hours === 1 ? "" : "s"} ago`
     : `${type} in ${hours} hour${hours === 1 ? "" : "s"}`;
 }
 
+// Used for formatting text when displaying the date/time of an event
 export function getRelative(now: number, time: number): string {
   if (Math.abs(now - time) <= 500) return "current";
   return now > time ? "past" : "future";
@@ -254,9 +251,9 @@ interface SunEvent {
   time: number;
 }
 
+// Normal function used to find the eventType and eventTime at a location
 export function getRelevantSunEvent(lat: number, lon: number): SunEvent {
   const now = Math.round(Date.now() / 1000);
-
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -278,11 +275,8 @@ export function getRelevantSunEvent(lat: number, lon: number): SunEvent {
     ...sunrises.map((time) => ({ type: "sunrise" as const, time })),
     ...sunsets.map((time) => ({ type: "sunset" as const, time })),
   ];
-
   allEvents.sort((a, b) => a.time - b.time);
-
-  const NINETY_MINUTES = 90 * 60; // in seconds
-
+  const NINETY_MINUTES = 90 * 60;
   const recentEvents = allEvents
     .filter(
       (event) => now - event.time <= NINETY_MINUTES && now - event.time >= 0
@@ -308,13 +302,10 @@ export function purgeDuplicates(
   coordinates: WeatherLocation[],
   eventType: "sunrise" | "sunset"
 ): WeatherLocation[] {
-  // First, sort based on eventType
   const sortedCoords = coordinates.sort((a, b) => {
     if (eventType === "sunrise") {
-      // For sunrise (going east), sort descending (west → east)
       return b.longitude - a.longitude;
     } else {
-      // For sunset (going west), sort ascending (east → west)
       return a.longitude - b.longitude;
     }
   });
@@ -322,11 +313,12 @@ export function purgeDuplicates(
   const distances = [0, 3, 5, 6.5, 8, 9.5, 11, 13, 15, 18, 21, 24];
   const withZones = sortedCoords.map((coord, index) => ({
     ...coord,
-    zone: (index <= 1 ? "near" : index <= 7 ? "horizon" : "far") as "near" | "horizon" | "far",
-    distance: distances[index]
+    zone: (index <= 1 ? "near" : index <= 7 ? "horizon" : "far") as
+      | "near"
+      | "horizon"
+      | "far",
+    distance: distances[index],
   }));
-
-  // Then remove duplicates
   const seen = new Map<string, boolean>();
   return withZones.filter((coord) => {
     const key = `${coord.latitude},${coord.longitude}`;
@@ -336,4 +328,92 @@ export function purgeDuplicates(
     seen.set(key, true);
     return true;
   });
+}
+
+// Function only used for edge cases - when someone searches a location that doesnt have a sunrise/sunset in the coming days - like places in the arctic circle
+export function findNextSunEvent(latitude: number, longitude: number): number {
+  const NOW = Date.now();
+  const DAY_MS = 86400000;
+  const MAX_DAYS_TO_SEARCH = 186;
+  let left = 0;
+  let right = MAX_DAYS_TO_SEARCH;
+  const hasEvent = (timestamp: number): boolean => {
+    try {
+      const sunrise = getSunrise(latitude, longitude, new Date(timestamp));
+      const sunset = getSunset(latitude, longitude, new Date(timestamp));
+      return !isNaN(sunrise.getTime()) || !isNaN(sunset.getTime());
+    } catch {
+      return false;
+    }
+  };
+  const getNextEvent = (timestamp: number): number | null => {
+    try {
+      const date = new Date(timestamp);
+      const sunrise = getSunrise(latitude, longitude, date);
+      const sunset = getSunset(latitude, longitude, date);
+
+      const sunriseTime = sunrise.getTime();
+      const sunsetTime = sunset.getTime();
+      const validTimes = [sunriseTime, sunsetTime].filter(
+        (time) => !isNaN(time) && time > NOW
+      );
+      return validTimes.length > 0 ? Math.min(...validTimes) : null;
+    } catch {
+      return null;
+    }
+  };
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+    const midTimestamp = NOW + mid * DAY_MS;
+
+    if (hasEvent(midTimestamp)) {
+      right = mid;
+    } else {
+      left = mid + 1;
+    }
+  }
+  if (left >= MAX_DAYS_TO_SEARCH) {
+    throw new Error("No sunrise or sunset found within search period");
+  }
+  const startDay = NOW + left * DAY_MS;
+  const nextDay = startDay + DAY_MS;
+  const event1 = getNextEvent(startDay);
+  const event2 = getNextEvent(nextDay);
+  if (event1 !== null && event2 !== null) {
+    return Math.min(event1, event2);
+  } else if (event1 !== null) {
+    return event1;
+  } else if (event2 !== null) {
+    return event2;
+  }
+  throw new Error("Failed to find next sunrise or sunset");
+}
+
+//Additional function for edge cases: takes unix time and returns string literal.
+export function unixToApproximateString(unixTimestamp: number): string {
+  unixTimestamp = Math.round(unixTimestamp / 1000);
+  const now = Math.floor(Date.now() / 1000);
+  const difference = unixTimestamp - now;
+  if (difference <= 0) {
+    return "now";
+  }
+  const HOUR = 3600;
+  const DAY = 86400;
+  const WEEK = 604800;
+  const MONTH = 2592000;
+  if (difference < HOUR) {
+    return "less than an hour";
+  } else if (difference < DAY) {
+    const hours = Math.floor(difference / HOUR);
+    return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+  } else if (difference < WEEK) {
+    const days = Math.floor(difference / DAY);
+    return `${days} ${days === 1 ? "day" : "days"}`;
+  } else if (difference < MONTH) {
+    const weeks = Math.floor(difference / WEEK);
+    return `${weeks} ${weeks === 1 ? "week" : "weeks"}`;
+  } else {
+    const months = Math.floor(difference / MONTH);
+    return `${months} ${months === 1 ? "month" : "months"}`;
+  }
 }
