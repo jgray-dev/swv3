@@ -6,7 +6,6 @@ import { averageData } from "~/.server/data";
 // 25 for far data
 // multi's affect the FINAL rating, so if the near multi is 0, the final rating will be 0, even if horizon and far are perfect scores
 
-
 function farDramaClouds(input: number): number {
   input = Math.max(0, Math.min(100, input));
   const points: [number, number][] = [
@@ -34,7 +33,6 @@ function farDramaClouds(input: number): number {
   const percentage = (input - x1) / (x2 - x1);
   return y1 + (y2 - y1) * percentage;
 }
-
 
 function horizonMidClouds(input: number): number {
   input = Math.max(0, Math.min(100, input));
@@ -119,7 +117,10 @@ function calculateAverageCloudHeight(horizonData: AveragedValues) {
   return weightedSum / totalCoverage;
 }
 
-export function skyRating(data: InterpolatedWeather[]): { rating: number, debugData: any } {
+export function skyRating(data: InterpolatedWeather[]): {
+  rating: number;
+  debugData: any;
+} {
   const nearData = averageData(data.filter((data) => data.zone === "near"));
   const horizonData = averageData(
     data.filter((data) => data.zone === "horizon")
@@ -135,7 +136,10 @@ export function skyRating(data: InterpolatedWeather[]): { rating: number, debugD
     "visibility" in nearData
   ) {
     nearRating = 25;
-    nearRating -= (nearData.mid_clouds / 25) + (nearData.high_clouds / 25) + (nearData.low_clouds / 6);
+    nearRating -=
+      nearData.mid_clouds / 25 +
+      nearData.high_clouds / 25 +
+      nearData.low_clouds / 6;
     nearMulti =
       (1 - (0.3 * Math.max(0, Math.min(100, nearData.low_clouds))) / 100) *
       (1 -
@@ -182,14 +186,15 @@ export function skyRating(data: InterpolatedWeather[]): { rating: number, debugD
     "mid_clouds" in farData &&
     "high_clouds" in farData
   ) {
-    const farHeight = calculateAverageCloudHeight(farData)
-    let freezeMulti = 0.8
+    const farHeight = calculateAverageCloudHeight(farData);
+    let freezeMulti = 0.8;
     if (farData.freezing_height * 1.2 > farHeight) {
-      freezeMulti = 1
+      freezeMulti = 1;
     }
-    const farCoverage = farDramaClouds((farData.low_clouds + farData.mid_clouds + farData.high_clouds) / 3)
-    farRating = farCoverage * freezeMulti
-    
+    const farCoverage = farDramaClouds(
+      (farData.low_clouds + farData.mid_clouds + farData.high_clouds) / 3
+    );
+    farRating = farCoverage * freezeMulti;
   }
 
   nearMulti = Math.min(Math.max(0, nearMulti), 1);
@@ -205,16 +210,15 @@ export function skyRating(data: InterpolatedWeather[]): { rating: number, debugD
       data: {
         nearData: nearData,
         horizonData: horizonData,
-        farData: farData
-        
+        farData: farData,
       },
       ratings: {
         nearRating: nearRating,
         nearMulti: nearMulti,
         horizonRating: horizonRating,
         horizonMulti: horizonMulti,
-        farRating: farRating
-      }
-    }
-  }
+        farRating: farRating,
+      },
+    },
+  };
 }
