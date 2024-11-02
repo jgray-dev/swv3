@@ -8,7 +8,7 @@
     "deploy": "bun run build && wrangler pages deploy",
     "dev": "remix vite:dev --host --port 3000",
     "lint": "eslint --ignore-pattern .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
-    "start": "wrangler pages dev ./build/client",
+    "start": "wrangler pages dev ./build/client --ip 0.0.0.0 --port 3000",
     "typecheck": "tsc",
     "typegen": "wrangler types",
     "preview": "bun run build && wrangler pages dev",
