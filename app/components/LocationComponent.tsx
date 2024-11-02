@@ -80,11 +80,11 @@ export default function LocationComponent() {
             type="text"
             required
             className="w-full sm:w-64 px-4 py-2 
-                     bg-white/10 backdrop-blur-sm
+                     bg-white/10
                      border border-white/20 
                      rounded-lg text-slate-100 placeholder-slate-400
                      focus:outline-none focus:ring-2 focus:ring-blue-400/50 
-                     focus:bg-white/20 focus:backdrop-blur-md
+                     focus:bg-white/20 
                      transition-all duration-200"
             placeholder="Enter location manually"
             value={input}
@@ -95,7 +95,7 @@ export default function LocationComponent() {
           <button
             type="submit"
             className="px-4 py-2 
-                     bg-white/20 backdrop-blur-sm
+                     bg-white/20 
                      border border-white/10
                      rounded-lg hover:bg-white/30 
                      active:bg-white/10
@@ -122,7 +122,7 @@ export default function LocationComponent() {
           }}
           className={`py-2 px-4 rounded-lg transition-all duration-200 sm:ml-2 
                    w-full sm:w-auto flex items-center justify-center
-                   backdrop-blur-sm border
+                    border
                    ${
                      geolocationError
                        ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
