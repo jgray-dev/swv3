@@ -11,16 +11,26 @@ body {
   }
 }
 
+
+
 .blob {
-  height: 300%;
-  background-color: hsl(222, 47%, 11%);
-  background-image: radial-gradient(
-      at 80% 0%,
-      hsla(225, 68%, 42%, 0.75) 0px,
-      transparent 50%
-    ),
-    radial-gradient(at 0% 50%, hsla(262, 68%, 32%, 0.45) 0px, transparent 50%);
+    height: 300%;
+    background-color: var(--bg-base-color, hsl(220, 48%, 6%));
+    background-image:
+            radial-gradient(
+                    at 80% 0%,
+                    var(--gradient-1-color, hsla(225, 69%, 20%, 0.75)) 0px,
+                    transparent 50%
+            ),
+            radial-gradient(
+                    at 0% 50%,
+                    var(--gradient-2-color, hsla(262, 68%, 19%, 0.45)) 0px,
+                    transparent 50%
+            );
+    transition: background-color, 0.75s ease-in-out;
 }
+
+
 
 @keyframes sparkle {
   0% {
