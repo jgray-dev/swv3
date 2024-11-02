@@ -42,20 +42,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-async function imageShit(context: any) {
-  await new Promise((resolve) => setTimeout(resolve, 4000));
-  return { urls: ["image1.jpg", "image2.jpg"], blah: ":P" };
-}
-
 export const loader: LoaderFunction = async ({ request, context }) => {
-
-  const responseInit: ResponseInit = {
-    headers: {
-      "Server-Timing": "miss, db;dur=53",
-      // Set streaming timeout to 30 seconds
-      "x-remix-response-timeout": "30000"
-    }
-  };
   const url = new URL(request.url);
   const lat = url.searchParams.get("lat");
   const lon = url.searchParams.get("lon");
@@ -102,7 +89,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   if ((!eventTime || !eventType) && !error)
     error = "No sunrise or sunset found";
 
-  return defer({
+  return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
     city: String(city),
@@ -122,8 +109,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     allData: weatherData,
     relative: getRelative(Math.round(Date.now() / 1000), eventTime),
     ok: true,
-    secondaryData: Promise.all([imageShit(context)]),
-  }, responseInit);
+  }
 };
 
 export function isLocationData(data: any): data is LocationData {
@@ -284,12 +270,6 @@ const getBackgroundColors = (rating: number | null) => {
   };
 };
 
-export const secondLoader: LoaderFunction = async ({ request, context }) => {
-  return {
-    test: "test",
-    message: "yuhhhhh",
-  };
-};
 
 export default function Sunwatch() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
