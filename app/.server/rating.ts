@@ -39,7 +39,7 @@ function farDramaClouds(input: number): number {
 function horizonMidClouds(input: number): number {
   input = Math.max(0, Math.min(100, input));
   const points: [number, number][] = [
-    [0, 10],
+    [0, 5],
     [10, 10],
     [20, 15],
     [30, 20],
@@ -67,9 +67,9 @@ function horizonMidClouds(input: number): number {
 function horizonHighClouds(input: number): number {
   input = Math.max(0, Math.min(100, input));
   const points: [number, number][] = [
-    [0, 20],
-    [10, 25],
-    [20, 30],
+    [0, 5],
+    [10, 15],
+    [20, 20],
     [30, 30],
     [40, 30],
     [50, 30],
@@ -135,7 +135,7 @@ export function skyRating(data: InterpolatedWeather[]): { rating: number, debugD
     "visibility" in nearData
   ) {
     nearRating = 25;
-    nearRating -= nearData.mid_clouds / 12 + nearData.high_clouds / 12;
+    nearRating -= (nearData.mid_clouds / 25) + (nearData.high_clouds / 25) + (nearData.low_clouds / 6);
     nearMulti =
       (1 - (0.3 * Math.max(0, Math.min(100, nearData.low_clouds))) / 100) *
       (1 -
