@@ -5,7 +5,7 @@ import {Await} from "react-router";
 
 export default function Visualize() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index")
-  if (!allData?.ok) return null
+  if (!allData?.secondaryData) return null
   return (
     <Suspense fallback={<div>Loading map...</div>}>
       <Await
