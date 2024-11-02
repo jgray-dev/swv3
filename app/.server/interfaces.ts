@@ -44,6 +44,7 @@ export interface LoaderData {
   message?: string;
   relative: "future" | "past" | "current";
   ok: boolean;
+  secondaryData: any;
 }
 
 export interface AveragedValues {
