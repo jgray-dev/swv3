@@ -310,6 +310,13 @@ export default function Sunwatch() {
       <LocationDisplay />
       <RatingDisplay />
       <CloudCoverDisplay />
+      <div
+        className={
+          "my-32 mt-96 bg-black/50 min-h-fit w-screen text-center font-bold text-white/70 text-sm border-dashed border-b-2 border-t-2 border-yellow-400"
+        }
+      >
+        you are entering development territory below
+      </div>
       <Visualize />
     </div>
   );
