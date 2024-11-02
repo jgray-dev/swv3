@@ -9,9 +9,11 @@ export interface InterpolatedWeather {
   freezing_height: number;
   visibility: number;
   zone: "near" | "horizon" | "far";
+  distance: number;
 }
 
 export interface WeatherLocation {
+  distance: number;
   zone: "near" | "horizon" | "far";
   latitude: number;
   longitude: number;
