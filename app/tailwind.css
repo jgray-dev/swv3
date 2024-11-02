@@ -20,7 +20,6 @@ body {
       transparent 50%
     ),
     radial-gradient(at 0% 50%, hsla(262, 68%, 32%, 0.45) 0px, transparent 50%);
-  backdrop-filter: blur(100px);
 }
 
 @keyframes sparkle {
