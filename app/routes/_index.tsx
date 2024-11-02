@@ -251,7 +251,6 @@ export default function Sunwatch() {
   
   useEffect(() => {
     if (allData?.rating) {
-      console.log("Changing background. ", allData?.rating)
       const colors = getBackgroundColors(!allData.lat && !allData.lon ? null : allData.rating);
       const root = document.documentElement;
 
