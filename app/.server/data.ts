@@ -154,7 +154,8 @@ export function interpolateWeatherData(
             weight
           )
         ),
-        zone: location.zone
+        zone: location.zone,
+        distance: location.distance
       };
     } catch (error) {
       // @ts-ignore
@@ -318,10 +319,11 @@ export function purgeDuplicates(
     }
   });
 
-  // Add zone attributes based on position
+  const distances = [0, 3, 5, 6.5, 8, 9.5, 11, 13, 15, 18, 21, 24];
   const withZones = sortedCoords.map((coord, index) => ({
     ...coord,
-    zone: (index <= 1 ? "near" : index <= 7 ? "horizon" : "far") as "near" | "horizon" | "far"
+    zone: (index <= 1 ? "near" : index <= 7 ? "horizon" : "far") as "near" | "horizon" | "far",
+    distance: distances[index]
   }));
 
   // Then remove duplicates
