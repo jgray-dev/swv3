@@ -51,7 +51,7 @@ function findBoundingTimeIndices(
       left = mid + 1;
     }
   }
-  console.error("Unable to find bounding times")
+  console.error("Unable to find bounding times");
   throw new Error("Unable to find bounding times");
 }
 
@@ -154,7 +154,7 @@ export function interpolateWeatherData(
   });
 }
 
-// Function to average data 
+// Function to average data
 export function averageData(data: InterpolatedWeather[]): AveragedValues {
   if (!data.length) {
     console.error("averageData ERROR: !data.length");
