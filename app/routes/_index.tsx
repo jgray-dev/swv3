@@ -2,11 +2,11 @@ import type {
   ActionFunction,
   MetaFunction,
 } from "@remix-run/cloudflare";
-import LocationComponent from "~/components/LocationComponent";
+import LocationComponent from "~/components/main/LocationComponent";
 import React, { useEffect } from "react";
 import { json, LoaderFunction } from "@remix-run/router";
 import { defer, Link, redirect, useRouteLoaderData } from "@remix-run/react";
-import { LocationData } from "~/components/LocationComponent";
+import { LocationData } from "~/components/main/LocationComponent";
 import {
   averageData,
   findNextSunEvent,
@@ -25,11 +25,11 @@ import {
   LoaderData,
   WeatherLocation,
 } from "~/.server/interfaces";
-import RatingDisplay from "~/components/RatingDisplay";
-import LocationDisplay from "~/components/LocationDisplay";
-import Alert from "~/components/Alert";
-import CloudCoverDisplay from "~/components/CloudCoverDisplay";
-import Visualize from "~/components/Visualize";
+import RatingDisplay from "~/components/main/RatingDisplay";
+import LocationDisplay from "~/components/main/LocationDisplay";
+import Alert from "~/components/main/Alert";
+import CloudCoverDisplay from "~/components/main/CloudCoverDisplay";
+import Visualize from "~/components/main/Visualize";
 
 export const meta: MetaFunction = () => {
   return [
@@ -292,7 +292,7 @@ export default function Sunwatch() {
   }, []);
 
   return (
-    <div className={"w-screen min-h-screen blob roboto overflow-x-hidden"}>
+    <div className={"w-screen min-h-screen blob overflow-x-hidden"}>
       <div className={"w-screen text-center mx-auto"}>
         <Link
           to={"/"}
@@ -321,7 +321,10 @@ export default function Sunwatch() {
       >
         you are entering development territory below
       </div>
-      <Link to={"/user-content"}>User content page :P</Link>
+      <div  className={"w-screen text-center mb-32"}>
+        <Link to={"/map"}>View the map</Link>
+        
+      </div>
 
       <Visualize />
     </div>
