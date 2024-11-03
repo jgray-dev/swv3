@@ -20,7 +20,11 @@ For previous versions, we fetched the weather data at the location entered by ou
 There are 3 zones, each impacting our rating in *very* different ways.
 
 Near zone; weather within 3 miles of our current location - this impacts ratings drastically because low clouds or fog here will completely block our view of a sunrise or sunset.
+
+
 Horizon zone; weather around the horizon in the direction of the event (west for sunsets, east for sunrises) - this also impacts our rating heavily because clouds in this zone are responsible for the spectacular colors we sometime's see.
+
+
 Far zone; weather past the horizon. - this is mostly a "bonus" to the rating, as it can add a sense of "drama" to the sky we view. Also low clouds in this area may prevent sunlight from reflecting correctly on the horizon zone clouds.
 
 ****
@@ -40,6 +44,15 @@ Far zone; weather past the horizon. - this is mostly a "bonus" to the rating, as
 ****
 
 My main goals are to meet, and exceed all previous verions.
+
+
 Version 1 was a barebones proof of concept for my idea. It was made using plain JS to modify the DOM of the page. Along with this, I fetched our API on the client, so the client got the API key X_X
+
+
 Version 2 was a much better verion. It enabled user submissions, more data visualization, and proxied API requests through a PHP backend.
+
+
 Version 3 *will* be an even better verion. It uses the Remix framework- which gives us SSR, server side actions, and the ability to connect databases and the like.
+
+
+
