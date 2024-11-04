@@ -2,17 +2,12 @@ import type { ActionFunction } from "@remix-run/cloudflare";
 import { LoaderFunction } from "@remix-run/router";
 import { Link } from "@remix-run/react";
 import React from "react";
-import * as schema from "../db/schema";
+import { uploads } from "~/db/schema";
 import { drizzle } from "drizzle-orm/d1";
 
 export const loader: LoaderFunction = async ({ context, request }) => {
-  const db = drizzle(context.cloudflare.env.swv3_d1, { schema });
-  console.log(await context.cloudflare.env.swv3_d1.prepare("SELECT * FROM uploads LIMIT 5").all())
-  // console.log(await db.query.uploads.findMany());
-
-  // const uploads = await db.query.uploads.findMany();
-  // console.log(uploads);
-  // return uploads;
+  const db = drizzle(context.cloudflare.env.swv3_d1);
+  console.log(await db.select().from(uploads).all())
   return 0;
 };
 
