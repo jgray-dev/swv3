@@ -2,11 +2,11 @@ import type {
   ActionFunction,
   MetaFunction,
 } from "@remix-run/cloudflare";
-import LocationComponent from "~/components/main/LocationComponent";
+import LocationComponent from "~/components/LocationComponent";
 import React, { useEffect } from "react";
 import { json, LoaderFunction } from "@remix-run/router";
-import { defer, Link, redirect, useRouteLoaderData } from "@remix-run/react";
-import { LocationData } from "~/components/main/LocationComponent";
+import { Link, redirect, useRouteLoaderData } from "@remix-run/react";
+import { LocationData } from "~/components/LocationComponent";
 import {
   averageData,
   findNextSunEvent,
@@ -25,11 +25,12 @@ import {
   LoaderData,
   WeatherLocation,
 } from "~/.server/interfaces";
-import RatingDisplay from "~/components/main/RatingDisplay";
-import LocationDisplay from "~/components/main/LocationDisplay";
-import Alert from "~/components/main/Alert";
-import CloudCoverDisplay from "~/components/main/CloudCoverDisplay";
-import Visualize from "~/components/main/Visualize";
+import RatingDisplay from "~/components/RatingDisplay";
+import LocationDisplay from "~/components/LocationDisplay";
+import Alert from "~/components/Alert";
+import CloudCoverDisplay from "~/components/CloudCoverDisplay";
+import {drizzle} from "drizzle-orm/d1";
+import Map from "~/components/Map";
 
 export const meta: MetaFunction = () => {
   return [
@@ -51,6 +52,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   if (!lat || !lon || !city) {
     return { ok: false, message: error };
   }
+  const db = drizzle(context.cloudflare.env.swv3_d1);
 
   const { type: eventType, time: eventTime } = getRelevantSunEvent(
     Number(lat),
@@ -316,17 +318,13 @@ export default function Sunwatch() {
       <CloudCoverDisplay />
       <div
         className={
-          "my-32 mt-96 bg-black/50 min-h-fit w-screen text-center font-bold text-white/70 text-sm border-dashed border-b-2 border-t-2 border-yellow-400"
+          "my-32 mt-96 bg-black/25 min-h-fit w-screen text-center font-bold text-white/35 text-sm border-dashed border-b-2 border-t-2 border-yellow-400/20"
         }
       >
-        you are entering development territory below
-      </div>
-      <div  className={"w-screen text-center mb-32"}>
-        <Link to={"/map"}>View the map</Link>
-        
+        dev safe space
       </div>
 
-      <Visualize />
+      <Map />
     </div>
   );
 }
