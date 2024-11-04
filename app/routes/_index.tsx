@@ -1,7 +1,4 @@
-import type {
-  ActionFunction,
-  MetaFunction,
-} from "@remix-run/cloudflare";
+import type { ActionFunction, MetaFunction } from "@remix-run/cloudflare";
 import LocationComponent from "~/components/LocationComponent";
 import React, { useEffect } from "react";
 import { json, LoaderFunction } from "@remix-run/router";
@@ -29,9 +26,10 @@ import RatingDisplay from "~/components/RatingDisplay";
 import LocationDisplay from "~/components/LocationDisplay";
 import Alert from "~/components/Alert";
 import CloudCoverDisplay from "~/components/CloudCoverDisplay";
-import {drizzle} from "drizzle-orm/d1";
+import { drizzle } from "drizzle-orm/d1";
 import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
+import { uploads } from "~/db/schema";
 
 export const meta: MetaFunction = () => {
   return [
@@ -53,7 +51,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   if (!lat || !lon || !city) {
     return { ok: false, message: error };
   }
-  const db = drizzle(context.cloudflare.env.swv3_d1);
 
   const { type: eventType, time: eventTime } = getRelevantSunEvent(
     Number(lat),
@@ -112,7 +109,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     allData: weatherData,
     relative: getRelative(Math.round(Date.now() / 1000), eventTime),
     ok: true,
-  }
+  };
 };
 
 export function isLocationData(data: any): data is LocationData {
@@ -132,13 +129,19 @@ export const action: ActionFunction = async ({ request, context }) => {
 
   // Handle image upload if present
   const imageFile = formData.get("image");
-  const allDataString = formData.get("allData");
+  const rating = formData.get("rating");
+  const lat = formData.get("lat");
+  const lon = formData.get("lon");
+  const locationDataString = formData.get("locationData"); // Keep original locationData handling
+
   let imageUrl: string | null = null;
 
-  if (imageFile && imageFile instanceof Blob && allDataString) {
+  if (imageFile && imageFile instanceof Blob) {
     try {
       // Generate unique filename
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${getFileExtension(imageFile.type)}`;
+      const fileName = `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(7)}${getFileExtension(imageFile.type)}`;
       const r2Bucket = context.cloudflare.env.swv3;
 
       // Upload to R2
@@ -151,6 +154,24 @@ export const action: ActionFunction = async ({ request, context }) => {
       // Get the public URL (replace with your R2 public URL)
       imageUrl = `https://pub-873a5cd8dd304eed8d893737ad943799.r2.dev/${fileName}`;
       console.log("Uploaded image URL:", imageUrl);
+      try {
+        const db = drizzle(context.cloudflare.env.swv3_d1);
+        const msg = await db
+          .insert(uploads)
+          .values({
+            id: undefined,
+            lat: Math.round(Number(lat)),
+            lon: Math.round(Number(lon)),
+            rating: Number(rating),
+            image_url: imageUrl,
+            time: BigInt(Math.floor(Date.now() / 1000)),
+          })
+          .returning();
+        console.log(msg);
+      } catch (error) {
+        console.error("Error posting database: ", error);
+        return json({ error: "Failed to post database" }, { status: 500 });
+      }
     } catch (error) {
       console.error("Error uploading image:", error);
       return json({ error: "Failed to upload image" }, { status: 500 });
@@ -158,8 +179,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   }
 
   // Handle location data
-  const locationDataString = formData.get("locationData");
-  if (typeof locationDataString !== "string") {
+  if (!locationDataString || typeof locationDataString !== "string") {
     return json({ error: "Invalid location data" }, { status: 400 });
   }
 
@@ -187,7 +207,7 @@ export const action: ActionFunction = async ({ request, context }) => {
           )}&key=${apiKey}`;
           break;
         default:
-          throw new Error("Invalid locationData type");
+          console.error("Invalid locationData type");
       }
 
       const response = await fetch(geocodingUrl);
@@ -195,22 +215,28 @@ export const action: ActionFunction = async ({ request, context }) => {
 
       // @ts-expect-error fts
       if (data.status === "OK") {
-        // Include imageUrl in the redirect if it exists
+        // Include imageUrl and rating in the redirect if they exist
         const redirectUrl = new URL(url.origin);
-        redirectUrl.searchParams.set("lat",
+        redirectUrl.searchParams.set(
+          "lat",
           // @ts-expect-error fts
           data.results[0].geometry.location.lat
         );
-        redirectUrl.searchParams.set("lon",
+        redirectUrl.searchParams.set(
+          "lon",
           // @ts-expect-error fts
           data.results[0].geometry.location.lng
         );
-        redirectUrl.searchParams.set("city",
+        redirectUrl.searchParams.set(
+          "city",
           // @ts-expect-error fts
           data.results[0].formatted_address
         );
         if (imageUrl) {
           redirectUrl.searchParams.set("imageUrl", imageUrl);
+        }
+        if (rating) {
+          redirectUrl.searchParams.set("rating", rating.toString());
         }
         return redirect(redirectUrl.toString());
       } else {
@@ -218,7 +244,9 @@ export const action: ActionFunction = async ({ request, context }) => {
         return redirect(
           appendErrorToUrl(
             url.search,
-            `No results found for ${locationData.data}`
+            `No results found for ${
+              locationData.type === "input" ? locationData.data : "coordinates"
+            }`
           )
         );
       }
@@ -238,13 +266,13 @@ export const action: ActionFunction = async ({ request, context }) => {
 // Helper function to get file extension from mime type
 function getFileExtension(mimeType: string): string {
   const extensions: Record<string, string> = {
-    'image/jpeg': '.jpg',
-    'image/png': '.png',
-    'image/gif': '.gif',
-    'image/webp': '.webp',
-    'image/svg+xml': '.svg'
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/gif": ".gif",
+    "image/webp": ".webp",
+    "image/svg+xml": ".svg",
   };
-  return extensions[mimeType] || '.jpg';
+  return extensions[mimeType] || ".jpg";
 }
 
 function appendErrorToUrl(baseUrlSearch: string, error?: string) {
@@ -325,7 +353,6 @@ const getBackgroundColors = (rating: number | null) => {
   };
 };
 
-
 export default function Sunwatch() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
 
@@ -378,7 +405,7 @@ export default function Sunwatch() {
       </div>
 
       {/*<Map />*/}
-      <SubmitComponent/>
+      <SubmitComponent />
     </div>
   );
 }
