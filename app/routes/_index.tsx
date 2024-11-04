@@ -31,6 +31,7 @@ import Alert from "~/components/Alert";
 import CloudCoverDisplay from "~/components/CloudCoverDisplay";
 import {drizzle} from "drizzle-orm/d1";
 import Map from "~/components/Map";
+import SubmitComponent from "~/components/SubmitComponent";
 
 export const meta: MetaFunction = () => {
   return [
@@ -128,16 +129,47 @@ export function isLocationData(data: any): data is LocationData {
 export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const formData = await request.formData();
+
+  // Handle image upload if present
+  const imageFile = formData.get("image");
+  const allDataString = formData.get("allData");
+  let imageUrl: string | null = null;
+
+  if (imageFile && imageFile instanceof Blob && allDataString) {
+    try {
+      // Generate unique filename
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${getFileExtension(imageFile.type)}`;
+      const r2Bucket = context.cloudflare.env.swv3;
+
+      // Upload to R2
+      await r2Bucket.put(fileName, imageFile, {
+        httpMetadata: {
+          contentType: imageFile.type,
+        },
+      });
+
+      // Get the public URL (replace with your R2 public URL)
+      imageUrl = `https://pub-873a5cd8dd304eed8d893737ad943799.r2.dev/${fileName}`;
+      console.log("Uploaded image URL:", imageUrl);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return json({ error: "Failed to upload image" }, { status: 500 });
+    }
+  }
+
+  // Handle location data
   const locationDataString = formData.get("locationData");
   if (typeof locationDataString !== "string") {
     return json({ error: "Invalid location data" }, { status: 400 });
   }
+
   try {
     const parsedData = JSON.parse(locationDataString);
     if (isLocationData(parsedData)) {
       const locationData: LocationData = parsedData;
       let geocodingUrl = "";
       const apiKey = context.cloudflare.env.GOOGLE_MAPS_API_KEY;
+
       switch (locationData.type) {
         case "geolocation":
           geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
@@ -155,23 +187,32 @@ export const action: ActionFunction = async ({ request, context }) => {
           )}&key=${apiKey}`;
           break;
         default:
-          Error("Invalid locationData type");
+          throw new Error("Invalid locationData type");
       }
 
       const response = await fetch(geocodingUrl);
       const data = await response.json();
+
       // @ts-expect-error fts
       if (data.status === "OK") {
-        return redirect(
-          `/?lat=${encodeURIComponent(
-            // @ts-expect-error fts
-            data.results[0].geometry.location.lat
-          )}&lon=${encodeURIComponent(
-            // @ts-expect-error fts
-            data.results[0].geometry.location.lng
-            // @ts-expect-error fts
-          )}&city=${encodeURIComponent(data.results[0].formatted_address)}`
+        // Include imageUrl in the redirect if it exists
+        const redirectUrl = new URL(url.origin);
+        redirectUrl.searchParams.set("lat",
+          // @ts-expect-error fts
+          data.results[0].geometry.location.lat
         );
+        redirectUrl.searchParams.set("lon",
+          // @ts-expect-error fts
+          data.results[0].geometry.location.lng
+        );
+        redirectUrl.searchParams.set("city",
+          // @ts-expect-error fts
+          data.results[0].formatted_address
+        );
+        if (imageUrl) {
+          redirectUrl.searchParams.set("imageUrl", imageUrl);
+        }
+        return redirect(redirectUrl.toString());
       } else {
         console.error("No geocoding results found");
         return redirect(
@@ -187,12 +228,24 @@ export const action: ActionFunction = async ({ request, context }) => {
       );
     }
   } catch (error) {
-    console.error("Error parsing location data:", error);
+    console.error("Error processing location data:", error);
     return redirect(
-      appendErrorToUrl(url.search, `Error parsing location data: ${error}`)
+      appendErrorToUrl(url.search, `Error processing location data: ${error}`)
     );
   }
 };
+
+// Helper function to get file extension from mime type
+function getFileExtension(mimeType: string): string {
+  const extensions: Record<string, string> = {
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/gif': '.gif',
+    'image/webp': '.webp',
+    'image/svg+xml': '.svg'
+  };
+  return extensions[mimeType] || '.jpg';
+}
 
 function appendErrorToUrl(baseUrlSearch: string, error?: string) {
   const searchParams = new URLSearchParams(
@@ -324,7 +377,8 @@ export default function Sunwatch() {
         dev safe space
       </div>
 
-      <Map />
+      {/*<Map />*/}
+      <SubmitComponent/>
     </div>
   );
 }
