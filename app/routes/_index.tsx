@@ -372,9 +372,9 @@ export default function Sunwatch() {
     }
   }, [allData?.rating, allData?.lat, allData?.lon]);
 
-  useEffect(() => {
-    console.log(allData);
-  }, []);
+  // useEffect(() => {
+  //   console.log(allData);
+  // }, []);
 
   return (
     <div className={"w-screen min-h-screen blob overflow-x-hidden"}>
