@@ -30,7 +30,7 @@ import { drizzle } from "drizzle-orm/d1";
 import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
 import { uploads } from "~/db/schema";
-import {createUpload} from "~/.server/database";
+import { createUpload, getNearest } from "~/.server/database";
 
 export const meta: MetaFunction = () => {
   return [
@@ -89,7 +89,11 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const stats = averageData(interpData);
   if ((!eventTime || !eventType) && !error)
     error = "No sunrise or sunset found";
-
+  const mapData = await getNearest(context, {
+    lat: Number(lat),
+    lon: Number(lon),
+  });
+  if (!mapData) return redirect(appendErrorToUrl(url.search, "Error fetching database"));
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
@@ -110,6 +114,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     allData: weatherData,
     relative: getRelative(Math.round(Date.now() / 1000), eventTime),
     ok: true,
+    uploads: mapData,
   };
 };
 
@@ -157,8 +162,14 @@ export const action: ActionFunction = async ({ request, context }) => {
       imageUrl = `https://pub-873a5cd8dd304eed8d893737ad943799.r2.dev/${fileName}`;
       console.log("Uploaded image URL:", imageUrl);
       try {
-        await createUpload(context, {lat: Number(lat), lon: Number(lon), rating: Number(rating), imageUrl: imageUrl, city: `${city}`})
-        console.log(`CREATEUPLOAD DONE`)
+        await createUpload(context, {
+          lat: Number(lat),
+          lon: Number(lon),
+          rating: Number(rating),
+          imageUrl: imageUrl,
+          city: `${city}`,
+        });
+        console.log(`CREATEUPLOAD DONE`);
         return json({ message: "Uploaded to database" }, { status: 201 });
       } catch (error) {
         console.error("Error posting database: ", error);
@@ -396,7 +407,7 @@ export default function Sunwatch() {
         dev safe space
       </div>
 
-      {/*<Map />*/}
+      <Map />
       <SubmitComponent />
     </div>
   );
