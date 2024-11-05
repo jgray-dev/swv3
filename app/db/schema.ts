@@ -7,5 +7,6 @@ export const uploads = sqliteTable("uploads", {
   lon: real("lon").notNull(),
   rating: integer("rating").notNull(),
   image_url: text("image_url").notNull(),
-  time: integer("time").notNull()
+  time: integer("time").notNull(),
+  city: text("city").notNull()
 });
