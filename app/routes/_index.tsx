@@ -30,6 +30,7 @@ import { drizzle } from "drizzle-orm/d1";
 import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
 import { uploads } from "~/db/schema";
+import {createUpload} from "~/.server/database";
 
 export const meta: MetaFunction = () => {
   return [
@@ -155,19 +156,8 @@ export const action: ActionFunction = async ({ request, context }) => {
       imageUrl = `https://pub-873a5cd8dd304eed8d893737ad943799.r2.dev/${fileName}`;
       console.log("Uploaded image URL:", imageUrl);
       try {
-        const db = drizzle(context.cloudflare.env.swv3_d1);
-        const msg = await db
-          .insert(uploads)
-          .values({
-            id: undefined,
-            lat: Math.round(Number(lat)),
-            lon: Math.round(Number(lon)),
-            rating: Number(rating),
-            image_url: imageUrl,
-            time: BigInt(Math.floor(Date.now() / 1000)),
-          })
-          .returning();
-        console.log(msg);
+        const msg = await createUpload(context, {lat: Number(lat), lon: Number(lon), rating: Number(rating), imageUrl: imageUrl})
+        console.log(`CREATEUPLOAD: ${msg.data.toString()}`)
       } catch (error) {
         console.error("Error posting database: ", error);
         return json({ error: "Failed to post database" }, { status: 500 });
