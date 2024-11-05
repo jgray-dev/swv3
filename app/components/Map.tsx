@@ -10,7 +10,7 @@ export default function MapComponent() {
     (typeof allData.uploads)[0] | null
   >(null);
   const [center, setCenter] = useState([allData?.lat || 0, allData?.lon || 0]);
-  const [zoom, setZoom] = useState(12);
+  const [zoom, setZoom] = useState(10);
   const [bounds, setBounds] = useState<[[number, number], [number, number]] | null>(
     null
   );
@@ -59,13 +59,13 @@ export default function MapComponent() {
         16
       );
       setCenter([lat, lon]);
-      setZoom(expansionZoom);
+      setZoom(expansionZoom - 3);
     } else {
       // Handle single marker click
       const upload = cluster.properties.upload;
       setSelectedUpload(upload);
       setCenter([upload.lat, upload.lon]);
-      setZoom(15);
+      setZoom(13);
     }
   };
 
