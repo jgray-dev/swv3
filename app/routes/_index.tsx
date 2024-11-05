@@ -133,6 +133,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   const rating = formData.get("rating");
   const lat = formData.get("lat");
   const lon = formData.get("lon");
+  const city = formData.get("city");
   const locationDataString = formData.get("locationData"); // Keep original locationData handling
 
   let imageUrl: string | null = null;
@@ -156,7 +157,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       imageUrl = `https://pub-873a5cd8dd304eed8d893737ad943799.r2.dev/${fileName}`;
       console.log("Uploaded image URL:", imageUrl);
       try {
-        const msg = await createUpload(context, {lat: Number(lat), lon: Number(lon), rating: Number(rating), imageUrl: imageUrl})
+        const msg = await createUpload(context, {lat: Number(lat), lon: Number(lon), rating: Number(rating), imageUrl: imageUrl, city: `${city}`})
         console.log(`CREATEUPLOAD: ${msg.data.toString()}`)
       } catch (error) {
         console.error("Error posting database: ", error);
