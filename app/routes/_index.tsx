@@ -157,8 +157,9 @@ export const action: ActionFunction = async ({ request, context }) => {
       imageUrl = `https://pub-873a5cd8dd304eed8d893737ad943799.r2.dev/${fileName}`;
       console.log("Uploaded image URL:", imageUrl);
       try {
-        const msg = await createUpload(context, {lat: Number(lat), lon: Number(lon), rating: Number(rating), imageUrl: imageUrl, city: `${city}`})
-        console.log(`CREATEUPLOAD: ${msg.data.toString()}`)
+        await createUpload(context, {lat: Number(lat), lon: Number(lon), rating: Number(rating), imageUrl: imageUrl, city: `${city}`})
+        console.log(`CREATEUPLOAD DONE`)
+        return json({ message: "Uploaded to database" }, { status: 201 });
       } catch (error) {
         console.error("Error posting database: ", error);
         return json({ error: "Failed to post database" }, { status: 500 });
