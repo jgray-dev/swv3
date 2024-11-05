@@ -62,6 +62,8 @@ export interface AveragedValues {
 }
 
 export interface dbUpload {
+  city: string;
+  id: number
   lat: number;
   lon: number;
   rating: number;
