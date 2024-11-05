@@ -20,8 +20,8 @@ export async function createUpload(context: any, {
     const result = await db
       .insert(uploads)
       .values({
-        lat: Math.round(lat),
-        lon: Math.round(lon),
+        lat: lat,
+        lon: lon,
         rating: rating,
         image_url: imageUrl,
         time: Math.floor(Date.now() / 1000) // Store as regular integer
