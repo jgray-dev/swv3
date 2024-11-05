@@ -7,12 +7,14 @@ export async function createUpload(context: any, {
   lat,
   lon,
   rating,
-  imageUrl
+  imageUrl,
+  city
 }: {
   lat: number;
   lon: number;
   rating: number;
   imageUrl: string;
+  city: string;
 }) {
   try {
     const db = drizzle(context.cloudflare.env.swv3_d1);
@@ -24,7 +26,8 @@ export async function createUpload(context: any, {
         lon: lon,
         rating: rating,
         image_url: imageUrl,
-        time: Math.floor(Date.now() / 1000) // Store as regular integer
+        time: Math.floor(Date.now() / 1000),
+        city: city,
       })
       .returning();
 
