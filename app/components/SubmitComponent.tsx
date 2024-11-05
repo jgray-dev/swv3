@@ -35,6 +35,7 @@ export default function SubmitComponent() {
       formData.append("rating", allData.rating.toString());
       formData.append("lat", allData.lat.toString());
       formData.append("lon", allData.lon.toString());
+      formData.append("city", allData.city.toString());
 
       submit(formData, {
          method: "post",
