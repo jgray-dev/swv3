@@ -6,6 +6,7 @@ import { LoaderData } from "~/.server/interfaces";
 export default function MapComponent() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
   const [selectedUpload, setSelectedUpload] = useState<
+    // @ts-ignore
     (typeof allData.uploads)[0] | null
   >(null);
   const [center, setCenter] = useState([allData?.lat || 0, allData?.lon || 0]);
@@ -41,7 +42,6 @@ export default function MapComponent() {
               width={50}
               anchor={[upload.lat, upload.lon]}
               onClick={() => handleMarkerClick(upload)}
-              role="button"
               aria-label={`View location at ${upload.lat}, ${upload.lon}`}
             />
           ))}
@@ -62,7 +62,7 @@ export default function MapComponent() {
             <img
               src={selectedUpload.image_url}
               alt={`Unable to load image`}
-              className="object-contain w-full h-full"
+              className="object-contain w-full h-full p-4 rounded-lg"
               loading="lazy"
             />
             <button
