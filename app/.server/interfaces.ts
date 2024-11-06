@@ -67,6 +67,6 @@ export interface dbUpload {
   lat: number;
   lon: number;
   rating: number;
-  image_url: string;
+  image_id: string;
   time: number;
 }
