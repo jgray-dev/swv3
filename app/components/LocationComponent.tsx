@@ -115,28 +115,28 @@ export default function LocationComponent() {
             geolocationError
               ? alert("Unable to use GPS. Did you deny the permission?")
               : gettingGeolocation
-                ? null
-                : gotGeolocation
-                  ? null
-                  : handleGeolocation();
+              ? null
+              : gotGeolocation
+              ? null
+              : handleGeolocation();
           }}
           className={`py-2 px-4 rounded-lg transition-all duration-200 sm:ml-2 
                    w-full sm:w-auto flex items-center justify-center
                     border
                    ${
-            geolocationError
-              ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
-              : gotGeolocation
-                ? "bg-green-500/20 border-green-500/30"
-                : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10 cursor-pointer"
-          }`}
+                     geolocationError
+                       ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
+                       : gotGeolocation
+                       ? "bg-green-500/20 border-green-500/30"
+                       : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10 cursor-pointer"
+                   }`}
           disabled={geolocationError || gettingGeolocation || gotGeolocation}
           aria-label={
             geolocationError
               ? "GPS location unavailable"
               : gotGeolocation
-                ? "GPS location acquired"
-                : "Use GPS location"
+              ? "GPS location acquired"
+              : "Use GPS location"
           }
           aria-live="polite"
         >
@@ -147,16 +147,17 @@ export default function LocationComponent() {
                 geolocationError
                   ? "text-red-400"
                   : gotGeolocation
-                    ? "text-green-400"
-                    : "text-slate-100"
+                  ? "text-green-400"
+                  : "text-slate-100"
               }`}
               aria-hidden="true"
             />
             {gettingGeolocation && !gotGeolocation && (
-              <div className="ml-2 h-4 w-4 rounded-full border-2 border-slate-100 border-t-transparent animate-spin"
-                   role="status"
-                   aria-label="Loading location data">
-              </div>
+              <div
+                className="ml-2 h-4 w-4 rounded-full border-2 border-slate-100 border-t-transparent animate-spin"
+                role="status"
+                aria-label="Loading location data"
+              ></div>
             )}
           </div>
         </button>
