@@ -54,6 +54,7 @@ export default function MapComponent() {
             onBoundsChanged={({bounds: {ne, sw}}) => {
               setBounds([[sw[0], sw[1]], [ne[0], ne[1]]]);
             }}
+            twoFingerDrag={true}
           >
             {allData.uploads.map((upload) => (
               <Marker
