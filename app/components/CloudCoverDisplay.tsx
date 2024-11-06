@@ -1,5 +1,6 @@
-import React from "react";
+import React, {useState} from "react";
 import { WiCloudyWindy, WiCloudy, WiDayCloudy } from "react-icons/wi";
+import { HiChevronDown, HiChevronUp } from "react-icons/hi";
 import { useRouteLoaderData } from "@remix-run/react";
 import type { LoaderData, InterpolatedWeather } from "~/.server/interfaces";
 
@@ -51,9 +52,10 @@ interface LocationCardProps {
 
 const LocationCard: React.FC<LocationCardProps> = ({ location, index }) => {
   const getTotalCoverageState = (coverage: number) => {
-    if (coverage === 0) return "bg-green-500/20 border-green-500/30";
-    if (coverage < 30) return "bg-yellow-500/20 border-yellow-500/30";
-    if (coverage < 60) return "bg-orange-500/20 border-orange-500/30";
+    if (coverage === 0) return "bg-green-500/10 border-green-500/20";
+    if (coverage < 30) return "bg-green-500/20 border-green-500/30";
+    if (coverage < 60) return "bg-green-500/20 border-green-500/30";
+    if (coverage < 80) return "bg-orange-500/20 border-orange-500/30";
     return "bg-red-500/20 border-red-500/30";
   };
 
@@ -112,7 +114,7 @@ const ZoneSection: React.FC<{
 }> = ({ title, locations, startIndex }) => (
   <div className="mb-8">
     <h3 className="text-xl font-semibold mb-4 text-slate-100">{title}</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" >
       {locations.map((location, idx) => (
         <LocationCard
           key={`${location.latitude}-${location.longitude}`}
@@ -125,6 +127,7 @@ const ZoneSection: React.FC<{
 );
 
 export default function CloudCoverDisplay() {
+  const [isExpanded, setIsExpanded] = useState(false);
   const data = useRouteLoaderData<LoaderData>("routes/_index");
   if (!data?.ok) return null;
 
@@ -134,31 +137,46 @@ export default function CloudCoverDisplay() {
   );
   const farLocations = data.weatherData.filter((loc) => loc.zone === "far");
 
-  let currentIndex = 0;
-
   return (
     <div className="w-full max-w-7xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6 text-center text-slate-100">
-        Cloud Coverage Analysis
-      </h2>
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between text-lg mb-6 text-slate-300 hover:text-white transition-colors duration-150"
+      >
+        <div className="w-screen text-center flex justify-center">
+          {isExpanded ? "Click to hide details" : "Click to reveal details"}
+          {isExpanded ? (
+            <HiChevronUp className="ml-2 mt-1" />
+          ) : (
+            <HiChevronDown className="ml-2 mt-1" />
+          )}
+        </div>
+      </button>
 
-      <ZoneSection
-        title="Near Zone"
-        locations={nearLocations}
-        startIndex={currentIndex}
-      />
+      <div
+        className={`
+          overflow-hidden transition-all duration-1000 ease-in-out
+          ${isExpanded ? "max-h-[5000px]" : "max-h-0"}
+        `}
+      >
+        <ZoneSection
+          title="Near Zone"
+          locations={nearLocations}
+          startIndex={0}
+        />
 
-      <ZoneSection
-        title="Horizon Zone"
-        locations={horizonLocations}
-        startIndex={nearLocations.length}
-      />
+        <ZoneSection
+          title="Horizon Zone"
+          locations={horizonLocations}
+          startIndex={nearLocations.length}
+        />
 
-      <ZoneSection
-        title="Far Zone"
-        locations={farLocations}
-        startIndex={horizonLocations.length}
-      />
+        <ZoneSection
+          title="Far Zone"
+          locations={farLocations}
+          startIndex={horizonLocations.length}
+        />
+      </div>
     </div>
   );
 }
