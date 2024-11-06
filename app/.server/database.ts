@@ -12,12 +12,14 @@ export async function createUpload(
     rating,
     image_id,
     city,
+    data,
   }: {
     lat: number;
     lon: number;
     rating: number;
     image_id: string;
     city: string;
+    data: any
   }
 ) {
   try {
@@ -32,6 +34,7 @@ export async function createUpload(
         image_id: image_id,
         time: Math.floor(Date.now() / 1000),
         city: city,
+        data: data
       })
       .returning();
 
@@ -63,6 +66,7 @@ export async function getNearest(
         image_id: uploads.image_id,
         time: uploads.time,
         city: uploads.city,
+        data: uploads.data,
         distance: sql<number>`
           ROUND(
             (6371 * acos(
