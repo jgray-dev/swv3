@@ -1,5 +1,5 @@
 import { useRouteLoaderData, useActionData, Form, useNavigation } from "@remix-run/react";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { LoaderData } from "~/.server/interfaces";
 
 interface ActionData {
@@ -31,7 +31,7 @@ export default function SubmitComponent() {
   if (!allData?.ok) return null;
 
   return (
-    <div className="max-w-md mx-auto mt-4">
+    <div className="md:max-w-lg max-w-full md:mx-auto mx-4 mt-4">
       <Form
         ref={formRef}
         method="post"
@@ -68,10 +68,11 @@ export default function SubmitComponent() {
         </div>
 
         {/* Hidden fields for additional data */}
-        <input type="hidden" name="rating" value={allData.rating} />
-        <input type="hidden" name="lat" value={allData.lat} />
-        <input type="hidden" name="lon" value={allData.lon} />
-        <input type="hidden" name="city" value={allData.city} />
+        <input type="hidden" name="rating" value={allData.rating}/>
+        <input type="hidden" name="lat" value={allData.lat}/>
+        <input type="hidden" name="lon" value={allData.lon}/>
+        <input type="hidden" name="city" value={allData.city}/>
+        <input type="hidden" name="data" value={JSON.stringify(allData.stats)}/>
 
         {actionData?.error && (
           <div className="px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30">
@@ -108,7 +109,7 @@ export default function SubmitComponent() {
 
           {isSubmitting && (
             <span className="absolute inset-0 flex items-center justify-center">
-              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
+              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"/>
               <span>Uploading...</span>
             </span>
           )}
