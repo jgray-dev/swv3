@@ -1,4 +1,9 @@
-import { useRouteLoaderData, useActionData, Form, useNavigation } from "@remix-run/react";
+import {
+  useRouteLoaderData,
+  useActionData,
+  Form,
+  useNavigation,
+} from "@remix-run/react";
 import React, { useEffect, useRef, useState } from "react";
 import { LoaderData } from "~/.server/interfaces";
 
@@ -45,12 +50,14 @@ export default function SubmitComponent() {
           >
             Select Image
           </label>
-          <div className={`
+          <div
+            className={`
             relative w-full p-4 rounded-lg 
             bg-white/10 border border-white/20 
             hover:bg-white/20 transition-all
-            ${selectedFile ? 'bg-white/20' : ''}
-          `}>
+            ${selectedFile ? "bg-white/20" : ""}
+          `}
+          >
             <input
               type="file"
               id="image"
@@ -62,17 +69,21 @@ export default function SubmitComponent() {
               disabled={isSubmitting}
             />
             <div className="flex items-center justify-center text-slate-100">
-              <span>{selectedFile || 'Choose an image'}</span>
+              <span>{selectedFile || "Choose an image"}</span>
             </div>
           </div>
         </div>
 
         {/* Hidden fields for additional data */}
-        <input type="hidden" name="rating" value={allData.rating}/>
-        <input type="hidden" name="lat" value={allData.lat}/>
-        <input type="hidden" name="lon" value={allData.lon}/>
-        <input type="hidden" name="city" value={allData.city}/>
-        <input type="hidden" name="data" value={JSON.stringify(allData.stats)}/>
+        <input type="hidden" name="rating" value={allData.rating} />
+        <input type="hidden" name="lat" value={allData.lat} />
+        <input type="hidden" name="lon" value={allData.lon} />
+        <input type="hidden" name="city" value={allData.city} />
+        <input
+          type="hidden"
+          name="data"
+          value={JSON.stringify(allData.stats)}
+        />
 
         {actionData?.error && (
           <div className="px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30">
@@ -82,7 +93,9 @@ export default function SubmitComponent() {
 
         {actionData?.success && (
           <div className="px-4 py-2 rounded-lg bg-green-500/20 border border-green-500/30">
-            <span className="text-sm text-green-400">Successfully uploaded!</span>
+            <span className="text-sm text-green-400">
+              Successfully uploaded!
+            </span>
           </div>
         )}
 
@@ -99,17 +112,19 @@ export default function SubmitComponent() {
             relative
           `}
         >
-          <span className={`
+          <span
+            className={`
             flex items-center justify-center
             transition-opacity duration-200
-            ${isSubmitting ? 'opacity-0' : 'opacity-100'}
-          `}>
+            ${isSubmitting ? "opacity-0" : "opacity-100"}
+          `}
+          >
             Upload Image
           </span>
 
           {isSubmitting && (
             <span className="absolute inset-0 flex items-center justify-center">
-              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"/>
+              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
               <span>Uploading...</span>
             </span>
           )}
