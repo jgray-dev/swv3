@@ -19,7 +19,7 @@ export async function createUpload(
     rating: number;
     image_id: string;
     city: string;
-    data: any
+    data: any;
   }
 ) {
   try {
@@ -34,7 +34,7 @@ export async function createUpload(
         image_id: image_id,
         time: Math.floor(Date.now() / 1000),
         city: city,
-        data: data
+        data: data,
       })
       .returning();
 
@@ -85,6 +85,6 @@ export async function getNearest(
       .limit(50);
   } catch (error) {
     console.error("Database error:", error);
-    throw new Error(`Database error: ${error}`)
+    throw new Error(`Database error: ${error}`);
   }
 }
