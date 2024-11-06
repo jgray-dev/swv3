@@ -29,7 +29,6 @@ export default function MapComponent() {
   );
   const [visibleMarkersCount, setVisibleMarkersCount] = useState<number>(0);
 
-
   const visibleItems = useMemo(() => {
     if (!allData?.uploads) return [];
     return allData.uploads.filter((sub) =>
@@ -40,7 +39,7 @@ export default function MapComponent() {
   useEffect(() => {
     setVisibleMarkersCount(visibleItems.length);
   }, [visibleItems]);
-  
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -60,7 +59,7 @@ export default function MapComponent() {
 
   if (!allData?.ok) return null;
 
-  const getColor = (rating: number): string => {
+  const getHsl = (rating: number): string => {
     if (rating <= 10) return "hsl(0, 74%, 42%)";
     if (rating <= 20) return "hsl(0, 72%, 51%)";
     if (rating <= 30) return "hsl(0, 84%, 60%)";
@@ -71,6 +70,19 @@ export default function MapComponent() {
     if (rating <= 85) return "hsl(142, 76%, 36%)";
     if (rating <= 95) return "hsl(142, 72%, 29%)";
     return "hsl(153, 73%, 25%)";
+  };
+
+  const getBorderColor = (rating: number): string => {
+    if (rating <= 10) return "hover:border-red-700";
+    if (rating <= 20) return "hover:border-red-600";
+    if (rating <= 30) return "hover:border-red-500";
+    if (rating <= 45) return "hover:border-orange-500";
+    if (rating <= 60) return "hover:border-orange-400";
+    if (rating <= 70) return "hover:border-yellow-500";
+    if (rating <= 80) return "hover:border-lime-500";
+    if (rating <= 85) return "hover:border-green-500";
+    if (rating <= 95) return "hover:border-green-600";
+    return "hover:border-emerald-700";
   };
 
   function isWithinBounds(
@@ -108,29 +120,29 @@ export default function MapComponent() {
             }}
           >
             <ZoomControl />
-            {currentZoom > 9 || visibleMarkersCount==1
+            {currentZoom > 9 || visibleMarkersCount == 1
               ? visibleItems.map((sub) => (
-                    <Overlay
-                      anchor={[sub.lat, sub.lon]}
-                      key={sub.time}
-                      offset={[64, 64]}
-                    >
-                      <button onClick={() => setSelectedSubmission(sub)}>
-                        <img
-                          src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
-                          alt={sub.city}
-                          className="max-w-32 aspect-auto rounded-lg shadow-md transition-transform hover:scale-105"
-                        />
-                      </button>
-                    </Overlay>
-                  ))
+                  <Overlay
+                    anchor={[sub.lat, sub.lon]}
+                    key={sub.time}
+                    offset={[64, 64]}
+                  >
+                    <button onClick={() => setSelectedSubmission(sub)}>
+                      <img
+                        src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
+                        alt={sub.city}
+                        className={`max-w-48 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(sub.rating)} border-2 border-transparent drop-shadow-xl shadow-xl hover:z-50 z-10`}
+                      />
+                    </button>
+                  </Overlay>
+                ))
               : allData.uploads
                   .filter((sub) =>
                     isWithinBounds(sub.lat, sub.lon, currentBounds)
                   )
                   .map((sub) => (
                     <Marker
-                      color={getColor(sub.rating)}
+                      color={getHsl(sub.rating)}
                       anchor={[sub.lat, sub.lon]}
                       key={sub.time}
                       hover={false}
