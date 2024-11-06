@@ -1,20 +1,18 @@
 import { useRouteLoaderData } from "@remix-run/react";
 import { Map, Marker } from "pigeon-maps";
 import { useState, useMemo } from "react";
-import { LoaderData } from "~/.server/interfaces";
+import {dbUpload, LoaderData} from "~/.server/interfaces";
 
 export default function MapComponent() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
   // @ts-ignore
-  const [selectedUpload, setSelectedUpload] = useState<
-    (typeof allData.uploads)[0] | null
-  >(null);
+  
   const [center, setCenter] = useState([allData?.lat || 0, allData?.lon || 0]);
   const [zoom, setZoom] = useState(10);
   const [bounds, setBounds] = useState<[[number, number], [number, number]] | null>(
     null
   );
-
+  const [selectedUpload, setSelectedUpload] = useState<dbUpload | null>(null);
   // Function to check if a point is within current bounds
   const isPointInBounds = (lat: number, lon: number) => {
     if (!bounds) return false;
@@ -89,7 +87,7 @@ export default function MapComponent() {
         >
           {selectedUpload ? (
             <div className="relative w-full h-full">
-              <div className="text-center text-xl w-full pt-4">
+              <div className="text-center text-xl w-full pt-4 max-w-[80%]">
                 {selectedUpload.city}
               </div>
               <img
@@ -138,20 +136,20 @@ function VisibleUploadsList({
 }) {
   return (
     <div className="bg-white/10 border border-white/20 rounded-lg p-4">
-      <h2 className="text-lg font-semibold mb-4">Visible Locations ({uploads.length})</h2>
+      <h2 className="text-lg font-semibold mb-4">Visible submissions ({uploads.length})</h2>
       <div className="space-y-2">
         {uploads.map((upload) => (
           <button
             key={upload.id}
             onClick={() => onUploadSelect(upload)}
-            className={`w-full text-left p-2 rounded-lg transition-colors
+            className={`w-full text-left p-2 rounded-lg transition-colors min-h-fit
               ${selectedUpload?.id === upload.id
               ? 'bg-white/20'
               : 'hover:bg-white/10'}`}
           >
             <div className="flex justify-between items-center">
-              <span>{upload.city}</span>
-              <span className="text-sm opacity-75">Rating: {upload.rating}/100</span>
+              <span className={""}>{upload.city}</span>
+              <span className="text-sm opacity-75">{upload.rating}/100</span>
             </div>
           </button>
         ))}
