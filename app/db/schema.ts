@@ -1,4 +1,10 @@
-import {blob, integer, real, sqliteTable, text} from "drizzle-orm/sqlite-core";
+import {
+  blob,
+  integer,
+  real,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core";
 
 export const uploads = sqliteTable("uploads", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -8,5 +14,5 @@ export const uploads = sqliteTable("uploads", {
   image_id: text("image_id").notNull(),
   time: integer("time").notNull(),
   city: text("city").notNull(),
-  data: text("data").notNull()
+  data: text("data").notNull(),
 });
