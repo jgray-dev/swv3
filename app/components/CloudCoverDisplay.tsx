@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { WiCloudyWindy, WiCloudy, WiDayCloudy } from "react-icons/wi";
 import { HiChevronDown, HiChevronUp } from "react-icons/hi";
 import { useRouteLoaderData } from "@remix-run/react";
@@ -114,7 +114,7 @@ const ZoneSection: React.FC<{
 }> = ({ title, locations, startIndex }) => (
   <div className="mb-8">
     <h3 className="text-xl font-semibold mb-4 text-slate-100">{title}</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" >
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {locations.map((location, idx) => (
         <LocationCard
           key={`${location.latitude}-${location.longitude}`}
