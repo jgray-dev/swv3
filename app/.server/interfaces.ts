@@ -46,7 +46,7 @@ export interface LoaderData {
   message?: string;
   relative: "future" | "past" | "current";
   ok: boolean;
-  uploads: dbUpload[]
+  uploads: dbUpload[];
 }
 
 export interface AveragedValues {
@@ -62,7 +62,7 @@ export interface AveragedValues {
 
 export interface dbUpload {
   city: string;
-  id: number
+  id: number;
   lat: number;
   lon: number;
   rating: number;
