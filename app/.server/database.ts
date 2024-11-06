@@ -10,13 +10,13 @@ export async function createUpload(
     lat,
     lon,
     rating,
-    imageUrl,
+    image_id,
     city,
   }: {
     lat: number;
     lon: number;
     rating: number;
-    imageUrl: string;
+    image_id: string;
     city: string;
   }
 ) {
@@ -29,7 +29,7 @@ export async function createUpload(
         lat: lat,
         lon: lon,
         rating: rating,
-        image_url: imageUrl,
+        image_id: image_id,
         time: Math.floor(Date.now() / 1000),
         city: city,
       })
@@ -54,17 +54,13 @@ export async function getNearest(
 ): Promise<dbUpload[] | null> {
   try {
     const db = drizzle(context.cloudflare.env.swv3_d1);
-    console.log(
-      `return 50 nearest database uploads to my coordinates: ${lat}, ${lon}`
-    );
-
     return await db
       .select({
         id: uploads.id,
         lat: uploads.lat,
         lon: uploads.lon,
         rating: uploads.rating,
-        image_url: uploads.image_url,
+        image_id: uploads.image_id,
         time: uploads.time,
         city: uploads.city,
         distance: sql<number>`
