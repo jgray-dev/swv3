@@ -26,10 +26,8 @@ import RatingDisplay from "~/components/RatingDisplay";
 import LocationDisplay from "~/components/LocationDisplay";
 import Alert from "~/components/Alert";
 import CloudCoverDisplay from "~/components/CloudCoverDisplay";
-import { drizzle } from "drizzle-orm/d1";
 import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
-import { uploads } from "~/db/schema";
 import { createUpload, getNearest } from "~/.server/database";
 
 export const meta: MetaFunction = () => {
@@ -133,7 +131,6 @@ export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const formData = await request.formData();
 
-  // Handle image upload if present
   const imageFile = formData.get("image");
   const rating = formData.get("rating");
   const lat = formData.get("lat");
@@ -235,12 +232,6 @@ export const action: ActionFunction = async ({ request, context }) => {
           // @ts-expect-error fts
           data.results[0].formatted_address
         );
-        if (imageUrl) {
-          redirectUrl.searchParams.set("imageUrl", imageUrl);
-        }
-        if (rating) {
-          redirectUrl.searchParams.set("rating", rating.toString());
-        }
         return redirect(redirectUrl.toString());
       } else {
         console.error("No geocoding results found");
@@ -372,9 +363,6 @@ export default function Sunwatch() {
     }
   }, [allData?.rating, allData?.lat, allData?.lon]);
 
-  // useEffect(() => {
-  //   console.log(allData);
-  // }, []);
 
   return (
     <div className={"w-screen min-h-screen blob overflow-x-hidden"}>
