@@ -152,7 +152,7 @@ export default function LocationComponent() {
               }`}
               aria-hidden="true"
             />
-            {gettingGeolocation && (
+            {gettingGeolocation && !gotGeolocation && (
               <div className="ml-2 h-4 w-4 rounded-full border-2 border-slate-100 border-t-transparent animate-spin"
                    role="status"
                    aria-label="Loading location data">
