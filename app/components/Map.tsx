@@ -27,7 +27,7 @@ export default function MapComponent() {
         {currentZoom > 10
           ? allData.uploads.map((sub) => (
               <Overlay anchor={[sub.lat, sub.lon]} key={sub.time} offset={[64, 60]}>
-                <img src={'https://pub-873a5cd8dd304eed8d893737ad943799.r2.dev/1730772533067-w9uawk.jpg'} alt={sub.city} className={"max-w-32 aspect-auto"}/>
+                <img src={sub.image_url} alt={sub.city} className={"max-w-32 aspect-auto"}/>
               </Overlay>
             ))
           : allData.uploads.map((sub) => (
