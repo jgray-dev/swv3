@@ -91,7 +91,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     lat: Number(lat),
     lon: Number(lon),
   });
-  if (!mapData) return redirect(appendErrorToUrl(url.search, "Error fetching database"));
+  if (!mapData)
+    return redirect(appendErrorToUrl(url.search, "Error fetching database"));
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
@@ -138,36 +139,44 @@ export const action: ActionFunction = async ({ request, context }) => {
   const city = formData.get("city");
   const locationDataString = formData.get("locationData"); // Keep original locationData handling
 
-  let imageUrl: string | null = null;
-
   if (imageFile && imageFile instanceof Blob) {
     try {
-      // Generate unique filename
-      const fileName = `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(7)}${getFileExtension(imageFile.type)}`;
-      const r2Bucket = context.cloudflare.env.swv3;
+      const API_URL = `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/images/v1`;
 
-      // Upload to R2
-      await r2Bucket.put(fileName, imageFile, {
-        httpMetadata: {
-          contentType: imageFile.type,
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${context.cloudflare.env.CF_TOKEN}`,
+          Accept: "application/json",
         },
+        body: formData,
       });
-
-      // Get the public URL (replace with your R2 public URL)
-      imageUrl = `https://pub-873a5cd8dd304eed8d893737ad943799.r2.dev/${fileName}`;
-      console.log("Uploaded image URL:", imageUrl);
+      const responseData = await response.json()
+      if (!response.ok) {
+        console.error("Upload failed")
+        // @ts-ignore
+        console.error(`[${responseData.errors?.[0]?.message ?? "Unknown error"}]`)
+        return json({ error: `Error uploading image to Images provider`, success: false }, { status: 500 });
+        
+      }
+      // @ts-ignore
+      const image_id = responseData?.result?.id
+      if (!image_id) {
+        return json({ error: `Error uploading image to Images provider [invalid image_id]`, success: false }, { status: 500 });
+      }
+      
       try {
         await createUpload(context, {
           lat: Number(lat),
           lon: Number(lon),
           rating: Number(rating),
-          imageUrl: imageUrl,
+          image_id: image_id,
           city: `${city}`,
         });
         console.log(`CREATEUPLOAD DONE`);
-        return json({ message: "Uploaded to database" }, { status: 201 });
+        return json({ message: "Uploaded to database", success: true }, { status: 201 });
       } catch (error) {
         console.error("Error posting database: ", error);
         return json({ error: "Failed to post database" }, { status: 500 });
@@ -362,7 +371,6 @@ export default function Sunwatch() {
       root.style.setProperty("--gradient-2-color", colors.gradient2);
     }
   }, [allData?.rating, allData?.lat, allData?.lon]);
-
 
   return (
     <div className={"w-screen min-h-screen blob overflow-x-hidden"}>
