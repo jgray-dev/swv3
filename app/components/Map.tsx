@@ -131,7 +131,9 @@ export default function MapComponent() {
                       <img
                         src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
                         alt={sub.city}
-                        className={`max-w-48 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(sub.rating)} border-2 border-transparent drop-shadow-xl shadow-xl hover:z-50 z-10`}
+                        className={`max-w-48 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(
+                          sub.rating
+                        )} border-2 border-transparent drop-shadow-xl shadow-xl hover:z-50 z-10`}
                       />
                     </button>
                   </Overlay>
