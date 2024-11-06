@@ -110,7 +110,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       eventTime,
       eventType
     ),
-    allData: weatherData,
     relative: getRelative(Math.round(Date.now() / 1000), eventTime),
     ok: true,
     uploads: mapData,
@@ -137,6 +136,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   const lat = formData.get("lat");
   const lon = formData.get("lon");
   const city = formData.get("city");
+  const data = formData.get("data");
   const locationDataString = formData.get("locationData"); // Keep original locationData handling
 
   if (imageFile && imageFile instanceof Blob) {
@@ -153,20 +153,33 @@ export const action: ActionFunction = async ({ request, context }) => {
         },
         body: formData,
       });
-      const responseData = await response.json()
+      const responseData = await response.json();
       if (!response.ok) {
-        console.error("Upload failed")
-        // @ts-ignore
-        console.error(`[${responseData.errors?.[0]?.message ?? "Unknown error"}]`)
-        return json({ error: `Error uploading image to Images provider`, success: false }, { status: 500 });
-        
+        return json(
+          {
+            error: `Error uploading image to images provider ${
+              // @ts-ignore
+              responseData.errors?.[0]?.message.contains("image/jpeg")
+                ? "[Invalid filetype]"
+                : ""
+            }`,
+            success: false,
+          },
+          { status: 500 }
+        );
       }
       // @ts-ignore
-      const image_id = responseData?.result?.id
+      const image_id = responseData?.result?.id;
       if (!image_id) {
-        return json({ error: `Error uploading image to Images provider [invalid image_id]`, success: false }, { status: 500 });
+        return json(
+          {
+            error: `Error uploading image to images provider [invalid image_id]`,
+            success: false,
+          },
+          { status: 500 }
+        );
       }
-      
+
       try {
         await createUpload(context, {
           lat: Number(lat),
@@ -174,16 +187,25 @@ export const action: ActionFunction = async ({ request, context }) => {
           rating: Number(rating),
           image_id: image_id,
           city: `${city}`,
+          data: data,
         });
-        console.log(`CREATEUPLOAD DONE`);
-        return json({ message: "Uploaded to database", success: true }, { status: 201 });
+        return json(
+          { message: "Uploaded to database", success: true },
+          { status: 201 }
+        );
       } catch (error) {
         console.error("Error posting database: ", error);
-        return json({ error: "Failed to post database" }, { status: 500 });
+        return json(
+          { error: "Failed to post database", success: false },
+          { status: 500 }
+        );
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-      return json({ error: "Failed to upload image" }, { status: 500 });
+      return json(
+        { error: "Failed to upload image", success: false },
+        { status: 500 }
+      );
     }
   }
 
@@ -265,18 +287,6 @@ export const action: ActionFunction = async ({ request, context }) => {
     );
   }
 };
-
-// Helper function to get file extension from mime type
-function getFileExtension(mimeType: string): string {
-  const extensions: Record<string, string> = {
-    "image/jpeg": ".jpg",
-    "image/png": ".png",
-    "image/gif": ".gif",
-    "image/webp": ".webp",
-    "image/svg+xml": ".svg",
-  };
-  return extensions[mimeType] || ".jpg";
-}
 
 function appendErrorToUrl(baseUrlSearch: string, error?: string) {
   const searchParams = new URLSearchParams(
