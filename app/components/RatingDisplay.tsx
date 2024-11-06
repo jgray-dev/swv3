@@ -62,7 +62,10 @@ export default function RatingDisplay() {
   };
 
   return (
-    <main className="w-screen flex justify-center transition-all duration-500" role="main">
+    <main
+      className="w-screen flex justify-center transition-all duration-500"
+      role="main"
+    >
       <div
         className="w-full bg-white/10 border border-white/20 sm:w-[36rem] sm:mt-4 mt-8 mx-4 min-h-32 rounded-lg flex flex-col sm:flex-row"
         role="region"
