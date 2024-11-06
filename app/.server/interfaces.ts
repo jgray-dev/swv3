@@ -46,7 +46,6 @@ export interface LoaderData {
   message?: string;
   relative: "future" | "past" | "current";
   ok: boolean;
-  secondaryData: any;
   uploads: dbUpload[]
 }
 
@@ -69,4 +68,5 @@ export interface dbUpload {
   rating: number;
   image_id: string;
   time: number;
+  data: any | InterpolatedWeather[];
 }
