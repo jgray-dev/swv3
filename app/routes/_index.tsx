@@ -28,7 +28,7 @@ import Alert from "~/components/Alert";
 import CloudCoverDisplay from "~/components/CloudCoverDisplay";
 import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
-import { createUpload, getNearest } from "~/.server/database";
+import { createUpload, getSubmissions } from "~/.server/database";
 
 export const meta: MetaFunction = () => {
   return [
@@ -47,8 +47,9 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const lon = url.searchParams.get("lon");
   const city = url.searchParams.get("city");
   let error = url.searchParams.get("error");
+  let mapData = await getSubmissions(context);
   if (!lat || !lon || !city) {
-    return { ok: false, message: error };
+    return { ok: false, message: error, uploads: mapData };
   }
 
   const { type: eventType, time: eventTime } = getRelevantSunEvent(
@@ -59,6 +60,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     return {
       message: "No sunrise or sunsets found in the next 48 hours.",
       ok: false,
+      uploads: mapData
     };
   }
   if (!eventTime) {
@@ -68,6 +70,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     return {
       message: `No ${eventType} time found | Next event in approximately ${next}`,
       ok: false,
+      uploads: mapData
     };
   }
   const apiKey = context.cloudflare.env.METEO_KEY;
@@ -87,12 +90,11 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const stats = averageData(interpData);
   if ((!eventTime || !eventType) && !error)
     error = "No sunrise or sunset found";
-  const mapData = await getNearest(context, {
+  mapData = await getSubmissions(context, {
     lat: Number(lat),
     lon: Number(lon),
   });
-  if (!mapData)
-    return redirect(appendErrorToUrl(url.search, "Error fetching database"));
+  if (!mapData) return redirect(appendErrorToUrl(url.search, "Error fetching database"));
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
@@ -130,163 +132,184 @@ export function isLocationData(data: any): data is LocationData {
 export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const formData = await request.formData();
+  const element = formData.get("element");
+  if (!element || typeof element !== "string") {
+    return json({ error: "Missing form identifier" }, { status: 500 });
+  }
+  switch (element) {
+    case "userSubmission": {
+      const imageFile = formData.get("image");
+      const rating = formData.get("rating");
+      const lat = formData.get("lat");
+      const lon = formData.get("lon");
+      const city = formData.get("city");
+      const data = formData.get("data");
 
-  const imageFile = formData.get("image");
-  const rating = formData.get("rating");
-  const lat = formData.get("lat");
-  const lon = formData.get("lon");
-  const city = formData.get("city");
-  const data = formData.get("data");
-  const locationDataString = formData.get("locationData"); // Keep original locationData handling
+      if (imageFile && imageFile instanceof Blob) {
+        try {
+          const API_URL = `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/images/v1`;
 
-  if (imageFile && imageFile instanceof Blob) {
-    try {
-      const API_URL = `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/images/v1`;
+          const imageFormData = new FormData();
+          imageFormData.append("file", imageFile);
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${context.cloudflare.env.CF_TOKEN}`,
+              Accept: "application/json",
+            },
+            body: imageFormData,
+          });
+          const responseData = await response.json();
+          if (!response.ok) {
+            return json(
+              {
+                error: `Error uploading image to images provider ${
+                  // @ts-ignore
+                  responseData.errors?.[0]?.message.contains("image/jpeg")
+                    ? "[Invalid filetype]"
+                    : ""
+                }`,
+                success: false,
+              },
+              { status: 500 }
+            );
+          }
+          // @ts-ignore
+          const image_id = responseData?.result?.id;
+          if (!image_id) {
+            return json(
+              {
+                error: `Error uploading image to images provider [invalid image_id]`,
+                success: false,
+              },
+              { status: 500 }
+            );
+          }
 
-      const formData = new FormData();
-      formData.append("file", imageFile);
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${context.cloudflare.env.CF_TOKEN}`,
-          Accept: "application/json",
-        },
-        body: formData,
-      });
-      const responseData = await response.json();
-      if (!response.ok) {
-        return json(
-          {
-            error: `Error uploading image to images provider ${
-              // @ts-ignore
-              responseData.errors?.[0]?.message.contains("image/jpeg")
-                ? "[Invalid filetype]"
-                : ""
-            }`,
-            success: false,
-          },
-          { status: 500 }
-        );
+          try {
+            await createUpload(context, {
+              lat: Number(lat),
+              lon: Number(lon),
+              rating: Number(rating),
+              image_id: image_id,
+              city: `${city}`,
+              data: data,
+            });
+            return json(
+              { message: "Uploaded to database", success: true },
+              { status: 201 }
+            );
+          } catch (error) {
+            console.error("Error posting database: ", error);
+            return json(
+              { error: "Failed to post database", success: false },
+              { status: 500 }
+            );
+          }
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          return json(
+            { error: "Failed to upload image", success: false },
+            { status: 500 }
+          );
+        }
       }
-      // @ts-ignore
-      const image_id = responseData?.result?.id;
-      if (!image_id) {
-        return json(
-          {
-            error: `Error uploading image to images provider [invalid image_id]`,
-            success: false,
-          },
-          { status: 500 }
-        );
+      return json({ error: "No image file provided" }, { status: 400 });
+    }
+
+    case "locationComponent": {
+      const locationDataString = formData.get("locationData");
+      if (!locationDataString || typeof locationDataString !== "string") {
+        return json({ error: "Invalid location data" }, { status: 400 });
       }
 
       try {
-        await createUpload(context, {
-          lat: Number(lat),
-          lon: Number(lon),
-          rating: Number(rating),
-          image_id: image_id,
-          city: `${city}`,
-          data: data,
-        });
-        return json(
-          { message: "Uploaded to database", success: true },
-          { status: 201 }
-        );
+        const parsedData = JSON.parse(locationDataString);
+        if (isLocationData(parsedData)) {
+          const locationData: LocationData = parsedData;
+          let geocodingUrl = "";
+          const apiKey = context.cloudflare.env.GOOGLE_MAPS_API_KEY;
+
+          switch (locationData.type) {
+            case "geolocation":
+              geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+                // @ts-expect-error fts
+                locationData.data.coords.latitude
+              )},${encodeURIComponent(
+                // @ts-expect-error fts
+                locationData.data.coords.longitude
+              )}&key=${apiKey}`;
+              break;
+            case "input":
+              geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+                // @ts-expect-error fts
+                locationData.data
+              )}&key=${apiKey}`;
+              break;
+            default:
+              console.error("Invalid locationData type");
+          }
+
+          const response = await fetch(geocodingUrl);
+          const data = await response.json();
+
+          // @ts-expect-error fts
+          if (data.status === "OK") {
+            const redirectUrl = new URL(url.origin);
+            redirectUrl.searchParams.set(
+              "lat",
+              // @ts-expect-error fts
+              data.results[0].geometry.location.lat
+            );
+            redirectUrl.searchParams.set(
+              "lon",
+              // @ts-expect-error fts
+              data.results[0].geometry.location.lng
+            );
+            redirectUrl.searchParams.set(
+              "city",
+              // @ts-expect-error fts
+              data.results[0].formatted_address
+            );
+            return redirect(redirectUrl.toString());
+          } else {
+            console.error("No geocoding results found");
+            return redirect(
+              appendErrorToUrl(
+                url.search,
+                `No results found for ${
+                  locationData.type === "input" ? locationData.data : "coordinates"
+                }`
+              )
+            );
+          }
+        } else {
+          return redirect(
+            appendErrorToUrl(url.search, `Invalid location data format`)
+          );
+        }
       } catch (error) {
-        console.error("Error posting database: ", error);
-        return json(
-          { error: "Failed to post database", success: false },
-          { status: 500 }
-        );
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      return json(
-        { error: "Failed to upload image", success: false },
-        { status: 500 }
-      );
-    }
-  }
-
-  // Handle location data
-  if (!locationDataString || typeof locationDataString !== "string") {
-    return json({ error: "Invalid location data" }, { status: 400 });
-  }
-
-  try {
-    const parsedData = JSON.parse(locationDataString);
-    if (isLocationData(parsedData)) {
-      const locationData: LocationData = parsedData;
-      let geocodingUrl = "";
-      const apiKey = context.cloudflare.env.GOOGLE_MAPS_API_KEY;
-
-      switch (locationData.type) {
-        case "geolocation":
-          geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-            // @ts-expect-error fts
-            locationData.data.coords.latitude
-          )},${encodeURIComponent(
-            // @ts-expect-error fts
-            locationData.data.coords.longitude
-          )}&key=${apiKey}`;
-          break;
-        case "input":
-          geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-            // @ts-expect-error fts
-            locationData.data
-          )}&key=${apiKey}`;
-          break;
-        default:
-          console.error("Invalid locationData type");
-      }
-
-      const response = await fetch(geocodingUrl);
-      const data = await response.json();
-
-      // @ts-expect-error fts
-      if (data.status === "OK") {
-        // Include imageUrl and rating in the redirect if they exist
-        const redirectUrl = new URL(url.origin);
-        redirectUrl.searchParams.set(
-          "lat",
-          // @ts-expect-error fts
-          data.results[0].geometry.location.lat
-        );
-        redirectUrl.searchParams.set(
-          "lon",
-          // @ts-expect-error fts
-          data.results[0].geometry.location.lng
-        );
-        redirectUrl.searchParams.set(
-          "city",
-          // @ts-expect-error fts
-          data.results[0].formatted_address
-        );
-        return redirect(redirectUrl.toString());
-      } else {
-        console.error("No geocoding results found");
+        console.error("Error processing location data:", error);
         return redirect(
-          appendErrorToUrl(
-            url.search,
-            `No results found for ${
-              locationData.type === "input" ? locationData.data : "coordinates"
-            }`
-          )
+          appendErrorToUrl(url.search, `Error processing location data: ${error}`)
         );
       }
-    } else {
-      return redirect(
-        appendErrorToUrl(url.search, `Invalid location data format`)
-      );
     }
-  } catch (error) {
-    console.error("Error processing location data:", error);
-    return redirect(
-      appendErrorToUrl(url.search, `Error processing location data: ${error}`)
-    );
+
+    
+    
+    case "refreshMap": {
+      const newCenter = formData.get("newLocation")
+      if (!newCenter) return json({ error: "Map refresh not implemented" }, { status: 501 });
+      console.log(newCenter)
+      return json({ success: true, message: "map data here" }, { status: 200 });
+    }
+
+    default:
+      return json({ error: "Unknown element type" }, { status: 400 });
   }
 };
+
 
 function appendErrorToUrl(baseUrlSearch: string, error?: string) {
   const searchParams = new URLSearchParams(
