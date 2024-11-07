@@ -24,7 +24,6 @@ export async function createUpload(
 ) {
   try {
     const db = drizzle(context.cloudflare.env.swv3_d1);
-
     const result = await db
       .insert(uploads)
       .values({
@@ -45,15 +44,15 @@ export async function createUpload(
   }
 }
 
-export async function getNearest(
+export async function getSubmissions(
   context: any,
   {
-    lat,
-    lon,
+    lat = 40.7128,
+    lon = -74.006,
   }: {
-    lat: number;
-    lon: number;
-  }
+    lat?: number;
+    lon?: number;
+  } = {}
 ): Promise<dbUpload[] | null> {
   try {
     const db = drizzle(context.cloudflare.env.swv3_d1);
