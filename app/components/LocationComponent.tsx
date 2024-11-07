@@ -21,7 +21,7 @@ export default function LocationComponent() {
     if (locationData) {
       console.log(locationData);
       fetcher.submit(
-        { locationData: JSON.stringify(locationData) },
+        { locationData: JSON.stringify(locationData), element: "locationComponent" },
         { method: "post" }
       );
     }
@@ -32,7 +32,7 @@ export default function LocationComponent() {
     e.preventDefault();
     setLocationData({
       type: "input",
-      data: input,
+      data: input
     });
   };
 
@@ -46,7 +46,7 @@ export default function LocationComponent() {
             setGotGeolocation(true);
             setLocationData({
               type: "geolocation",
-              data: position,
+              data: position
             });
           },
           (err) => {
@@ -72,6 +72,7 @@ export default function LocationComponent() {
           onSubmit={handleManualSubmit}
           className="flex flex-row gap-2 w-full sm:w-auto"
         >
+          <input type="hidden" name="element" value="locationComponent"/>
           <label htmlFor="location-input" className="sr-only">
             Enter location manually
           </label>
