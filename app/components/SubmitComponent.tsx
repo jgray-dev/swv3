@@ -79,6 +79,7 @@ export default function SubmitComponent() {
         <input type="hidden" name="lat" value={allData.lat} />
         <input type="hidden" name="lon" value={allData.lon} />
         <input type="hidden" name="city" value={allData.city} />
+        <input type="hidden" name="element" value="userSubmission" />
         <input
           type="hidden"
           name="data"
