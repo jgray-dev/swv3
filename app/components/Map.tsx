@@ -1,12 +1,15 @@
-import { useRouteLoaderData } from "@remix-run/react";
+import {Form, useActionData, useFetcher, useRouteLoaderData} from "@remix-run/react";
 import { Map, Marker, Overlay, ZoomControl } from "pigeon-maps";
 import { AveragedValues, dbUpload, LoaderData } from "~/.server/interfaces";
 import { useEffect, useState, useMemo } from "react";
 import StatItem from "~/components/StatItem";
 
-interface Marker extends dbUpload {
-  cluster: boolean;
-  amount: number;
+
+interface ActionData {
+  success: boolean;
+  error?: string;
+  message?: string;
+  data?: any;
 }
 
 interface Bounds {
@@ -16,6 +19,9 @@ interface Bounds {
 
 export default function MapComponent() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
+  const actionData = useActionData<ActionData>();
+  const fetcher = useFetcher();
+  
   const [currentZoom, setCurrentZoom] = useState<number>(9);
   const [currentBounds, setCurrentBounds] = useState<Bounds | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<dbUpload | null>(
@@ -43,6 +49,7 @@ export default function MapComponent() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
   useEffect(() => {
     if (selectedSubmission) {
       console.log(selectedSubmission);
@@ -56,8 +63,6 @@ export default function MapComponent() {
         : [40.7128, -74.006]
     );
   }, [allData]);
-
-  if (!allData?.ok) return null;
 
   const getHsl = (rating: number): string => {
     if (rating <= 10) return "hsl(0, 74%, 42%)";
@@ -98,8 +103,36 @@ export default function MapComponent() {
       lon <= bounds.ne[1] + 1
     );
   }
+
+  function getCenter(): [number, number] {
+    if (!currentBounds) {
+      return [40.7128, -74.006];
+    }
+
+    const centerLat = (currentBounds.ne[0] + currentBounds.sw[0]) / 2;
+    const centerLng = (currentBounds.ne[1] + currentBounds.sw[1]) / 2;
+
+    return [centerLat, centerLng];
+  }
+
+  async function handleRefresh() {
+    const location: [number, number] = getCenter()
+    fetcher.submit(
+      { newLocation: JSON.stringify(location), element: "refreshMap" },
+      { method: "post" }
+    );
+    console.log("Fetcher data:");
+    console.log(fetcher.data);
+  }
+  
   return (
     <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
+      <div
+        className={`${allData?.ok ? "hidden" : "visible min-h-[10vh]"} asd`}
+      ></div>
+      <div className={"w-screen text-center font-bold translate-y-3"}>
+        user submission map
+      </div>
       <div
         className={`${
           selectedSubmission ? "md:w-1/2" : "md:w-3/4"
@@ -107,12 +140,20 @@ export default function MapComponent() {
         role="region"
         aria-label="Interactive location map"
       >
+        <Form onSubmit={(e)=> {
+          e.preventDefault()
+          void handleRefresh()
+        }}>
+          <button type={"submit"} className={"rounded-full py-2 px-4 bg-blue-500 hover:bg-blue-400/80 mx-auto duration-200 text-slate-200 hover:text-white"}>Refresh</button>
+        </Form>
+        {actionData?.success && (<div>action data</div>)}
         {isMounted && (
           <Map
             // @ts-ignore
             center={currentLocation}
             animate={true}
-            defaultCenter={[allData.lat, allData.lon]}
+            // @ts-ignore
+            defaultCenter={currentLocation}
             defaultZoom={9}
             onBoundsChanged={({ zoom, bounds }) => {
               setCurrentZoom(zoom);
@@ -138,7 +179,8 @@ export default function MapComponent() {
                     </button>
                   </Overlay>
                 ))
-              : allData.uploads
+              : allData?.uploads &&
+                allData.uploads
                   .filter((sub) =>
                     isWithinBounds(sub.lat, sub.lon, currentBounds)
                   )
