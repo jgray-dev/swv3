@@ -1,12 +1,7 @@
 import { useRouteLoaderData } from "@remix-run/react";
 import { Map, Marker, Overlay, ZoomControl } from "pigeon-maps";
 import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
-import React, {
-  useEffect,
-  useState,
-  useMemo,
-  ReactElement,
-} from "react";
+import React, { useEffect, useState, useMemo, ReactElement } from "react";
 import StatItem from "~/components/StatItem";
 
 export interface Bounds {
