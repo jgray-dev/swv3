@@ -272,10 +272,9 @@ export default function MapComponent() {
                       onClick={() => {
                         setCurrentLocation([sub.lat, sub.lon]);
                         setSelectedSubmission(sub);
-
                         const startZoom = currentZoom;
-                        const targetZoom = 13;
-                        const duration = 2000;
+                        const targetZoom = 12;
+                        const duration = 1200;
                         const startTime = performance.now();
 
                         const animateZoom = (currentTime: number) => {
