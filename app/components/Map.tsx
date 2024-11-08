@@ -55,7 +55,6 @@ export default function MapComponent() {
 
   useEffect(() => {
     if (allData?.uploads) {
-      console.log(allData)
       const newSubmissions = allData.uploads.reduce((acc, upload) => {
         acc[upload.id] = upload;
         return acc;
