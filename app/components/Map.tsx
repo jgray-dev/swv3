@@ -1,68 +1,55 @@
-import { useFetcher, useRouteLoaderData } from "@remix-run/react";
+import { useRouteLoaderData } from "@remix-run/react";
 import { Map, Marker, Overlay, ZoomControl } from "pigeon-maps";
 import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
 import React, {
   useEffect,
   useState,
   useMemo,
-  useCallback,
-  useRef,
   ReactElement,
 } from "react";
 import StatItem from "~/components/StatItem";
 
-interface FetcherData {
-  success: boolean;
-  error?: string;
-  message?: string;
-  data?: DbUpload[] | null;
-  more?: boolean;
-}
-
-interface Bounds {
+export interface Bounds {
   ne: [number, number];
   sw: [number, number];
 }
 
-interface PostMap {
-  [id: number]: DbUpload;
-}
-
 export default function MapComponent() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
-  const fetcher = useFetcher<FetcherData>();
 
-  const [submissions, setSubmissions] = useState<PostMap>({});
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lockRefresh, setLockRefresh] = useState(false);
-  const refreshTimeoutRef = useRef<NodeJS.Timeout>();
+  const [submissions, setSubmissions] = useState<DbUpload[]>(
+    allData?.uploads ? allData.uploads : []
+  );
   const [currentZoom, setCurrentZoom] = useState<number>(9);
   const [currentBounds, setCurrentBounds] = useState<Bounds | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<DbUpload | null>(
     null
   );
   const [isMounted, setIsMounted] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState<number[]>(
+  const [currentCenter, setCurrentCenter] = useState<[number, number]>(
     allData?.lat && allData?.lon
       ? [allData.lat, allData.lon]
       : [40.7128, -74.006]
   );
-  const [currentLocation, setCurrentLocation] = useState<[number, number]>(
-    allData?.lat && allData?.lon
-      ? [allData.lat, allData.lon]
-      : [40.7128, -74.006]
-  );
-  const [visibleMarkersCount, setVisibleMarkersCount] = useState<number>(0);
 
   useEffect(() => {
     if (allData?.uploads) {
       const newSubmissions = allData.uploads.reduce((acc, upload) => {
         acc[upload.id] = upload;
         return acc;
-      }, {} as PostMap);
+      }, {} as DbUpload[]);
       setSubmissions(newSubmissions);
     }
   }, [allData?.uploads]);
+
+  useEffect(() => {
+    setIsMounted(true);
+    setCurrentCenter(
+      allData?.lat && allData?.lon
+        ? [allData.lat, allData.lon]
+        : [40.7128, -74.006]
+    );
+  }, [allData]);
 
   const visibleItems = useMemo(() => {
     return Object.values(submissions).filter((sub) =>
@@ -70,88 +57,9 @@ export default function MapComponent() {
     );
   }, [submissions, currentBounds]);
 
-  function getCenter(): [number, number] {
-    if (!currentBounds) {
-      return [40.7128, -74.006];
-    }
-    return [
-      (currentBounds.ne[0] + currentBounds.sw[0]) / 2,
-      (currentBounds.ne[1] + currentBounds.sw[1]) / 2,
-    ];
-  }
-
-  useEffect(() => {
-    if (lockRefresh) return;
-    const curLoc = getCenter();
-    if (
-      Math.abs(curLoc[0] - lastRefresh[0]) > 2 ||
-      Math.abs(curLoc[1] - lastRefresh[1]) > 2
-    ) {
-      void handleRefresh();
-      setLastRefresh(curLoc);
-    }
-  }, [currentBounds, lockRefresh]);
-
-  const handleRefresh = useCallback(async () => {
-    if (lockRefresh) return;
-    if (isRefreshing) return;
-
-    if (refreshTimeoutRef.current) {
-      clearTimeout(refreshTimeoutRef.current);
-    }
-    setIsRefreshing(true);
-    refreshTimeoutRef.current = setTimeout(() => {
-      const location: [number, number] = getCenter();
-      const currentIds = Object.keys(submissions).map(Number);
-      fetcher.submit(
-        {
-          newLocation: JSON.stringify(location),
-          element: "refreshMap",
-          currentIds: JSON.stringify(currentIds),
-        },
-        { method: "post" }
-      );
-    }, 150);
-  }, [submissions, isRefreshing, fetcher]);
-
-  useEffect(() => {
-    if (fetcher.data?.success && fetcher.data?.data) {
-      setLockRefresh(!fetcher.data.more);
-      setSubmissions((prev) => {
-        const newSubmissions = { ...prev };
-        fetcher.data?.data?.forEach((upload) => {
-          if (!newSubmissions[upload.id]) {
-            newSubmissions[upload.id] = upload;
-          }
-        });
-        return newSubmissions;
-      });
-    } else if (fetcher.data?.error) {
-      console.error("Failed to refresh:", fetcher.data.error);
-    }
-    setIsRefreshing(false);
-  }, [fetcher.data]);
-
-  useEffect(() => {
-    setVisibleMarkersCount(visibleItems.length);
+  const overlays = useMemo(() => {
+    return renderOverlays(visibleItems);
   }, [visibleItems]);
-
-  useEffect(() => {
-    setIsMounted(true);
-    return () => {
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    setCurrentLocation(
-      allData?.lat && allData?.lon
-        ? [allData.lat, allData.lon]
-        : [40.7128, -74.006]
-    );
-  }, [allData]);
 
   function isWithinBounds(
     lat: number,
@@ -159,110 +67,123 @@ export default function MapComponent() {
     bounds: Bounds | null
   ): boolean {
     if (!bounds) return true;
+
+    const tolerance = 0.5;
     return (
-      lat <= bounds.ne[0] &&
-      lat >= bounds.sw[0] &&
-      lon >= bounds.sw[1] &&
-      lon <= bounds.ne[1]
+      lat <= bounds.ne[0] + tolerance &&
+      lat >= bounds.sw[0] - tolerance &&
+      lon >= bounds.sw[1] - tolerance &&
+      lon <= bounds.ne[1] + tolerance
     );
   }
 
-  const getHsl = (rating: number): string => {
-    if (rating <= 10) return "hsl(0, 74%, 42%)";
-    if (rating <= 20) return "hsl(0, 72%, 51%)";
-    if (rating <= 30) return "hsl(0, 84%, 60%)";
-    if (rating <= 45) return "hsl(24, 95%, 53%)";
-    if (rating <= 60) return "hsl(27, 96%, 61%)";
-    if (rating <= 70) return "hsl(48, 96%, 53%)";
-    if (rating <= 80) return "hsl(84, 81%, 44%)";
-    if (rating <= 85) return "hsl(142, 76%, 36%)";
-    if (rating <= 95) return "hsl(142, 72%, 29%)";
-    return "hsl(153, 73%, 25%)";
-  };
-
-  const getBorderColor = (rating: number): string => {
-    if (rating <= 10) return "border-red-700";
-    if (rating <= 20) return "border-red-600";
-    if (rating <= 30) return "border-red-500";
-    if (rating <= 45) return "border-orange-500";
-    if (rating <= 60) return "border-orange-400";
-    if (rating <= 70) return "border-yellow-500";
-    if (rating <= 80) return "border-lime-500";
-    if (rating <= 85) return "border-green-500";
-    if (rating <= 95) return "border-green-600";
-    return "border-emerald-700";
-  };
-
-  function isWithinBuffer(
-    point1: [number, number],
-    point2: [number, number],
-    buffer: number = 0.05
-  ): boolean {
-    return (
-      Math.abs(point1[0] - point2[0]) <= buffer &&
-      Math.abs(point1[1] - point2[1]) <= buffer
-    );
-  }
-
+  //Submission grouping logic
   interface CoordGroup {
     center: [number, number];
     subs: DbUpload[];
     group: boolean;
   }
 
-  function groupCoordinates(
-    subs: DbUpload[],
-    buffer: number = 0.005
-  ): CoordGroup[] {
+  function isWithinBuffer(
+    point1: [number, number],
+    point2: [number, number]
+  ): boolean {
+    const buffer = getBuffer();
+    return (
+      Math.abs(point1[0] - point2[0]) <= buffer &&
+      Math.abs(point1[1] - point2[1]) <= buffer
+    );
+  }
+
+  function getBuffer() {
+    const maxZoom = 14,
+      minZoom = 11,
+      maxValue = 0.15,
+      minValue = 0.01;
+    const zoomRange = maxZoom - minZoom,
+      valueRange = minValue - maxValue;
+    const zoomFraction = (Math.min(currentZoom, 14) - minZoom) / zoomRange;
+    return maxValue + zoomFraction * valueRange;
+  }
+
+  function groupCoordinates(subs: DbUpload[]): CoordGroup[] {
     const groups: CoordGroup[] = [];
     const used = new Set<number>();
     for (let i = 0; i < subs.length; i++) {
       if (used.has(i)) continue;
-
-      const currentGroup: CoordGroup = {
-        center: [subs[i].lat, subs[i].lon],
-        subs: [],
-        group: false,
-      };
-
-      const currentCoord: [number, number] = [subs[i].lat, subs[i].lon];
-
-      currentGroup.subs.push(subs[i]);
-      used.add(i);
-
-      // Check remaining coordinates
-      for (let j = i + 1; j < subs.length; j++) {
-        if (used.has(j)) continue;
-
-        const checkCoord: [number, number] = [subs[j].lat, subs[j].lon];
-        if (isWithinBuffer(currentCoord, checkCoord, buffer)) {
-          currentGroup.subs.push(subs[j]);
-          currentGroup.group = true;
-          used.add(j);
+      let closestGroup: CoordGroup | null = null;
+      let minDistance = Infinity;
+      for (const group of groups) {
+        if (isWithinBuffer([subs[i].lat, subs[i].lon], group.center)) {
+          const distance = calculateDistance(
+            [subs[i].lat, subs[i].lon],
+            group.center
+          );
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestGroup = group;
+          }
         }
       }
-
-      groups.push(currentGroup);
+      if (closestGroup) {
+        closestGroup.subs.push(subs[i]);
+        closestGroup.group = true;
+        used.add(i);
+        closestGroup.center = [
+          closestGroup.subs.reduce((sum, sub) => sum + sub.lat, 0) /
+            closestGroup.subs.length,
+          closestGroup.subs.reduce((sum, sub) => sum + sub.lon, 0) /
+            closestGroup.subs.length,
+        ];
+      } else {
+        const newGroup: CoordGroup = {
+          center: [subs[i].lat, subs[i].lon],
+          subs: [subs[i]],
+          group: false,
+        };
+        groups.push(newGroup);
+        used.add(i);
+      }
     }
     return groups;
   }
 
-  const overlays = useMemo(() => {
-    return renderOverlays(visibleItems);
-  }, [visibleItems]);
-
-  function renderOverlays(subs: DbUpload[]): ReactElement[] {
-    if (!(subs.length > 0)) return [<></>];
+  // Submission overlays
+  function renderOverlays(subs: DbUpload[]): ReactElement[] | ReactElement {
+    if (!(subs.length > 0)) return <></>;
     const groups = groupCoordinates(subs);
-    if (!groups) return [<></>];
-    console.log(groups.map((g) => (g.group ? "" : [g.center, g.subs])));
+    if (!groups) return <></>;
     return groups.map((g) =>
       g.group ? (
-        <Overlay></Overlay> //todo: render the grouped overlay (some sort of grid/smaller icons/etc etc)
+        <Overlay
+          anchor={g.center}
+          key={Math.random() * g.center[0]}
+          offset={[Math.min(g.subs.length, 3) * 32, 64]}
+        >
+          <div className={`gap-1 grid-cols-3 grid`}>
+            {g.subs.map((sub) => (
+              <button onClick={() => setSelectedSubmission(sub)} key={sub.time}>
+                <img
+                  src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
+                  alt={sub.city}
+                  className={`${
+                    g.subs.length <= 3
+                      ? "max-w-32 max-h-32"
+                      : g.subs.length <= 6
+                      ? "max-w-24 max-h-24"
+                      : "max-w-16 max-h-16"
+                  } aspect-auto rounded-md transition-transform hover:scale-105 ${getBorderColor(
+                    sub.rating
+                  )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
+                />
+              </button>
+            ))}
+          </div>
+        </Overlay>
       ) : (
         <Overlay
           anchor={g.center}
-          key={JSON.stringify(g.center)}
+          key={Math.random() * g.center[0]}
           offset={[64, 64]}
         >
           <button onMouseDown={() => setSelectedSubmission(g.subs[0])}>
@@ -287,43 +208,28 @@ export default function MapComponent() {
       <div className={"w-screen text-center font-bold"}>
         user submission map
       </div>
-      <div
-        className={`w-full flex justify-center text-white/50 translate-y-3 ${
-          isRefreshing ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <div
-          className={`ml-2 h-4 w-4 rounded-full border-2 border-white/50 border-t-transparent animate-spin z-50 mt-1 mr-3 `}
-          role="status"
-          aria-label="Loading location data"
-        ></div>
-        <div>Loading</div>
-      </div>
       <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
         <div
-          className={`${
-            selectedSubmission ? "md:w-1/2" : "md:w-3/4"
-          } w-full h-[600px] md:h-[800px] rounded-lg overflow-hidden shadow-lg mx-auto transition-all duration-200`}
+          className={`transition-all duration-300 ease-in-out w-full md:w-3/4 transform ${
+            selectedSubmission ? "md:!w-1/2" : ""
+          } h-[600px] md:h-[800px] rounded-lg overflow-hidden shadow-lg mx-auto`}
           role="region"
           aria-label="Interactive location map"
         >
           {isMounted && (
             <Map
-              center={currentLocation}
+              center={currentCenter}
               zoom={currentZoom}
               attribution={false}
               animate={true}
               minZoom={2}
-              maxZoom={14}
+              maxZoom={16}
               onBoundsChanged={({ zoom, bounds, center }) => {
                 if (zoom !== currentZoom) {
                   setCurrentZoom(zoom);
                 }
-                if (
-                  center[0] !== currentLocation[0] ||
-                  center[1] !== currentLocation[1]
-                ) {
-                  setCurrentLocation(center);
+                setCurrentCenter(center);
+                if (center !== currentCenter || zoom !== currentZoom) {
                 }
                 if (bounds !== currentBounds) {
                   setCurrentBounds(bounds);
@@ -332,7 +238,7 @@ export default function MapComponent() {
             >
               <ZoomControl />
 
-              {currentZoom > 10 || visibleMarkersCount === 1
+              {currentZoom > 9 || visibleItems.length === 1
                 ? overlays
                 : visibleItems.map((sub: any) => (
                     <Marker
@@ -341,7 +247,7 @@ export default function MapComponent() {
                       key={sub.time}
                       hover={false}
                       onClick={() => {
-                        setCurrentLocation([sub.lat, sub.lon]);
+                        setCurrentCenter([sub.lat, sub.lon]);
                         setSelectedSubmission(sub);
                         const startZoom = currentZoom;
                         const targetZoom = 12;
@@ -384,6 +290,14 @@ export default function MapComponent() {
                     {getDateString(selectedSubmission.time)}
                   </h2>
                 </div>
+                <button
+                  className={
+                    "absolute top-2 left-2 h-8 w-8 bg-red-600 rounded-full hover:bg-red-700 duration-200 text-center"
+                  }
+                  onMouseDown={() => setSelectedSubmission(null)}
+                >
+                  X
+                </button>
               </div>
             </div>
 
@@ -468,4 +382,39 @@ function getDateString(eventTime: number): string {
     }
   }
   return "just now";
+}
+
+function calculateDistance(
+  coord1: [number, number],
+  coord2: [number, number]
+): number {
+  const [lat1, lon1] = coord1;
+  const [lat2, lon2] = coord2;
+  return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lon2 - lon1, 2));
+}
+
+function getHsl(rating: number): string {
+  if (rating <= 10) return "hsl(0, 74%, 42%)";
+  if (rating <= 20) return "hsl(0, 72%, 51%)";
+  if (rating <= 30) return "hsl(0, 84%, 60%)";
+  if (rating <= 45) return "hsl(24, 95%, 53%)";
+  if (rating <= 60) return "hsl(27, 96%, 61%)";
+  if (rating <= 70) return "hsl(48, 96%, 53%)";
+  if (rating <= 80) return "hsl(84, 81%, 44%)";
+  if (rating <= 85) return "hsl(142, 76%, 36%)";
+  if (rating <= 95) return "hsl(142, 72%, 29%)";
+  return "hsl(153, 73%, 25%)";
+}
+
+function getBorderColor(rating: number): string {
+  if (rating <= 10) return "border-red-700";
+  if (rating <= 20) return "border-red-600";
+  if (rating <= 30) return "border-red-500";
+  if (rating <= 45) return "border-orange-500";
+  if (rating <= 60) return "border-orange-400";
+  if (rating <= 70) return "border-yellow-500";
+  if (rating <= 80) return "border-lime-500";
+  if (rating <= 85) return "border-green-500";
+  if (rating <= 95) return "border-green-600";
+  return "border-emerald-700";
 }
