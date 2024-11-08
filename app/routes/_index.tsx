@@ -186,7 +186,6 @@ export const action: ActionFunction = async ({ request, context }) => {
               { status: 500 }
             );
           }
-
           try {
             await createUpload(context, {
               lat: Number(lat),
