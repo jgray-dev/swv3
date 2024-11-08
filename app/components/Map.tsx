@@ -1,6 +1,6 @@
 import { useFetcher, useRouteLoaderData } from "@remix-run/react";
 import { Map, Marker, Overlay, ZoomControl } from "pigeon-maps";
-import { AveragedValues, dbUpload, LoaderData } from "~/.server/interfaces";
+import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
 import React, {
   useEffect,
   useState,
@@ -14,7 +14,7 @@ interface FetcherData {
   success: boolean;
   error?: string;
   message?: string;
-  data?: dbUpload[] | null;
+  data?: DbUpload[] | null;
   more?: boolean;
 }
 
@@ -24,7 +24,7 @@ interface Bounds {
 }
 
 interface PostMap {
-  [id: number]: dbUpload;
+  [id: number]: DbUpload;
 }
 
 export default function MapComponent() {
@@ -37,7 +37,7 @@ export default function MapComponent() {
   const refreshTimeoutRef = useRef<NodeJS.Timeout>();
   const [currentZoom, setCurrentZoom] = useState<number>(9);
   const [currentBounds, setCurrentBounds] = useState<Bounds | null>(null);
-  const [selectedSubmission, setSelectedSubmission] = useState<dbUpload | null>(
+  const [selectedSubmission, setSelectedSubmission] = useState<DbUpload | null>(
     null
   );
   const [isMounted, setIsMounted] = useState(false);
@@ -226,7 +226,6 @@ export default function MapComponent() {
               zoom={currentZoom}
               attribution={false}
               animate={true}
-              metaWheelZoom={true}
               minZoom={2}
               maxZoom={18}
               onBoundsChanged={({ zoom, bounds, center }) => {
@@ -245,7 +244,7 @@ export default function MapComponent() {
               }}
             >
               <ZoomControl />
-              {currentZoom > 9 || visibleMarkersCount === 1
+              {currentZoom > 11 || visibleMarkersCount === 1
                 ? visibleItems.map((sub) => (
                     <Overlay
                       anchor={[sub.lat, sub.lon]}
