@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/d1";
 import { uploads } from "~/db/schema";
 import { count, sql } from "drizzle-orm";
-import { dbUpload } from "~/.server/interfaces";
+import { DbUpload } from "~/.server/interfaces";
 import { notInArray } from "drizzle-orm/sql/expressions/conditions";
 
 // Database interaction function
@@ -56,7 +56,7 @@ export async function getSubmissions(
     lon?: number;
     currentIds?: number[];
   } = {}
-): Promise<{ more: boolean; data: dbUpload[] | null }> {
+): Promise<{ more: boolean; data: DbUpload[] | null }> {
   try {
     const db = drizzle(context.cloudflare.env.swv3_d1);
     const query = db
