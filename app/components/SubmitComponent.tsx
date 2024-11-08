@@ -36,17 +36,18 @@ export default function SubmitComponent() {
   if (!allData?.ok) return null;
 
   return (
-    <div className="md:max-w-lg max-w-full md:mx-auto mx-4 mt-4 mb-8">
+    <div className="md:max-w-lg max-w-full md:mx-auto mx-4 mt-4 mb-8 text-center">
+      Submit your own picture!
       <Form
         ref={formRef}
         method="post"
         encType="multipart/form-data"
-        className="p-6 space-y-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20"
+        className="p-6 space-y-4 rounded-lg bg-white/10 border border-white/20"
       >
         <div className="space-y-2">
           <label
             htmlFor="image"
-            className="block text-sm font-medium text-slate-100"
+            className="block text-sm font-light text-slate-100 text-left"
           >
             Select Image
           </label>
