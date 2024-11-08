@@ -193,174 +193,182 @@ export default function MapComponent() {
   };
 
   return (
-    <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
+    <>
       <div
         className={`${allData?.ok ? "hidden" : "visible min-h-[10vh]"}`}
       ></div>
-      <div className={"w-screen text-center font-bold translate-y-3"}>
+      <div className={"w-screen text-center font-bold"}>
         user submission map
       </div>
-      <div
-        className={`ml-2 h-4 w-4 rounded-full border-2 border-slate-100 border-t-transparent animate-spin ${
-          isRefreshing ? "opacity-100" : "opacity-0"
-        }`}
-        role="status"
-        aria-label="Loading location data"
-      ></div>
-      <div
-        className={`${
-          selectedSubmission ? "md:w-1/2" : "md:w-3/4"
-        } w-full h-[600px] md:h-[800px] rounded-lg overflow-hidden shadow-lg mx-auto transition-all duration-200`}
-        role="region"
-        aria-label="Interactive location map"
-      >
-        {isMounted && (
-          <Map
-            center={currentLocation}
-            zoom={currentZoom}
-            attribution={false}
-            animate={false}
-            twoFingerDrag={true}
-            metaWheelZoom={true}
-            minZoom={2}
-            maxZoom={18}
-            onBoundsChanged={({ zoom, bounds, center }) => {
-              // Only update if values actually changed
-              if (zoom !== currentZoom) {
-                setCurrentZoom(zoom);
-              }
-              if (center[0] !== currentLocation[0] || center[1] !== currentLocation[1]) {
-                setCurrentLocation(center);
-              }
-              setCurrentBounds(bounds);
-            }}
-          >
-            <ZoomControl />
-            {currentZoom > 9 || visibleMarkersCount === 1
-              ? visibleItems.map((sub) => (
-                  <Overlay
-                    anchor={[sub.lat, sub.lon]}
-                    key={sub.time}
-                    offset={[64, 64]}
-                  >
-                    <button onClick={() => setSelectedSubmission(sub)}>
-                      <img
-                        src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
-                        alt={sub.city}
-                        className={`max-w-48 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(
-                          sub.rating
-                        )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
-                      />
-                    </button>
-                  </Overlay>
-                ))
-              : visibleItems.map((sub) => (
-                  <Marker
-                    color={getHsl(sub.rating)}
-                    anchor={[sub.lat, sub.lon]}
-                    key={sub.time}
-                    hover={false}
-                    onClick={() => {
-                      setCurrentLocation([sub.lat, sub.lon]);
-                      setSelectedSubmission(sub);
+      <div className={`w-full flex justify-center text-white/50 translate-y-3 ${
+        (isRefreshing) ? "opacity-100" : "opacity-0"
+      }`}>
+        <div
+          className={`ml-2 h-4 w-4 rounded-full border-2 border-white/50 border-t-transparent animate-spin z-50 mt-1 mr-3 `}
+          role="status"
+          aria-label="Loading location data"
+        ></div>
+        <div>Loading</div>
+      </div>
+      <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
+        <div
+          className={`${
+            selectedSubmission ? "md:w-1/2" : "md:w-3/4"
+          } w-full h-[600px] md:h-[800px] rounded-lg overflow-hidden shadow-lg mx-auto transition-all duration-200`}
+          role="region"
+          aria-label="Interactive location map"
+        >
+          {isMounted && (
+            <Map
+              center={currentLocation}
+              zoom={currentZoom}
+              attribution={false}
+              animate={true}
+              metaWheelZoom={true}
+              minZoom={2}
+              maxZoom={18}
+              onBoundsChanged={({ zoom, bounds, center }) => {
+                if (zoom !== currentZoom) {
+                  setCurrentZoom(zoom);
+                }
+                if (
+                  center[0] !== currentLocation[0] ||
+                  center[1] !== currentLocation[1]
+                ) {
+                  setCurrentLocation(center);
+                }
+                if (bounds !== currentBounds) {
+                  setCurrentBounds(bounds);
+                }
+              }}
+            >
+              <ZoomControl />
+              {currentZoom > 9 || visibleMarkersCount === 1
+                ? visibleItems.map((sub) => (
+                    <Overlay
+                      anchor={[sub.lat, sub.lon]}
+                      key={sub.time}
+                      offset={[64, 64]}
+                    >
+                      <button onClick={() => setSelectedSubmission(sub)}>
+                        <img
+                          src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
+                          alt={sub.city}
+                          className={`max-w-48 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(
+                            sub.rating
+                          )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
+                        />
+                      </button>
+                    </Overlay>
+                  ))
+                : visibleItems.map((sub) => (
+                    <Marker
+                      color={getHsl(sub.rating)}
+                      anchor={[sub.lat, sub.lon]}
+                      key={sub.time}
+                      hover={false}
+                      onClick={() => {
+                        setCurrentLocation([sub.lat, sub.lon]);
+                        setSelectedSubmission(sub);
 
-                      const startZoom = currentZoom;
-                      const targetZoom = 13;
-                      const duration = 2000;
-                      const startTime = performance.now();
+                        const startZoom = currentZoom;
+                        const targetZoom = 13;
+                        const duration = 2000;
+                        const startTime = performance.now();
 
-                      const animateZoom = (currentTime: number) => {
-                        const elapsed = currentTime - startTime;
-                        const progress = Math.min(elapsed / duration, 1);
-                        const eased = progress * (2 - progress);
-                        const newZoom =
-                          startZoom + (targetZoom - startZoom) * eased;
-                        setCurrentZoom(newZoom);
-                        if (progress < 1) {
-                          requestAnimationFrame(animateZoom);
-                        }
-                      };
-                      requestAnimationFrame(animateZoom);
-                    }}
+                        const animateZoom = (currentTime: number) => {
+                          const elapsed = currentTime - startTime;
+                          const progress = Math.min(elapsed / duration, 1);
+                          const eased = progress * (2 - progress);
+                          const newZoom =
+                            startZoom + (targetZoom - startZoom) * eased;
+                          setCurrentZoom(newZoom);
+                          if (progress < 1) {
+                            requestAnimationFrame(animateZoom);
+                          }
+                        };
+                        requestAnimationFrame(animateZoom);
+                      }}
+                    />
+                  ))}
+            </Map>
+          )}
+        </div>
+
+        {selectedSubmission && (
+          <div className="md:w-1/2 w-full flex flex-col gap-4 animate-fade-in md:max-h-[800px] transition-opacity duration-200">
+            <div className="md:max-h-[400px] w-full">
+              <div className="relative w-full h-full rounded-lg overflow-hidden">
+                <img
+                  src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${selectedSubmission.image_id}/public`}
+                  alt={selectedSubmission.city}
+                  className="object-cover w-full max-h-full"
+                />
+                <div className="absolute bottom-0 left-0 right-0 max-h-fit bg-black/50 backdrop-blur-sm px-4 py-3 w-full flex justify-between">
+                  <h2 className="text-slate-100 text-md font-bold">
+                    {selectedSubmission.city}
+                  </h2>
+                  <h2 className="text-slate-100 text-sm pt-0.5">
+                    {getDateString(selectedSubmission.time)}
+                  </h2>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 bg-white/10 border border-white/20 rounded-lg p-6 overflow-y-auto">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-100">Rating</span>
+                  <span className="text-slate-100 font-semibold">
+                    {selectedSubmission.rating}/100
+                  </span>
+                </div>
+                <div className="space-y-0.5">
+                  <StatItem
+                    label="High Clouds"
+                    value={
+                      (JSON.parse(selectedSubmission.data) as AveragedValues)
+                        .high_clouds
+                    }
                   />
-                ))}
-          </Map>
+                  <StatItem
+                    label="Mid Clouds"
+                    value={
+                      (JSON.parse(selectedSubmission.data) as AveragedValues)
+                        .mid_clouds
+                    }
+                  />
+                  <StatItem
+                    label="Low Clouds"
+                    value={
+                      (JSON.parse(selectedSubmission.data) as AveragedValues)
+                        .low_clouds
+                    }
+                  />
+                  <StatItem
+                    label="Visibility"
+                    value={
+                      (JSON.parse(selectedSubmission.data) as AveragedValues)
+                        .visibility
+                    }
+                    isVisibility={true}
+                  />
+                  <StatItem
+                    label="Temperature"
+                    value={
+                      (JSON.parse(selectedSubmission.data) as AveragedValues)
+                        .temperature
+                    }
+                    maxValue={122}
+                    unit="°F"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
-
-      {selectedSubmission && (
-        <div className="md:w-1/2 w-full flex flex-col gap-4 animate-fade-in md:max-h-[800px] transition-opacity duration-200">
-          <div className="md:max-h-[400px] w-full">
-            <div className="relative w-full h-full rounded-lg overflow-hidden">
-              <img
-                src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${selectedSubmission.image_id}/public`}
-                alt={selectedSubmission.city}
-                className="object-cover w-full max-h-full"
-              />
-              <div className="absolute bottom-0 left-0 right-0 max-h-fit bg-black/50 backdrop-blur-sm px-4 py-3 w-full flex justify-between">
-                <h2 className="text-slate-100 text-md font-bold">
-                  {selectedSubmission.city}
-                </h2>
-                <h2 className="text-slate-100 text-sm pt-0.5">
-                  {getDateString(selectedSubmission.time)}
-                </h2>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 bg-white/10 border border-white/20 rounded-lg p-6 overflow-y-auto">
-            <div className="flex flex-col space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-100">Rating</span>
-                <span className="text-slate-100 font-semibold">
-                  {selectedSubmission.rating}/100
-                </span>
-              </div>
-              <div className="space-y-0.5">
-                <StatItem
-                  label="High Clouds"
-                  value={
-                    (JSON.parse(selectedSubmission.data) as AveragedValues)
-                      .high_clouds
-                  }
-                />
-                <StatItem
-                  label="Mid Clouds"
-                  value={
-                    (JSON.parse(selectedSubmission.data) as AveragedValues)
-                      .mid_clouds
-                  }
-                />
-                <StatItem
-                  label="Low Clouds"
-                  value={
-                    (JSON.parse(selectedSubmission.data) as AveragedValues)
-                      .low_clouds
-                  }
-                />
-                <StatItem
-                  label="Visibility"
-                  value={
-                    (JSON.parse(selectedSubmission.data) as AveragedValues)
-                      .visibility
-                  }
-                  isVisibility={true}
-                />
-                <StatItem
-                  label="Temperature"
-                  value={
-                    (JSON.parse(selectedSubmission.data) as AveragedValues)
-                      .temperature
-                  }
-                  maxValue={122}
-                  unit="°F"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
