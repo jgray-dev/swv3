@@ -91,7 +91,7 @@ export async function getSubmissions(
 
     const [totalCount, data] = await Promise.all([
       db.select({ count: count() }).from(uploads),
-      query.limit(2),
+      query.limit(15),
     ]);
     
     const more = totalCount[0].count > (currentIds ? currentIds.length : 0);
