@@ -255,29 +255,28 @@ export default function MapComponent() {
     if (!(subs.length > 0)) return [<></>];
     const groups = groupCoordinates(subs);
     if (!groups) return [<></>];
-    console.log(groups.map((g)=>(g.group?"":[g.center, g.subs])))
-    return groups.map((g) => (
-        g.group ? (
-          <Overlay></Overlay> //todo: render the grouped overlay (some sort of grid/smaller icons/etc etc)
-        ) : (
-
-          <Overlay
-            anchor={g.center}
-            key={JSON.stringify(g.center)}
-            offset={[64, 64]}
-          >
-            <button onMouseDown={() => setSelectedSubmission(g.subs[0])}>
-              <img
-                src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${g.subs[0].image_id}/thumbnail`}
-                alt={g.subs[0].city}
-                className={`max-w-32 max-h-32 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(
-                  g.subs[0].rating
-                )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
-              />
-            </button>
-          </Overlay>
-        )
-      ))
+    console.log(groups.map((g) => (g.group ? "" : [g.center, g.subs])));
+    return groups.map((g) =>
+      g.group ? (
+        <Overlay></Overlay> //todo: render the grouped overlay (some sort of grid/smaller icons/etc etc)
+      ) : (
+        <Overlay
+          anchor={g.center}
+          key={JSON.stringify(g.center)}
+          offset={[64, 64]}
+        >
+          <button onMouseDown={() => setSelectedSubmission(g.subs[0])}>
+            <img
+              src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${g.subs[0].image_id}/thumbnail`}
+              alt={g.subs[0].city}
+              className={`max-w-32 max-h-32 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(
+                g.subs[0].rating
+              )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
+            />
+          </button>
+        </Overlay>
+      )
+    );
   }
 
   return (
