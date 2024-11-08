@@ -1,15 +1,21 @@
-import {Form, useActionData, useFetcher, useRouteLoaderData} from "@remix-run/react";
+import { useFetcher, useRouteLoaderData } from "@remix-run/react";
 import { Map, Marker, Overlay, ZoomControl } from "pigeon-maps";
 import { AveragedValues, dbUpload, LoaderData } from "~/.server/interfaces";
-import { useEffect, useState, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import StatItem from "~/components/StatItem";
 
-
-interface ActionData {
+interface FetcherData {
   success: boolean;
   error?: string;
   message?: string;
-  data?: any;
+  data?: dbUpload[] | null;
+  more?: boolean;
 }
 
 interface Bounds {
@@ -17,17 +23,29 @@ interface Bounds {
   sw: [number, number];
 }
 
+interface PostMap {
+  [id: number]: dbUpload;
+}
+
 export default function MapComponent() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
-  const actionData = useActionData<ActionData>();
-  const fetcher = useFetcher();
-  
+  const fetcher = useFetcher<FetcherData>();
+
+  const [submissions, setSubmissions] = useState<PostMap>({});
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lockRefresh, setLockRefresh] = useState(false);
+  const refreshTimeoutRef = useRef<NodeJS.Timeout>();
   const [currentZoom, setCurrentZoom] = useState<number>(9);
   const [currentBounds, setCurrentBounds] = useState<Bounds | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<dbUpload | null>(
     null
   );
   const [isMounted, setIsMounted] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<number[]>(
+    allData?.lat && allData?.lon
+      ? [allData.lat, allData.lon]
+      : [40.7128, -74.006]
+  );
   const [currentLocation, setCurrentLocation] = useState<number[]>(
     allData?.lat && allData?.lon
       ? [allData.lat, allData.lon]
@@ -35,12 +53,90 @@ export default function MapComponent() {
   );
   const [visibleMarkersCount, setVisibleMarkersCount] = useState<number>(0);
 
+  useEffect(() => {
+    if (allData?.uploads && Object.keys(submissions).length === 0) {
+      const newSubmissions = allData.uploads.reduce((acc, upload) => {
+        acc[upload.id] = upload;
+        return acc;
+      }, {} as PostMap);
+      setSubmissions(newSubmissions);
+    }
+  }, [allData?.uploads, submissions]);
+
   const visibleItems = useMemo(() => {
-    if (!allData?.uploads) return [];
-    return allData.uploads.filter((sub) =>
+    return Object.values(submissions).filter((sub) =>
       isWithinBounds(sub.lat, sub.lon, currentBounds)
     );
-  }, [allData?.uploads, currentBounds]);
+  }, [submissions, currentBounds]);
+
+  function getCenter(): [number, number] {
+    if (!currentBounds) {
+      return [40.7128, -74.006];
+    }
+    return [
+      (currentBounds.ne[0] + currentBounds.sw[0]) / 2,
+      (currentBounds.ne[1] + currentBounds.sw[1]) / 2,
+    ];
+  }
+
+  useEffect(() => {
+    if (lockRefresh) {
+      console.log("Refresh skipped: Lock is active");
+      return;
+    }
+    const curLoc = getCenter();
+    if (
+      Math.abs(curLoc[0] - lastRefresh[0]) > 2 ||
+      Math.abs(curLoc[1] - lastRefresh[1]) > 2
+    ) {
+      void handleRefresh();
+      setLastRefresh(curLoc);
+    }
+  }, [currentBounds, lockRefresh]);
+
+  const handleRefresh = useCallback(async () => {
+    if (lockRefresh) return;
+    console.log("refreshing");
+    if (isRefreshing) return;
+
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    setIsRefreshing(true);
+    refreshTimeoutRef.current = setTimeout(() => {
+      const location: [number, number] = getCenter();
+      const currentIds = Object.keys(submissions).map(Number);
+      fetcher.submit(
+        {
+          newLocation: JSON.stringify(location),
+          element: "refreshMap",
+          currentIds: JSON.stringify(currentIds),
+        },
+        { method: "post" }
+      );
+    }, 150);
+  }, [submissions, isRefreshing, fetcher]);
+
+  useEffect(() => {
+    if (fetcher.data?.success && fetcher.data?.data) {
+      setLockRefresh(!fetcher.data.more);
+      if (!fetcher.data.more) {
+        console.log("Refresh locked: No more data available");
+      }
+      setSubmissions((prev) => {
+        const newSubmissions = { ...prev };
+        fetcher.data?.data?.forEach((upload) => {
+          if (!newSubmissions[upload.id]) {
+            newSubmissions[upload.id] = upload;
+          }
+        });
+        return newSubmissions;
+      });
+    } else if (fetcher.data?.error) {
+      console.error("Failed to refresh:", fetcher.data.error);
+    }
+    setIsRefreshing(false);
+  }, [fetcher.data]);
 
   useEffect(() => {
     setVisibleMarkersCount(visibleItems.length);
@@ -48,6 +144,11 @@ export default function MapComponent() {
 
   useEffect(() => {
     setIsMounted(true);
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -63,6 +164,20 @@ export default function MapComponent() {
         : [40.7128, -74.006]
     );
   }, [allData]);
+
+  function isWithinBounds(
+    lat: number,
+    lon: number,
+    bounds: Bounds | null
+  ): boolean {
+    if (!bounds) return true;
+    return (
+      lat <= bounds.ne[0] + 1 &&
+      lat >= bounds.sw[0] - 1 &&
+      lon >= bounds.sw[1] - 1 &&
+      lon <= bounds.ne[1] + 1
+    );
+  }
 
   const getHsl = (rating: number): string => {
     if (rating <= 10) return "hsl(0, 74%, 42%)";
@@ -90,49 +205,21 @@ export default function MapComponent() {
     return "hover:border-emerald-700";
   };
 
-  function isWithinBounds(
-    lat: number,
-    lon: number,
-    bounds: Bounds | null
-  ): boolean {
-    if (!bounds) return true;
-    return (
-      lat <= bounds.ne[0] + 1 &&
-      lat >= bounds.sw[0] - 1 &&
-      lon >= bounds.sw[1] - 1 &&
-      lon <= bounds.ne[1] + 1
-    );
-  }
-
-  function getCenter(): [number, number] {
-    if (!currentBounds) {
-      return [40.7128, -74.006];
-    }
-
-    const centerLat = (currentBounds.ne[0] + currentBounds.sw[0]) / 2;
-    const centerLng = (currentBounds.ne[1] + currentBounds.sw[1]) / 2;
-
-    return [centerLat, centerLng];
-  }
-
-  async function handleRefresh() {
-    const location: [number, number] = getCenter()
-    fetcher.submit(
-      { newLocation: JSON.stringify(location), element: "refreshMap" },
-      { method: "post" }
-    );
-    console.log("Fetcher data:");
-    console.log(fetcher.data);
-  }
-  
   return (
     <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
       <div
-        className={`${allData?.ok ? "hidden" : "visible min-h-[10vh]"} asd`}
+        className={`${allData?.ok ? "hidden" : "visible min-h-[10vh]"}`}
       ></div>
       <div className={"w-screen text-center font-bold translate-y-3"}>
         user submission map
       </div>
+      <div
+        className={`ml-2 h-4 w-4 rounded-full border-2 border-slate-100 border-t-transparent animate-spin ${
+          isRefreshing ? "opacity-100" : "opacity-0"
+        }`}
+        role="status"
+        aria-label="Loading location data"
+      ></div>
       <div
         className={`${
           selectedSubmission ? "md:w-1/2" : "md:w-3/4"
@@ -140,19 +227,12 @@ export default function MapComponent() {
         role="region"
         aria-label="Interactive location map"
       >
-        <Form onSubmit={(e)=> {
-          e.preventDefault()
-          void handleRefresh()
-        }}>
-          <button type={"submit"} className={"rounded-full py-2 px-4 bg-blue-500 hover:bg-blue-400/80 mx-auto duration-200 text-slate-200 hover:text-white"}>Refresh</button>
-        </Form>
-        {actionData?.success && (<div>action data</div>)}
         {isMounted && (
           <Map
-            // @ts-ignore
+            //@ts-ignore
             center={currentLocation}
             animate={true}
-            // @ts-ignore
+            //@ts-ignore
             defaultCenter={currentLocation}
             defaultZoom={9}
             onBoundsChanged={({ zoom, bounds }) => {
@@ -161,7 +241,7 @@ export default function MapComponent() {
             }}
           >
             <ZoomControl />
-            {currentZoom > 9 || visibleMarkersCount == 1
+            {currentZoom > 9 || visibleMarkersCount === 1
               ? visibleItems.map((sub) => (
                   <Overlay
                     anchor={[sub.lat, sub.lon]}
@@ -179,20 +259,15 @@ export default function MapComponent() {
                     </button>
                   </Overlay>
                 ))
-              : allData?.uploads &&
-                allData.uploads
-                  .filter((sub) =>
-                    isWithinBounds(sub.lat, sub.lon, currentBounds)
-                  )
-                  .map((sub) => (
-                    <Marker
-                      color={getHsl(sub.rating)}
-                      anchor={[sub.lat, sub.lon]}
-                      key={sub.time}
-                      hover={false}
-                      onClick={() => setSelectedSubmission(sub)}
-                    />
-                  ))}
+              : visibleItems.map((sub) => (
+                  <Marker
+                    color={getHsl(sub.rating)}
+                    anchor={[sub.lat, sub.lon]}
+                    key={sub.time}
+                    hover={false}
+                    onClick={() => setSelectedSubmission(sub)}
+                  />
+                ))}
           </Map>
         )}
       </div>
