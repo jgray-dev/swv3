@@ -11,4 +11,5 @@ interface Env {
 	CF_TOKEN: string;
 	swv3: R2Bucket;
 	swv3_d1: D1Database;
+	AI: Ai;
 }
