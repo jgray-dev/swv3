@@ -217,14 +217,21 @@ export default function MapComponent() {
         {isMounted && (
           <Map
             center={currentLocation}
-            animate={true}
             zoom={currentZoom}
             attribution={false}
-            metaWheelZoom={true}
+            animate={false}
             twoFingerDrag={true}
+            metaWheelZoom={true}
+            minZoom={2}
+            maxZoom={18}
             onBoundsChanged={({ zoom, bounds, center }) => {
-              setCurrentLocation(center);
-              setCurrentZoom(zoom);
+              // Only update if values actually changed
+              if (zoom !== currentZoom) {
+                setCurrentZoom(zoom);
+              }
+              if (center[0] !== currentLocation[0] || center[1] !== currentLocation[1]) {
+                setCurrentLocation(center);
+              }
               setCurrentBounds(bounds);
             }}
           >
