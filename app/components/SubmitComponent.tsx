@@ -36,7 +36,7 @@ export default function SubmitComponent() {
   if (!allData?.ok) return null;
 
   return (
-    <div className="md:max-w-lg max-w-full md:mx-auto mx-4 mt-4">
+    <div className="md:max-w-lg max-w-full md:mx-auto mx-4 mt-4 mb-8">
       <Form
         ref={formRef}
         method="post"
