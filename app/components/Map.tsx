@@ -80,7 +80,7 @@ export default function MapComponent() {
   }
 
   useEffect(() => {
-    if (lockRefresh) return
+    if (lockRefresh) return;
     const curLoc = getCenter();
     if (
       Math.abs(curLoc[0] - lastRefresh[0]) > 2 ||
@@ -227,7 +227,7 @@ export default function MapComponent() {
             metaWheelZoom={true}
             twoFingerDrag={true}
             onBoundsChanged={({ zoom, bounds, center }) => {
-              setCurrentLocation(center)
+              setCurrentLocation(center);
               setCurrentZoom(zoom);
               setCurrentBounds(bounds);
             }}
@@ -258,25 +258,26 @@ export default function MapComponent() {
                     key={sub.time}
                     hover={false}
                     onClick={() => {
-                      setCurrentLocation([sub.lat, sub.lon])
-                      setSelectedSubmission(sub)
+                      setCurrentLocation([sub.lat, sub.lon]);
+                      setSelectedSubmission(sub);
 
-                      const startZoom = currentZoom
-                      const targetZoom = 13
-                      const duration = 400
-                      const startTime = performance.now()
+                      const startZoom = currentZoom;
+                      const targetZoom = 13;
+                      const duration = 400;
+                      const startTime = performance.now();
 
                       const animateZoom = (currentTime: number) => {
-                        const elapsed = currentTime - startTime
-                        const progress = Math.min(elapsed / duration, 1)
-                        const eased = progress * (2 - progress)
-                        const newZoom = startZoom + (targetZoom - startZoom) * eased
-                        setCurrentZoom(newZoom)
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        const eased = progress * (2 - progress);
+                        const newZoom =
+                          startZoom + (targetZoom - startZoom) * eased;
+                        setCurrentZoom(newZoom);
                         if (progress < 1) {
-                          requestAnimationFrame(animateZoom)
+                          requestAnimationFrame(animateZoom);
                         }
-                      }
-                      requestAnimationFrame(animateZoom)
+                      };
+                      requestAnimationFrame(animateZoom);
                     }}
                   />
                 ))}
