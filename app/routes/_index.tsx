@@ -422,7 +422,7 @@ export default function Sunwatch() {
         <Link
           to={"/"}
           className={"text-white/50 text-xs cursor-pointer"}
-          onClick={() => {
+          onMouseDown={() => {
             const colors = getBackgroundColors(null);
             const root = document.documentElement;
 
