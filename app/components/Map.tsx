@@ -200,9 +200,11 @@ export default function MapComponent() {
       <div className={"w-screen text-center font-bold"}>
         user submission map
       </div>
-      <div className={`w-full flex justify-center text-white/50 translate-y-3 ${
-        (isRefreshing) ? "opacity-100" : "opacity-0"
-      }`}>
+      <div
+        className={`w-full flex justify-center text-white/50 translate-y-3 ${
+          isRefreshing ? "opacity-100" : "opacity-0"
+        }`}
+      >
         <div
           className={`ml-2 h-4 w-4 rounded-full border-2 border-white/50 border-t-transparent animate-spin z-50 mt-1 mr-3 `}
           role="status"
@@ -250,7 +252,7 @@ export default function MapComponent() {
                       key={sub.time}
                       offset={[64, 64]}
                     >
-                      <button onClick={() => setSelectedSubmission(sub)}>
+                      <button onMouseDown={() => setSelectedSubmission(sub)}>
                         <img
                           src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
                           alt={sub.city}
