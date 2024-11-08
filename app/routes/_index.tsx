@@ -305,15 +305,18 @@ export const action: ActionFunction = async ({ request, context }) => {
     case "refreshMap": {
       const newCenterString = formData.get("newLocation");
       const currentIdsString = formData.get("currentIds");
-      if (!newCenterString) return json({ error: "Invalid location" }, { status: 501 });
+      if (!newCenterString)
+        return json({ error: "Invalid location" }, { status: 501 });
       const newCenter = JSON.parse(newCenterString as string);
-      const currentIds = currentIdsString ? JSON.parse(currentIdsString as string) : undefined;
+      const currentIds = currentIdsString
+        ? JSON.parse(currentIdsString as string)
+        : undefined;
       const newUploads = await getSubmissions(context, {
         lat: newCenter[0],
         lon: newCenter[1],
-        currentIds: currentIds
+        currentIds: currentIds,
       });
-      return {success: true, data: newUploads.data}
+      return { success: true, data: newUploads.data };
     }
     default:
       return json({ error: "Unknown element type" }, { status: 400 });
