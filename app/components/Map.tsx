@@ -80,10 +80,7 @@ export default function MapComponent() {
   }
 
   useEffect(() => {
-    if (lockRefresh) {
-      console.log("Refresh skipped: Lock is active");
-      return;
-    }
+    if (lockRefresh) return
     const curLoc = getCenter();
     if (
       Math.abs(curLoc[0] - lastRefresh[0]) > 2 ||
@@ -96,7 +93,6 @@ export default function MapComponent() {
 
   const handleRefresh = useCallback(async () => {
     if (lockRefresh) return;
-    console.log("refreshing");
     if (isRefreshing) return;
 
     if (refreshTimeoutRef.current) {
@@ -120,9 +116,6 @@ export default function MapComponent() {
   useEffect(() => {
     if (fetcher.data?.success && fetcher.data?.data) {
       setLockRefresh(!fetcher.data.more);
-      if (!fetcher.data.more) {
-        console.log("Refresh locked: No more data available");
-      }
       setSubmissions((prev) => {
         const newSubmissions = { ...prev };
         fetcher.data?.data?.forEach((upload) => {
@@ -150,12 +143,6 @@ export default function MapComponent() {
       }
     };
   }, []);
-
-  useEffect(() => {
-    if (selectedSubmission) {
-      console.log(selectedSubmission);
-    }
-  }, [selectedSubmission]);
 
   useEffect(() => {
     setCurrentLocation(
@@ -193,16 +180,16 @@ export default function MapComponent() {
   };
 
   const getBorderColor = (rating: number): string => {
-    if (rating <= 10) return "hover:border-red-700";
-    if (rating <= 20) return "hover:border-red-600";
-    if (rating <= 30) return "hover:border-red-500";
-    if (rating <= 45) return "hover:border-orange-500";
-    if (rating <= 60) return "hover:border-orange-400";
-    if (rating <= 70) return "hover:border-yellow-500";
-    if (rating <= 80) return "hover:border-lime-500";
-    if (rating <= 85) return "hover:border-green-500";
-    if (rating <= 95) return "hover:border-green-600";
-    return "hover:border-emerald-700";
+    if (rating <= 10) return "border-red-700";
+    if (rating <= 20) return "border-red-600";
+    if (rating <= 30) return "border-red-500";
+    if (rating <= 45) return "border-orange-500";
+    if (rating <= 60) return "border-orange-400";
+    if (rating <= 70) return "border-yellow-500";
+    if (rating <= 80) return "border-lime-500";
+    if (rating <= 85) return "border-green-500";
+    if (rating <= 95) return "border-green-600";
+    return "border-emerald-700";
   };
 
   return (
@@ -235,7 +222,12 @@ export default function MapComponent() {
             //@ts-ignore
             defaultCenter={currentLocation}
             defaultZoom={9}
-            onBoundsChanged={({ zoom, bounds }) => {
+            zoom={currentZoom}
+            attribution={false}
+            metaWheelZoom={true}
+            twoFingerDrag={true}
+            onBoundsChanged={({ zoom, bounds, center }) => {
+              setCurrentLocation(center)
               setCurrentZoom(zoom);
               setCurrentBounds(bounds);
             }}
@@ -254,7 +246,7 @@ export default function MapComponent() {
                         alt={sub.city}
                         className={`max-w-48 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(
                           sub.rating
-                        )} border-2 border-transparent drop-shadow-xl shadow-xl hover:z-50 z-10`}
+                        )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
                       />
                     </button>
                   </Overlay>
@@ -265,7 +257,27 @@ export default function MapComponent() {
                     anchor={[sub.lat, sub.lon]}
                     key={sub.time}
                     hover={false}
-                    onClick={() => setSelectedSubmission(sub)}
+                    onClick={() => {
+                      setCurrentLocation([sub.lat, sub.lon])
+                      setSelectedSubmission(sub)
+
+                      const startZoom = currentZoom
+                      const targetZoom = 13
+                      const duration = 400
+                      const startTime = performance.now()
+
+                      const animateZoom = (currentTime: number) => {
+                        const elapsed = currentTime - startTime
+                        const progress = Math.min(elapsed / duration, 1)
+                        const eased = progress * (2 - progress)
+                        const newZoom = startZoom + (targetZoom - startZoom) * eased
+                        setCurrentZoom(newZoom)
+                        if (progress < 1) {
+                          requestAnimationFrame(animateZoom)
+                        }
+                      }
+                      requestAnimationFrame(animateZoom)
+                    }}
                   />
                 ))}
           </Map>
