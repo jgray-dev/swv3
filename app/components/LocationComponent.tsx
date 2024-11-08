@@ -115,7 +115,7 @@ export default function LocationComponent() {
           </button>
         </Form>
         <button
-          onClick={() => {
+          onMouseDown={() => {
             geolocationError
               ? alert("Unable to use GPS. Did you deny the permission?")
               : gettingGeolocation
