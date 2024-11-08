@@ -60,7 +60,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     return {
       message: "No sunrise or sunsets found in the next 48 hours.",
       ok: false,
-      uploads: mapData
+      uploads: mapData.data,
     };
   }
   if (!eventTime) {
@@ -70,7 +70,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     return {
       message: `No ${eventType} time found | Next event in approximately ${next}`,
       ok: false,
-      uploads: mapData
+      uploads: mapData.data,
     };
   }
   const apiKey = context.cloudflare.env.METEO_KEY;
@@ -94,7 +94,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     lat: Number(lat),
     lon: Number(lon),
   });
-  if (!mapData) return redirect(appendErrorToUrl(url.search, "Error fetching database"));
+  if (!mapData)
+    return redirect(appendErrorToUrl(url.search, "Error fetching database"));
   return {
     lat: parseFloat(lat),
     lon: parseFloat(lon),
@@ -114,7 +115,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     ),
     relative: getRelative(Math.round(Date.now() / 1000), eventTime),
     ok: true,
-    uploads: mapData,
+    uploads: mapData.data,
   };
 };
 
@@ -278,7 +279,9 @@ export const action: ActionFunction = async ({ request, context }) => {
               appendErrorToUrl(
                 url.search,
                 `No results found for ${
-                  locationData.type === "input" ? locationData.data : "coordinates"
+                  locationData.type === "input"
+                    ? locationData.data
+                    : "coordinates"
                 }`
               )
             );
@@ -291,25 +294,31 @@ export const action: ActionFunction = async ({ request, context }) => {
       } catch (error) {
         console.error("Error processing location data:", error);
         return redirect(
-          appendErrorToUrl(url.search, `Error processing location data: ${error}`)
+          appendErrorToUrl(
+            url.search,
+            `Error processing location data: ${error}`
+          )
         );
       }
     }
 
-    
-    
     case "refreshMap": {
-      const newCenter = formData.get("newLocation")
-      if (!newCenter) return json({ error: "Map refresh not implemented" }, { status: 501 });
-      console.log(newCenter)
-      return json({ success: true, message: "map data here" }, { status: 200 });
+      const newCenterString = formData.get("newLocation");
+      const currentIdsString = formData.get("currentIds");
+      if (!newCenterString) return json({ error: "Invalid location" }, { status: 501 });
+      const newCenter = JSON.parse(newCenterString as string);
+      const currentIds = currentIdsString ? JSON.parse(currentIdsString as string) : undefined;
+      const newUploads = await getSubmissions(context, {
+        lat: newCenter[0],
+        lon: newCenter[1],
+        currentIds: currentIds
+      });
+      return {success: true, data: newUploads.data}
     }
-
     default:
       return json({ error: "Unknown element type" }, { status: 400 });
   }
 };
-
 
 function appendErrorToUrl(baseUrlSearch: string, error?: string) {
   const searchParams = new URLSearchParams(
