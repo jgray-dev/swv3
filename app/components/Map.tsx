@@ -46,7 +46,7 @@ export default function MapComponent() {
       ? [allData.lat, allData.lon]
       : [40.7128, -74.006]
   );
-  const [currentLocation, setCurrentLocation] = useState<number[]>(
+  const [currentLocation, setCurrentLocation] = useState<[number, number]>(
     allData?.lat && allData?.lon
       ? [allData.lat, allData.lon]
       : [40.7128, -74.006]
@@ -216,12 +216,8 @@ export default function MapComponent() {
       >
         {isMounted && (
           <Map
-            //@ts-ignore
             center={currentLocation}
             animate={true}
-            //@ts-ignore
-            defaultCenter={currentLocation}
-            defaultZoom={9}
             zoom={currentZoom}
             attribution={false}
             metaWheelZoom={true}
