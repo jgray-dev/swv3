@@ -1,5 +1,3 @@
-import { blob, integer, text } from "drizzle-orm/sqlite-core";
-
 export interface InterpolatedWeather {
   latitude: number;
   longitude: number;
@@ -46,7 +44,7 @@ export interface LoaderData {
   message?: string;
   relative: "future" | "past" | "current";
   ok: boolean;
-  uploads: dbUpload[];
+  uploads: DbUpload[];
 }
 
 export interface AveragedValues {
@@ -60,7 +58,7 @@ export interface AveragedValues {
   zone: "near" | "horizon" | "far";
 }
 
-export interface dbUpload {
+export interface DbUpload {
   city: string;
   id: number;
   lat: number;
