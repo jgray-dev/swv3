@@ -93,7 +93,7 @@ export async function getSubmissions(
       db.select({ count: count() }).from(uploads),
       query.limit(15),
     ]);
-    
+
     const more = totalCount[0].count > (currentIds ? currentIds.length : 0);
 
     return {
