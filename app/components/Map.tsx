@@ -54,14 +54,14 @@ export default function MapComponent() {
   const [visibleMarkersCount, setVisibleMarkersCount] = useState<number>(0);
 
   useEffect(() => {
-    if (allData?.uploads && Object.keys(submissions).length === 0) {
+    if (allData?.uploads) {
       const newSubmissions = allData.uploads.reduce((acc, upload) => {
         acc[upload.id] = upload;
         return acc;
       }, {} as PostMap);
       setSubmissions(newSubmissions);
     }
-  }, [allData?.uploads, submissions]);
+  }, [allData?.uploads]);
 
   const visibleItems = useMemo(() => {
     return Object.values(submissions).filter((sub) =>
@@ -263,7 +263,7 @@ export default function MapComponent() {
 
                       const startZoom = currentZoom;
                       const targetZoom = 13;
-                      const duration = 400;
+                      const duration = 2000;
                       const startTime = performance.now();
 
                       const animateZoom = (currentTime: number) => {
@@ -292,7 +292,7 @@ export default function MapComponent() {
               <img
                 src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${selectedSubmission.image_id}/public`}
                 alt={selectedSubmission.city}
-                className="object-cover w-full h-full max-h-[400px]"
+                className="object-cover w-full max-h-full"
               />
               <div className="absolute bottom-0 left-0 right-0 max-h-fit bg-black/50 backdrop-blur-sm px-4 py-3 w-full flex justify-between">
                 <h2 className="text-slate-100 text-md font-bold">
