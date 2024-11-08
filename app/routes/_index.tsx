@@ -49,7 +49,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   let error = url.searchParams.get("error");
   let mapData = await getSubmissions(context);
   if (!lat || !lon || !city) {
-    return { ok: false, message: error, uploads: mapData };
+    return { ok: false, message: error, uploads: mapData.data };
   }
 
   const { type: eventType, time: eventTime } = getRelevantSunEvent(
