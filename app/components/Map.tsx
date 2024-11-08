@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useCallback,
   useRef,
+  ReactElement,
 } from "react";
 import StatItem from "~/components/StatItem";
 
@@ -159,10 +160,10 @@ export default function MapComponent() {
   ): boolean {
     if (!bounds) return true;
     return (
-      lat <= bounds.ne[0] + 1 &&
-      lat >= bounds.sw[0] - 1 &&
-      lon >= bounds.sw[1] - 1 &&
-      lon <= bounds.ne[1] + 1
+      lat <= bounds.ne[0] &&
+      lat >= bounds.sw[0] &&
+      lon >= bounds.sw[1] &&
+      lon <= bounds.ne[1]
     );
   }
 
@@ -191,6 +192,93 @@ export default function MapComponent() {
     if (rating <= 95) return "border-green-600";
     return "border-emerald-700";
   };
+
+  function isWithinBuffer(
+    point1: [number, number],
+    point2: [number, number],
+    buffer: number = 0.05
+  ): boolean {
+    return (
+      Math.abs(point1[0] - point2[0]) <= buffer &&
+      Math.abs(point1[1] - point2[1]) <= buffer
+    );
+  }
+
+  interface CoordGroup {
+    center: [number, number];
+    subs: DbUpload[];
+    group: boolean;
+  }
+
+  function groupCoordinates(
+    subs: DbUpload[],
+    buffer: number = 0.005
+  ): CoordGroup[] {
+    const groups: CoordGroup[] = [];
+    const used = new Set<number>();
+    for (let i = 0; i < subs.length; i++) {
+      if (used.has(i)) continue;
+
+      const currentGroup: CoordGroup = {
+        center: [subs[i].lat, subs[i].lon],
+        subs: [],
+        group: false,
+      };
+
+      const currentCoord: [number, number] = [subs[i].lat, subs[i].lon];
+
+      currentGroup.subs.push(subs[i]);
+      used.add(i);
+
+      // Check remaining coordinates
+      for (let j = i + 1; j < subs.length; j++) {
+        if (used.has(j)) continue;
+
+        const checkCoord: [number, number] = [subs[j].lat, subs[j].lon];
+        if (isWithinBuffer(currentCoord, checkCoord, buffer)) {
+          currentGroup.subs.push(subs[j]);
+          currentGroup.group = true;
+          used.add(j);
+        }
+      }
+
+      groups.push(currentGroup);
+    }
+    return groups;
+  }
+
+  const overlays = useMemo(() => {
+    return renderOverlays(visibleItems);
+  }, [visibleItems]);
+
+  function renderOverlays(subs: DbUpload[]): ReactElement[] {
+    if (!(subs.length > 0)) return [<></>];
+    const groups = groupCoordinates(subs);
+    if (!groups) return [<></>];
+    console.log(groups.map((g)=>(g.group?"":[g.center, g.subs])))
+    return groups.map((g) => (
+        g.group ? (
+          <Overlay></Overlay> //todo: render the grouped overlay (some sort of grid/smaller icons/etc etc)
+        ) : (
+
+          <Overlay
+            anchor={g.center}
+            key={JSON.stringify(g.center)}
+            offset={[64, 64]}
+          >
+            <button onMouseDown={() => setSelectedSubmission(g.subs[0])}>
+              <img
+                src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${g.subs[0].image_id}/thumbnail`}
+                alt={g.subs[0].city}
+                className={`max-w-32 max-h-32 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(
+                  g.subs[0].rating
+                )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
+              />
+            </button>
+          </Overlay>
+        )
+      ))
+  }
 
   return (
     <>
@@ -227,7 +315,7 @@ export default function MapComponent() {
               attribution={false}
               animate={true}
               minZoom={2}
-              maxZoom={18}
+              maxZoom={14}
               onBoundsChanged={({ zoom, bounds, center }) => {
                 if (zoom !== currentZoom) {
                   setCurrentZoom(zoom);
@@ -244,25 +332,10 @@ export default function MapComponent() {
               }}
             >
               <ZoomControl />
-              {currentZoom > 11 || visibleMarkersCount === 1
-                ? visibleItems.map((sub) => (
-                    <Overlay
-                      anchor={[sub.lat, sub.lon]}
-                      key={sub.time}
-                      offset={[64, 64]}
-                    >
-                      <button onMouseDown={() => setSelectedSubmission(sub)}>
-                        <img
-                          src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
-                          alt={sub.city}
-                          className={`max-w-48 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(
-                            sub.rating
-                          )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
-                        />
-                      </button>
-                    </Overlay>
-                  ))
-                : visibleItems.map((sub) => (
+
+              {currentZoom > 10 || visibleMarkersCount === 1
+                ? overlays
+                : visibleItems.map((sub: any) => (
                     <Marker
                       color={getHsl(sub.rating)}
                       anchor={[sub.lat, sub.lon]}
