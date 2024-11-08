@@ -24,7 +24,7 @@ export default function RatingDisplay() {
       if (progress < 1) {
         const newValue =
           startValueRef.current + (rating - startValueRef.current) * progress;
-        setDisplayNumber(newValue);
+        setDisplayNumber(Math.max(0, newValue));
         animationFrameId = requestAnimationFrame(animateNumber);
       } else {
         setDisplayNumber(rating);
