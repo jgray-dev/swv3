@@ -140,7 +140,7 @@ export default function CloudCoverDisplay() {
   return (
     <div className="w-full max-w-7xl mx-auto p-6">
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onMouseDown={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between text-lg mb-6 text-slate-300 hover:text-white transition-colors duration-150"
       >
         <div className="w-screen text-center flex justify-center">
