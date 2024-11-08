@@ -49,7 +49,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   let error = url.searchParams.get("error");
   let mapData = await getSubmissions(context);
   if (!lat || !lon || !city) {
-    return { ok: false, message: error, uploads: mapData.data };
+    return { ok: false, message: error, uploads: mapData };
   }
 
   const { type: eventType, time: eventTime } = getRelevantSunEvent(
@@ -60,7 +60,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     return {
       message: "No sunrise or sunsets found in the next 48 hours.",
       ok: false,
-      uploads: mapData.data,
+      uploads: mapData,
     };
   }
   if (!eventTime) {
@@ -70,7 +70,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     return {
       message: `No ${eventType} time found | Next event in approximately ${next}`,
       ok: false,
-      uploads: mapData.data,
+      uploads: mapData,
     };
   }
   const apiKey = context.cloudflare.env.METEO_KEY;
@@ -115,7 +115,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     ),
     relative: getRelative(Math.round(Date.now() / 1000), eventTime),
     ok: true,
-    uploads: mapData.data,
+    uploads: mapData,
   };
 };
 
@@ -299,23 +299,6 @@ export const action: ActionFunction = async ({ request, context }) => {
           )
         );
       }
-    }
-
-    case "refreshMap": {
-      const newCenterString = formData.get("newLocation");
-      const currentIdsString = formData.get("currentIds");
-      if (!newCenterString)
-        return json({ error: "Invalid location" }, { status: 501 });
-      const newCenter = JSON.parse(newCenterString as string);
-      const currentIds = currentIdsString
-        ? JSON.parse(currentIdsString as string)
-        : undefined;
-      const newUploads = await getSubmissions(context, {
-        lat: newCenter[0],
-        lon: newCenter[1],
-        currentIds: currentIds,
-      });
-      return { success: true, data: newUploads.data };
     }
     default:
       return json({ error: "Unknown element type" }, { status: 400 });
