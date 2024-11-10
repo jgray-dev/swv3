@@ -13,6 +13,7 @@ export async function createUpload(
     image_id,
     city,
     data,
+    time
   }: {
     lat: number;
     lon: number;
@@ -20,6 +21,7 @@ export async function createUpload(
     image_id: string;
     city: string;
     data: any;
+    time: number;
   }
 ) {
   try {
@@ -31,7 +33,7 @@ export async function createUpload(
         lon: lon,
         rating: rating,
         image_id: image_id,
-        time: Math.floor(Date.now() / 1000),
+        time: time,
         city: city,
         data: data,
       })
