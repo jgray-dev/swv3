@@ -30,6 +30,7 @@ import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
 import { createUpload, getSubmissions } from "~/.server/database";
 
+
 export const meta: MetaFunction = () => {
   return [
     { title: "SWV3" },
@@ -46,6 +47,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const lat = url.searchParams.get("lat");
   const lon = url.searchParams.get("lon");
   const city = url.searchParams.get("city");
+  const date = url.searchParams.get("date");
+  const type = url.searchParams.get("type");
   let error = url.searchParams.get("error");
   let mapData = await getSubmissions(context);
   if (!lat || !lon || !city) {
@@ -145,8 +148,13 @@ export const action: ActionFunction = async ({ request, context }) => {
       const lon = formData.get("lon");
       const city = formData.get("city");
       const data = formData.get("data");
+      const historic = formData.get("historic");
 
       if (imageFile && imageFile instanceof Blob) {
+        if (!Boolean(historic)) {
+          console.log("historic upload")
+        }
+        
         try {
           const API_URL = `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/images/v1`;
 
@@ -194,11 +202,13 @@ export const action: ActionFunction = async ({ request, context }) => {
               image_id: image_id,
               city: `${city}`,
               data: data,
+              time: Math.floor(Date.now() / 1000),
             });
             return json(
               { message: "Uploaded to database", success: true },
               { status: 201 }
             );
+            
           } catch (error) {
             console.error("Error posting database: ", error);
             return json(
@@ -218,9 +228,17 @@ export const action: ActionFunction = async ({ request, context }) => {
     }
 
     case "locationComponent": {
+      const eventType = formData.get("eventType");
+      const date = formData.get("date");
       const locationDataString = formData.get("locationData");
       if (!locationDataString || typeof locationDataString !== "string") {
         return json({ error: "Invalid location data" }, { status: 400 });
+      }
+      if (!eventType || typeof eventType !== "string") {
+        return json({ error: "Invalid eventType" }, { status: 400 });
+      }
+      if (!date || typeof date !== "string") {
+        return json({ error: "Invalid date" }, { status: 400 });
       }
 
       try {
@@ -271,6 +289,15 @@ export const action: ActionFunction = async ({ request, context }) => {
               // @ts-expect-error fts
               data.results[0].formatted_address
             );
+            redirectUrl.searchParams.set(
+              "date",
+              date
+            );
+            redirectUrl.searchParams.set(
+              "type",
+              eventType
+            );
+            
             return redirect(redirectUrl.toString());
           } else {
             console.error("No geocoding results found");
