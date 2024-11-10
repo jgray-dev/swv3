@@ -13,7 +13,7 @@ export async function createUpload(
     image_id,
     city,
     data,
-    time
+    time,
   }: {
     lat: number;
     lon: number;

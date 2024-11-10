@@ -20,7 +20,7 @@ export default function LocationComponent() {
   const fetcher = useFetcher();
 
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    new Date().toISOString().split("T")[0]
   );
   const [eventType, setEventType] = useState<"sunrise" | "sunset">(
     allData?.eventType || "sunrise"
@@ -74,7 +74,11 @@ export default function LocationComponent() {
   }
 
   return (
-    <div className="p-4 sm:p-6 md:p-8" role="region" aria-label="Location Search">
+    <div
+      className="p-4 sm:p-6 md:p-8"
+      role="region"
+      aria-label="Location Search"
+    >
       <div className="max-w-2xl mx-auto bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
         <Form onSubmit={handleManualSubmit} className="flex flex-col gap-4">
           <input type="hidden" name="element" value="locationComponent" />
@@ -82,7 +86,10 @@ export default function LocationComponent() {
           {/* Location Input Group */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
-              <label htmlFor="location-input" className="text-slate-300 text-sm mb-1 block">
+              <label
+                htmlFor="location-input"
+                className="text-slate-300 text-sm mb-1 block"
+              >
                 Location
               </label>
               <div className="flex gap-2">
@@ -106,28 +113,30 @@ export default function LocationComponent() {
                     geolocationError
                       ? alert("Unable to use GPS. Did you deny the permission?")
                       : gettingGeolocation
-                        ? null
-                        : gotGeolocation
-                          ? null
-                          : handleGeolocation();
+                      ? null
+                      : gotGeolocation
+                      ? null
+                      : handleGeolocation();
                   }}
                   className={`py-2.5 px-3 rounded-lg transition-all duration-200
                            flex items-center justify-center gap-2
                            border
                            ${
-                    geolocationError
-                      ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
-                      : gotGeolocation
-                        ? "bg-green-500/20 border-green-500/30"
-                        : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10"
-                  }`}
-                  disabled={geolocationError || gettingGeolocation || gotGeolocation}
+                             geolocationError
+                               ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
+                               : gotGeolocation
+                               ? "bg-green-500/20 border-green-500/30"
+                               : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10"
+                           }`}
+                  disabled={
+                    geolocationError || gettingGeolocation || gotGeolocation
+                  }
                   aria-label={
                     geolocationError
                       ? "GPS location unavailable"
                       : gotGeolocation
-                        ? "GPS location acquired"
-                        : "Use GPS location"
+                      ? "GPS location acquired"
+                      : "Use GPS location"
                   }
                 >
                   <CiLocationArrow1
@@ -135,8 +144,8 @@ export default function LocationComponent() {
                       geolocationError
                         ? "text-red-400"
                         : gotGeolocation
-                          ? "text-green-400"
-                          : "text-slate-100"
+                        ? "text-green-400"
+                        : "text-slate-100"
                     }`}
                   />
                   {gettingGeolocation && !gotGeolocation && (
@@ -154,7 +163,10 @@ export default function LocationComponent() {
           {/* Date and Event Type Group */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 sm:flex-initial">
-              <label htmlFor="date-input" className="text-slate-300 text-sm mb-1 block">
+              <label
+                htmlFor="date-input"
+                className="text-slate-300 text-sm mb-1 block"
+              >
                 Date
               </label>
               <input
@@ -162,7 +174,7 @@ export default function LocationComponent() {
                 id="date-input"
                 name="date"
                 min="2022-01-01"
-                max={new Date().toISOString().split('T')[0]}
+                max={new Date().toISOString().split("T")[0]}
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="w-full sm:w-44 px-4 py-2.5 
@@ -174,26 +186,27 @@ export default function LocationComponent() {
             </div>
 
             <div className="flex-1 sm:flex-initial">
-              <label htmlFor="event-type" className="text-slate-300 text-sm mb-1 block">
+              <label
+                htmlFor="event-type"
+                className="text-slate-300 text-sm mb-1 block"
+              >
                 Event Type
               </label>
               <select
                 id="event-type"
                 name="eventType"
                 value={eventType}
-                onChange={(e) => setEventType(e.target.value as "sunrise" | "sunset")}
+                onChange={(e) =>
+                  setEventType(e.target.value as "sunrise" | "sunset")
+                }
                 className="w-full sm:w-44 px-4 py-2.5
                          bg-white/10 border border-white/20 
                          rounded-lg text-slate-100
                          focus:outline-none focus:ring-2 focus:ring-blue-400/50 
                          focus:bg-white/20 transition-all duration-200"
               >
-                <option value="sunrise">
-                  Sunrise
-                </option>
-                <option value="sunset">
-                  Sunset
-                </option>
+                <option value="sunrise">Sunrise</option>
+                <option value="sunset">Sunset</option>
               </select>
             </div>
 

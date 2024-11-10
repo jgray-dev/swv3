@@ -30,7 +30,6 @@ import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
 import { createUpload, getSubmissions } from "~/.server/database";
 
-
 export const meta: MetaFunction = () => {
   return [
     { title: "SWV3" },
@@ -152,9 +151,9 @@ export const action: ActionFunction = async ({ request, context }) => {
 
       if (imageFile && imageFile instanceof Blob) {
         if (!Boolean(historic)) {
-          console.log("historic upload")
+          console.log("historic upload");
         }
-        
+
         try {
           const API_URL = `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/images/v1`;
 
@@ -208,7 +207,6 @@ export const action: ActionFunction = async ({ request, context }) => {
               { message: "Uploaded to database", success: true },
               { status: 201 }
             );
-            
           } catch (error) {
             console.error("Error posting database: ", error);
             return json(
@@ -289,15 +287,9 @@ export const action: ActionFunction = async ({ request, context }) => {
               // @ts-expect-error fts
               data.results[0].formatted_address
             );
-            redirectUrl.searchParams.set(
-              "date",
-              date
-            );
-            redirectUrl.searchParams.set(
-              "type",
-              eventType
-            );
-            
+            redirectUrl.searchParams.set("date", date);
+            redirectUrl.searchParams.set("type", eventType);
+
             return redirect(redirectUrl.toString());
           } else {
             console.error("No geocoding results found");
