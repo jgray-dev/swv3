@@ -117,6 +117,34 @@ function calculateAverageCloudHeight(horizonData: AveragedValues) {
   return weightedSum / totalCoverage;
 }
 
+function totalCoverMulti(input: number): number {
+  input = Math.max(0, Math.min(100, input));
+  const points: [number, number][] = [
+    [0, 0.8],
+    [10, 0.9],
+    [20, 1],
+    [30, 1],
+    [40, 1],
+    [50, 1],
+    [60, 1],
+    [70, 1],
+    [80, 0.9],
+    [90, 0.8],
+    [100, 0.7],
+  ];
+  let i = 0;
+  while (i < points.length - 1 && points[i + 1][0] < input) {
+    i++;
+  }
+  if (points[i][0] === input) {
+    return points[i][1];
+  }
+  const [x1, y1] = points[i];
+  const [x2, y2] = points[i + 1];
+  const percentage = (input - x1) / (x2 - x1);
+  return y1 + (y2 - y1) * percentage;
+}
+
 export function skyRating(data: InterpolatedWeather[]): {
   rating: number;
   debugData: any;
@@ -201,8 +229,17 @@ export function skyRating(data: InterpolatedWeather[]): {
   nearRating = Math.min(Math.max(0, nearRating), 25);
   horizonRating = Math.min(Math.max(0, horizonRating), 50);
   farRating = Math.min(Math.max(0, farRating), 25);
+
+  const averageCloudCover =
+    data.reduce((acc, curr) => acc + curr.cloud_cover, 0) / data.length;
+
+  const totalMulti = totalCoverMulti(averageCloudCover);
+
   const final = Math.round(
-    (nearRating + horizonRating + farRating) * nearMulti * horizonMulti
+    (nearRating + horizonRating + farRating) *
+      nearMulti *
+      horizonMulti *
+      totalMulti
   );
   return {
     rating: Math.min(Math.max(0, final), 100),
