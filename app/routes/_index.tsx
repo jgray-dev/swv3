@@ -441,7 +441,6 @@ export default function Sunwatch() {
       <LocationDisplay />
       <RatingDisplay />
       <CloudCoverDisplay />
-
       <Map />
       <SubmitComponent />
     </div>
