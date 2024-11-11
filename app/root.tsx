@@ -10,6 +10,8 @@ import {
 import "./tailwind.css";
 import React from "react";
 
+import { datadogRum } from "@datadog/browser-rum";
+
 export const links: LinksFunction = () => [
   {
     rel: "prefetch",
@@ -20,26 +22,19 @@ export const links: LinksFunction = () => [
   },
 ];
 
-
-
-import { datadogRum } from '@datadog/browser-rum';
-
-
-
-
 export function Layout({ children }: { children: React.ReactNode }) {
   datadogRum.init({
-    applicationId: '2d0dcfb4-e52c-4123-8899-2eb2da9ea804',
-    clientToken: 'pub8caa44c4e938e0c8e06ec84e0a0bbf8e',
-    site: 'us5.datadoghq.com',
-    service: 'swv3',
-    env: 'production',
+    applicationId: "2d0dcfb4-e52c-4123-8899-2eb2da9ea804",
+    clientToken: "pub8caa44c4e938e0c8e06ec84e0a0bbf8e",
+    site: "us5.datadoghq.com",
+    service: "swv3",
+    env: "production",
     sessionSampleRate: 100,
     sessionReplaySampleRate: 100,
     trackUserInteractions: true,
     trackResources: true,
     trackLongTasks: true,
-    defaultPrivacyLevel: 'mask-user-input',
+    defaultPrivacyLevel: "mask-user-input",
   });
   return (
     <html lang="en">
@@ -52,7 +47,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           defer
         ></script>
         <Meta />
-        <Links /><title></title>
+        <Links />
+        <title></title>
       </head>
       <body className={"text-white"}>
         {children}
