@@ -22,7 +22,7 @@ export default function MapComponent() {
   const [submissions, setSubmissions] = useState<DbUpload[]>(
     allData?.uploads ? allData.uploads : []
   );
-  const [currentZoom, setCurrentZoom] = useState<number>(9);
+  const [currentZoom, setCurrentZoom] = useState<number>(7);
   const [currentBounds, setCurrentBounds] = useState<Bounds | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<DbUpload | null>(
     null
