@@ -49,16 +49,16 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const date = url.searchParams.get("date");
   const type = url.searchParams.get("type");
   let error = url.searchParams.get("error");
-  let mapData = await getSubmissions(context);
   if (!lat || !lon || !city) {
+    let mapData = await getSubmissions(context);
     return { ok: false, message: error, uploads: mapData };
   }
-
   const { type: eventType, time: eventTime } = getRelevantSunEvent(
     Number(lat),
     Number(lon)
   );
   if (!eventType) {
+    let mapData = await getSubmissions(context);
     return {
       message: "No sunrise or sunsets found in the next 48 hours.",
       ok: false,
@@ -69,6 +69,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     const next = unixToApproximateString(
       findNextSunEvent(Number(lat), Number(lon))
     );
+    let mapData = await getSubmissions(context);
     return {
       message: `No ${eventType} time found | Next event in approximately ${next}`,
       ok: false,
@@ -77,9 +78,13 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   }
   const apiKey = context.cloudflare.env.METEO_KEY;
   const coords = generateCoordinateString(Number(lat), Number(lon), eventType);
-  const response = await fetch(
-    `https://customer-api.open-meteo.com/v1/forecast?${coords}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&past_days=1&forecast_days=2&apikey=${apiKey}`
-  );
+
+  const [mapData, response] = await Promise.all([
+    getSubmissions(context),
+    fetch(
+      `https://customer-api.open-meteo.com/v1/forecast?${coords}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&past_days=1&forecast_days=2&apikey=${apiKey}`
+    ),
+  ]);
   let weatherData = await response.json();
   if (!eventTime) return null;
   weatherData = purgeDuplicates(weatherData as WeatherLocation[], eventType);
@@ -92,10 +97,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const stats = averageData(interpData);
   if ((!eventTime || !eventType) && !error)
     error = "No sunrise or sunset found";
-  mapData = await getSubmissions(context, {
-    lat: Number(lat),
-    lon: Number(lon),
-  });
   if (!mapData)
     return redirect(appendErrorToUrl(url.search, "Error fetching database"));
   return {
