@@ -373,7 +373,6 @@ export default function MapComponent() {
                       color={getHsl(sub.rating)}
                       anchor={[sub.lat, sub.lon]}
                       key={sub.time}
-                      hover={false}
                       onClick={() => {
                         setSelectedSubmission(sub);
                         animateZoom(sub.lat, sub.lon, 12);
