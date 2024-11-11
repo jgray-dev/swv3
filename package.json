@@ -17,6 +17,7 @@
     "db:up": "drizzle-kit up:sqlite"
   },
   "dependencies": {
+    "@datadog/browser-rum": "^5.29.1",
     "@remix-run/cloudflare": "^2.13.1",
     "@remix-run/cloudflare-pages": "^2.13.1",
     "@remix-run/react": "^2.13.1",
