@@ -22,7 +22,7 @@ export default function MapComponent() {
   const [submissions, setSubmissions] = useState<DbUpload[]>(
     allData?.uploads ? allData.uploads : []
   );
-  const [currentZoom, setCurrentZoom] = useState<number>(7);
+  const [currentZoom, setCurrentZoom] = useState<number>(8);
   const [currentBounds, setCurrentBounds] = useState<Bounds | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<DbUpload | null>(
     null
@@ -235,7 +235,7 @@ export default function MapComponent() {
       if (!containerRef.current) return;
       const containerWidth = containerRef.current.scrollWidth;
       const viewportWidth = window.innerWidth;
-      setMaxScroll(Math.max(0, containerWidth - viewportWidth));
+      setMaxScroll(Math.max(0, containerWidth - viewportWidth) + 32);
     };
 
     calculateMaxScroll();
@@ -296,14 +296,14 @@ export default function MapComponent() {
       <div className="relative w-screen overflow-x-hidden min-h-[20vh] mt-24 text-center font-bold">
         Featured user submissions
         <div
-          className="flex gap-4 py-8 transition-transform duration-150 ease-in-out"
+          className="flex gap-4 py-8 transition-transform duration-150 ease-in-out mr-4 ml-4 w-full"
           ref={containerRef}
           style={{ transform: `translateX(-${parallaxOffset}px)` }}
         >
           {sortedUploads.map((sub) => (
             <div
               key={sub.image_id}
-              className="flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-sm"
+              className="flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-md"
               onClick={() => {
                 setSelectedSubmission(sub);
                 animateZoom(sub.lat, sub.lon);
@@ -338,9 +338,9 @@ export default function MapComponent() {
       </div>
       <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
         <div
-          className={`transition-all duration-300 ease-in-out w-full md:w-3/4 transform ${
+          className={`transition-all duration-400 ease-in-out w-full md:w-3/4 transform ${
             selectedSubmission ? "md:!w-1/2" : ""
-          } h-[600px] md:h-[800px] rounded-lg overflow-hidden shadow-lg mx-auto`}
+          } h-[500px] md:h-[800px] rounded-lg overflow-hidden shadow-lg mx-auto`}
           role="region"
           aria-label="Interactive location map"
         >
@@ -366,7 +366,7 @@ export default function MapComponent() {
             >
               <ZoomControl />
 
-              {currentZoom > 9 || visibleItems.length === 1
+              {currentZoom > 10 || visibleItems.length === 1
                 ? overlays
                 : visibleItems.map((sub: any) => (
                     <Marker
@@ -384,8 +384,12 @@ export default function MapComponent() {
           )}
         </div>
 
-        {selectedSubmission && (
-          <div className="md:w-1/2 w-full flex flex-col gap-4 animate-fade-in md:max-h-[800px] transition-opacity duration-200">
+        {selectedSubmission ? (
+          <div
+            className={` flex flex-col gap-4 md:max-h-[800px] transition duration-300 ${
+              selectedSubmission ? "md:w-1/2 w-full" : "w-0"
+            }`}
+          >
             <div className="md:max-h-[400px] w-full">
               <div className="relative w-full h-full rounded-lg overflow-hidden">
                 <img
@@ -463,6 +467,8 @@ export default function MapComponent() {
               </div>
             </div>
           </div>
+        ) : (
+          <div className={"w-0 duration-300"}></div>
         )}
       </div>
     </>
