@@ -366,7 +366,7 @@ export default function MapComponent() {
             >
               <ZoomControl />
 
-              {currentZoom > 10 || visibleItems.length === 1
+              {currentZoom > 9 || visibleItems.length === 1
                 ? overlays
                 : visibleItems.map((sub: any) => (
                     <Marker
