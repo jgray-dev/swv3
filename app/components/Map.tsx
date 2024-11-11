@@ -1,9 +1,15 @@
 import { useRouteLoaderData } from "@remix-run/react";
 import { Map, Marker, Overlay, ZoomControl } from "pigeon-maps";
 import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
-import React, {useEffect, useState, useMemo, ReactElement, useRef} from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  ReactElement,
+  useRef,
+} from "react";
 import StatItem from "~/components/StatItem";
-import {FaChevronLeft, FaChevronRight} from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 export interface Bounds {
   ne: [number, number];
@@ -158,10 +164,13 @@ export default function MapComponent() {
         >
           <div className={`gap-1 grid-cols-3 grid`}>
             {g.subs.map((sub) => (
-              <button onClick={() => {
-                animateZoom(sub.lat, sub.lon)
-                setSelectedSubmission(sub)
-              }} key={sub.time}>
+              <button
+                onClick={() => {
+                  animateZoom(sub.lat, sub.lon);
+                  setSelectedSubmission(sub);
+                }}
+                key={sub.time}
+              >
                 <img
                   src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
                   alt={sub.city}
@@ -185,11 +194,12 @@ export default function MapComponent() {
           key={Math.random() * g.center[0]}
           offset={[64, 64]}
         >
-          <button onMouseDown={() => {
-
-            animateZoom(g.subs[0].lat, g.subs[0].lon)
-            setSelectedSubmission(g.subs[0])
-          }}>
+          <button
+            onMouseDown={() => {
+              animateZoom(g.subs[0].lat, g.subs[0].lon);
+              setSelectedSubmission(g.subs[0]);
+            }}
+          >
             <img
               src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${g.subs[0].image_id}/thumbnail`}
               alt={g.subs[0].city}
@@ -203,7 +213,6 @@ export default function MapComponent() {
     );
   }
 
-
   const containerRef = useRef<HTMLDivElement>(null);
   const [parallaxOffset, setParallaxOffset] = useState(0);
   const [maxScroll, setMaxScroll] = useState(0);
@@ -216,8 +225,8 @@ export default function MapComponent() {
       const delta = currentScroll - lastScrollY.current;
       lastScrollY.current = currentScroll;
 
-      setParallaxOffset(prev => {
-        const newOffset = prev + (delta * 1.5);
+      setParallaxOffset((prev) => {
+        const newOffset = prev + delta * 1.5;
         return Math.min(Math.max(0, newOffset), maxScroll);
       });
     };
@@ -239,22 +248,24 @@ export default function MapComponent() {
     };
   }, [maxScroll]);
 
-  const handleScroll = (direction: 'left' | 'right') => {
-    setParallaxOffset(prev => {
-      const newOffset = direction === 'left'
-        ? prev - 300
-        : prev + 300;
+  const handleScroll = (direction: "left" | "right") => {
+    setParallaxOffset((prev) => {
+      const newOffset = direction === "left" ? prev - 300 : prev + 300;
       return Math.min(Math.max(0, newOffset), maxScroll);
     });
   };
 
   if (!allData?.uploads) return null;
-  
-  const sortedUploads = [...allData.uploads].sort((a, b) =>
-    (b.rating ?? 0) - (a.rating ?? 0)
+
+  const sortedUploads = [...allData.uploads].sort(
+    (a, b) => (b.rating ?? 0) - (a.rating ?? 0)
   );
 
-  function animateZoom(targetLat: number, targetLon: number, targetZoom: number = 16) {
+  function animateZoom(
+    targetLat: number,
+    targetLon: number,
+    targetZoom: number = 16
+  ) {
     const startZoom = currentZoom;
     const [startLat, startLon] = currentCenter;
     const duration = 1200;
@@ -275,7 +286,7 @@ export default function MapComponent() {
     };
     requestAnimationFrame(animateFrame);
   }
-  
+
   return (
     <>
       <div
@@ -287,15 +298,15 @@ export default function MapComponent() {
         <div
           className="flex gap-4 py-8 transition-transform duration-150 ease-in-out"
           ref={containerRef}
-          style={{transform: `translateX(-${parallaxOffset}px)`}}
+          style={{ transform: `translateX(-${parallaxOffset}px)` }}
         >
           {sortedUploads.map((sub) => (
             <div
               key={sub.image_id}
               className="flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-sm"
-              onClick={()=> {
-                setSelectedSubmission(sub)
-                animateZoom(sub.lat, sub.lon)
+              onClick={() => {
+                setSelectedSubmission(sub);
+                animateZoom(sub.lat, sub.lon);
               }}
             >
               <img
@@ -306,25 +317,23 @@ export default function MapComponent() {
             </div>
           ))}
         </div>
-
         <button
-          onClick={() => handleScroll('left')}
+          onClick={() => handleScroll("left")}
           className={`absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 p-3 rounded-full text-white hover:bg-black/70 transition-opacity backdrop-blur-xs ${
-            parallaxOffset === 0 ? 'opacity-0' : 'opacity-100'
+            parallaxOffset === 0 ? "opacity-0" : "opacity-100"
           }`}
           disabled={parallaxOffset === 0}
         >
-          <FaChevronLeft size={24}/>
+          <FaChevronLeft size={24} />
         </button>
-
         <button
-          onClick={() => handleScroll('right')}
+          onClick={() => handleScroll("right")}
           className={`absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 p-3 rounded-full text-white hover:bg-black/70 transition-opacity backdrop-blur-xs ${
-            parallaxOffset >= maxScroll ? 'opacity-0' : 'opacity-100'
+            parallaxOffset >= maxScroll ? "opacity-0" : "opacity-100"
           }`}
           disabled={parallaxOffset >= maxScroll}
         >
-          <FaChevronRight size={24}/>
+          <FaChevronRight size={24} />
         </button>
       </div>
       <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
@@ -343,7 +352,7 @@ export default function MapComponent() {
               animate={true}
               minZoom={2}
               maxZoom={16}
-              onBoundsChanged={({zoom, bounds, center}) => {
+              onBoundsChanged={({ zoom, bounds, center }) => {
                 if (zoom !== currentZoom) {
                   setCurrentZoom(zoom);
                 }
@@ -355,29 +364,28 @@ export default function MapComponent() {
                 }
               }}
             >
-              <ZoomControl/>
+              <ZoomControl />
 
               {currentZoom > 9 || visibleItems.length === 1
                 ? overlays
                 : visibleItems.map((sub: any) => (
-                  <Marker
-                    color={getHsl(sub.rating)}
-                    anchor={[sub.lat, sub.lon]}
-                    key={sub.time}
-                    hover={false}
-                    onClick={() => {
-                      setSelectedSubmission(sub);
-                      animateZoom(sub.lat, sub.lon, 12)
-                    }}
-                  />
-                ))}
+                    <Marker
+                      color={getHsl(sub.rating)}
+                      anchor={[sub.lat, sub.lon]}
+                      key={sub.time}
+                      hover={false}
+                      onClick={() => {
+                        setSelectedSubmission(sub);
+                        animateZoom(sub.lat, sub.lon, 12);
+                      }}
+                    />
+                  ))}
             </Map>
           )}
         </div>
 
         {selectedSubmission && (
-          <div
-            className="md:w-1/2 w-full flex flex-col gap-4 animate-fade-in md:max-h-[800px] transition-opacity duration-200">
+          <div className="md:w-1/2 w-full flex flex-col gap-4 animate-fade-in md:max-h-[800px] transition-opacity duration-200">
             <div className="md:max-h-[400px] w-full">
               <div className="relative w-full h-full rounded-lg overflow-hidden">
                 <img
@@ -385,8 +393,7 @@ export default function MapComponent() {
                   alt={selectedSubmission.city}
                   className="object-cover w-full max-h-full"
                 />
-                <div
-                  className="absolute bottom-0 left-0 right-0 max-h-fit bg-black/50 backdrop-blur-sm px-4 py-3 w-full flex justify-between">
+                <div className="absolute bottom-0 left-0 right-0 max-h-fit bg-black/50 backdrop-blur-sm px-4 py-3 w-full flex justify-between">
                   <h2 className="text-slate-100 text-md font-bold">
                     {selectedSubmission.city}
                   </h2>
@@ -470,15 +477,15 @@ function getDateString(eventTime: number): string {
     return "just now";
   }
   const timeUnits = [
-    {seconds: 31536000, unit: "year"},
-    {seconds: 2592000, unit: "month"},
-    {seconds: 604800, unit: "week"},
-    {seconds: 86400, unit: "day"},
-    {seconds: 3600, unit: "hour"},
-    {seconds: 60, unit: "minute"},
-    {seconds: 1, unit: "second"},
+    { seconds: 31536000, unit: "year" },
+    { seconds: 2592000, unit: "month" },
+    { seconds: 604800, unit: "week" },
+    { seconds: 86400, unit: "day" },
+    { seconds: 3600, unit: "hour" },
+    { seconds: 60, unit: "minute" },
+    { seconds: 1, unit: "second" },
   ];
-  for (const {seconds, unit} of timeUnits) {
+  for (const { seconds, unit } of timeUnits) {
     const value = Math.floor(differenceInSeconds / seconds);
     if (value >= 1) {
       const plural = value === 1 ? "" : "s";
