@@ -1,5 +1,4 @@
 import {
-  blob,
   integer,
   real,
   sqliteTable,
