@@ -105,7 +105,10 @@ export default function SubmitComponent() {
             </div>
           </>
         )}
-        <label className="inline-flex items-center me-5 cursor-not-allowed" title={"Uploading historic images is current disabled."}>
+        <label
+          className="inline-flex items-center me-5 cursor-not-allowed"
+          title={"Uploading historic images is current disabled."}
+        >
           <input
             type="checkbox"
             defaultChecked={true}
