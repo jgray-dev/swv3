@@ -1,6 +1,6 @@
 import { computeDestinationPoint } from "geolib";
 import {
-  AveragedValues,
+  AveragedValues, ClassificationResult,
   InterpolatedWeather,
   WeatherLocation,
 } from "~/.server/interfaces";
@@ -439,4 +439,23 @@ export function unixToApproximateString(unixTimestamp: number): string {
     const months = Math.floor(difference / MONTH);
     return `${months} ${months === 1 ? "month" : "months"}`;
   }
+}
+
+
+export async function checkImage(image: File): Promise<Boolean> {
+  const buffer = await image.arrayBuffer()
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/Falconsai/nsfw_image_detection",
+      {
+        headers: {
+          "Authorization": "Bearer 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",
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        body: buffer,
+      }
+    );
+    const result = await response.json() as ClassificationResult[];
+    const normalScore = result.find(item => item.label === 'normal')?.score ?? 0;
+    return normalScore >= 0.6;
 }
