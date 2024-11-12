@@ -29,6 +29,8 @@ import CloudCoverDisplay from "~/components/CloudCoverDisplay";
 import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
 import { createUpload, getSubmissions } from "~/.server/database";
+import { getSunrise, getSunset } from "sunrise-sunset-js";
+import { de } from "date-fns/locale";
 
 export const meta: MetaFunction = () => {
   return [
@@ -46,17 +48,56 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const lat = url.searchParams.get("lat");
   const lon = url.searchParams.get("lon");
   const city = url.searchParams.get("city");
-  const date = url.searchParams.get("date");
+  const dateUrl = url.searchParams.get("date");
   const type = url.searchParams.get("type");
   let error = url.searchParams.get("error");
   if (!lat || !lon || !city) {
     let mapData = await getSubmissions(context);
     return { ok: false, message: error, uploads: mapData };
   }
-  const { type: eventType, time: eventTime } = getRelevantSunEvent(
+  let { type: eventType, time: eventTime } = getRelevantSunEvent(
     Number(lat),
     Number(lon)
   );
+  let historic = false;
+  let date;
+  if (dateUrl && type) {
+    date = new Date(dateUrl);
+    switch (type) {
+      case "sunrise":
+        historic = true;
+        eventType = "sunrise";
+        eventTime = Math.round(
+          new Date(getSunrise(Number(lat), Number(lon), date)).getTime() / 1000
+        );
+        break;
+      case "sunset":
+        historic = true;
+        eventType = "sunset";
+        eventTime = Math.round(
+          new Date(getSunset(Number(lat), Number(lon), date)).getTime() / 1000
+        );
+        break;
+      default:
+        console.error(`Error parsing past URL. ${dateUrl} ${type}`);
+        let mapData = await getSubmissions(context);
+        return {
+          message: "Error parsing URL parameters for historic data.",
+          ok: false,
+          uploads: mapData,
+        };
+    }
+  }
+  if (!date) {
+    console.error(`Error parsing date parameter. ${date} ${dateUrl}`);
+    let mapData = await getSubmissions(context);
+    return {
+      message: "Error parsing date parameter.",
+      ok: false,
+      uploads: mapData,
+    };
+  }
+
   if (!eventType) {
     let mapData = await getSubmissions(context);
     return {
@@ -78,14 +119,32 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   }
   const apiKey = context.cloudflare.env.METEO_KEY;
   const coords = generateCoordinateString(Number(lat), Number(lon), eventType);
+  const dayBefore = new Date(date.getTime() - 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+  const dayAfter = new Date(date.getTime() + 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
 
   const [mapData, response] = await Promise.all([
     getSubmissions(context),
     fetch(
-      `https://customer-api.open-meteo.com/v1/forecast?${coords}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&past_days=1&forecast_days=2&apikey=${apiKey}`
+      historic
+        ? `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${coords}&start_date=${dayBefore}&end_date=${dayAfter}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=CMIslKKjad4FIywt`
+        : `https://customer-api.open-meteo.com/v1/forecast?${coords}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&past_days=1&forecast_days=2&apikey=${apiKey}`
     ),
   ]);
   let weatherData = await response.json();
+  // @ts-ignore
+  if (weatherData?.error) {
+    let mapData = await getSubmissions(context);
+    return {
+      // @ts-ignore
+      message: `Error fetching weather API ${weatherData?.reason}`,
+      ok: false,
+      uploads: mapData,
+    };
+  }
   if (!eventTime) return null;
   weatherData = purgeDuplicates(weatherData as WeatherLocation[], eventType);
   const interpData = interpolateWeatherData(
@@ -100,6 +159,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   if (!mapData)
     return redirect(appendErrorToUrl(url.search, "Error fetching database"));
   return {
+    allData: weatherData,
     lat: parseFloat(lat),
     lon: parseFloat(lon),
     city: String(city),
