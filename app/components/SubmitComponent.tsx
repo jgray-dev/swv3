@@ -9,10 +9,6 @@ import { LoaderData } from "~/.server/interfaces";
 
 interface ActionData {
   success: boolean;
-  requested: {
-    date: boolean;
-    location: boolean;
-  };
   error?: string;
 }
 
@@ -40,28 +36,35 @@ export default function SubmitComponent() {
   if (!allData?.ok) return null;
 
   return (
-    <div className="md:max-w-lg max-w-full md:mx-auto mx-4 mt-4 mb-8 text-center">
-      Submit your own picture!
+    <div className="w-full max-w-lg mx-auto px-4 py-6">
+      <h2 className="text-xl font-medium text-slate-100 mb-6 text-center">
+        Submit your own picture!
+      </h2>
+
       <Form
         ref={formRef}
         method="post"
         encType="multipart/form-data"
-        className="p-6 space-y-4 rounded-lg bg-white/10 border border-white/20"
+        className="space-y-6 p-8 rounded-xl bg-white/10 border border-white/20 backdrop-blur-sm"
       >
+        {/* File Upload Section */}
         <div className="space-y-2">
           <label
             htmlFor="image"
-            className="block text-sm font-light text-slate-100 text-left"
+            className="block text-sm font-medium text-slate-100"
           >
             Select Image
           </label>
           <div
             className={`
-            relative w-full p-4 rounded-lg 
-            bg-white/10 border border-white/20 
-            hover:bg-white/20 transition-all
-            ${selectedFile ? "bg-white/20" : ""}
-          `}
+              relative overflow-hidden rounded-lg
+              border transition-all duration-200 ease-in-out
+              ${
+                selectedFile
+                  ? "bg-white/20 border-white/30"
+                  : "bg-white/10 border-white/20 hover:bg-white/15"
+              }
+            `}
           >
             <input
               type="file"
@@ -73,13 +76,26 @@ export default function SubmitComponent() {
               required
               disabled={isSubmitting}
             />
-            <div className="flex items-center justify-center text-slate-100">
-              <span>{selectedFile || "Choose an image"}</span>
+            <div className="flex items-center justify-center py-4 px-3">
+              <svg
+                className={`w-5 h-5 mr-2 ${
+                  selectedFile ? "text-green-400" : "text-slate-400"
+                }`}
+                fill="none"
+                strokeWidth="2"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="text-sm text-slate-100">
+                {selectedFile || "Choose an image"}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Hidden fields for additional data */}
+        {/* Hidden Fields */}
         <input type="hidden" name="rating" value={allData.rating} />
         <input type="hidden" name="lat" value={allData.lat} />
         <input type="hidden" name="lon" value={allData.lon} />
@@ -91,74 +107,126 @@ export default function SubmitComponent() {
           value={JSON.stringify(allData.stats)}
         />
 
+        {/* Status Messages */}
         {actionData?.error && (
-          <div className="px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30">
+          <div className="flex items-center p-4 rounded-lg bg-red-500/20 border border-red-500/30">
+            <svg
+              className="w-5 h-5 text-red-400 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
             <span className="text-sm text-red-400">{actionData.error}</span>
           </div>
         )}
-        {actionData?.requested && (
-          <>
-            <div className="px-4 py-2 rounded-lg bg-orange-500/20 border border-orange-500/30">
-              <span className="text-sm text-orange-400">
-                More data required to complete upload
-              </span>
+
+        {/* Toggle Switch */}
+        <div className="flex items-center justify-start">
+          <label className="inline-flex items-center cursor-pointer">
+            <div className="relative">
+              <input
+                type="checkbox"
+                defaultChecked={true}
+                className="sr-only peer"
+                name="current"
+              />
+              <div className="w-11 h-6 bg-gray-700 peer-checked:bg-green-600 rounded-full duration-150 ease-in-out transition-colors">
+              </div>
+              <div
+                className="absolute left-[2px] top-[2px] bg-white w-5 h-5 rounded-full 
+                      duration-150 ease-in-out
+                      peer-checked:translate-x-[20px]"
+              ></div>
             </div>
-          </>
-        )}
-        <label
-          className="inline-flex items-center me-5 cursor-not-allowed"
-          title={"Uploading historic images is current disabled."}
-        >
-          <input
-            type="checkbox"
-            defaultChecked={true}
-            className="sr-only peer"
-            name={"historic"}
-            disabled
-          />
-          <div className="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
-          <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-            Image from today
-          </span>
-        </label>
+            <span className="ml-3 text-sm font-medium text-slate-300">
+              Image from today
+            </span>
+          </label>
+        </div>
+
         {actionData?.success && (
-          <div className="px-4 py-2 rounded-lg bg-green-500/20 border border-green-500/30">
+          <div className="flex items-center p-4 rounded-lg bg-green-500/20 border border-green-500/30">
+            <svg
+              className="w-5 h-5 text-green-400 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
             <span className="text-sm text-green-400">
               Successfully uploaded!
             </span>
           </div>
         )}
 
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={isSubmitting || !selectedFile}
           className={`
-            w-full px-4 py-2 rounded-lg 
-            bg-white/20 border border-white/20 
-            hover:bg-white/30 active:bg-white/10 
-            transition-all text-slate-100
-            disabled:bg-white/5 disabled:border-white/5 
-            disabled:cursor-not-allowed
-            relative
+            w-full px-4 py-3 rounded-lg
+            font-medium text-sm
+            transition-all duration-200
+            ${
+              isSubmitting || !selectedFile
+                ? "bg-white/5 border-white/5 text-slate-400 cursor-not-allowed"
+                : "bg-white/20 border border-white/20 text-slate-100 hover:bg-white/30 active:bg-white/10"
+            }
           `}
         >
-          <span
-            className={`
-            flex items-center justify-center
-            transition-opacity duration-200
-            ${isSubmitting ? "opacity-0" : "opacity-100"}
-          `}
-          >
-            Upload Image
-          </span>
-
-          {isSubmitting && (
-            <span className="absolute inset-0 flex items-center justify-center">
-              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
-              <span>Uploading...</span>
+          <div className="relative h-5">
+            <span
+              className={`
+                absolute inset-0 w-full
+                flex items-center justify-center
+                transition-opacity duration-200
+                ${isSubmitting ? "opacity-0" : "opacity-100"}
+              `}
+            >
+              Upload Image
             </span>
-          )}
+
+            {isSubmitting && (
+              <span className="absolute inset-0 w-full flex items-center justify-center">
+                <svg
+                  className="animate-spin h-5 w-5 mr-2 text-slate-100"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <span>Uploading...</span>
+              </span>
+            )}
+          </div>
         </button>
+        <div className={`w-full text-center text-white/50 ${!selectedFile?"opacity-0 h-0":"opacity-100"}`}>Submitting a <span className={"text-white"}>{allData.eventType}</span> rated <span
+          className={"text-white"}>{allData.rating}</span> at <span className={"text-white"}>{allData.city}</span></div>
       </Form>
     </div>
   );
