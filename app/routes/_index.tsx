@@ -6,6 +6,7 @@ import { Link, redirect, useRouteLoaderData } from "@remix-run/react";
 import { LocationData } from "~/components/LocationComponent";
 import {
   averageData,
+  checkImage,
   findNextSunEvent,
   generateCoordinateString,
   getRelative,
@@ -30,7 +31,6 @@ import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
 import { createUpload, getSubmissions } from "~/.server/database";
 import { getSunrise, getSunset } from "sunrise-sunset-js";
-import { de } from "date-fns/locale";
 
 export const meta: MetaFunction = () => {
   return [
@@ -208,16 +208,21 @@ export const action: ActionFunction = async ({ request, context }) => {
       const lon = formData.get("lon");
       const city = formData.get("city");
       const data = formData.get("data");
-      const historic = formData.get("historic");
+      const current = formData.get("current");
 
       if (imageFile && imageFile instanceof Blob) {
-        if (!Boolean(historic)) {
-          console.log("historic upload");
-        }
-
+        const safe = await checkImage(imageFile)
+        if (!safe)
+          return json(
+            {
+              error: `Unsafe image detected.`,
+              success: false,
+            },
+            { status: 418 }
+          );
+        
         try {
           const API_URL = `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/images/v1`;
-
           const imageFormData = new FormData();
           imageFormData.append("file", imageFile);
           const response = await fetch(API_URL, {
