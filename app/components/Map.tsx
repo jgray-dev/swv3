@@ -270,13 +270,21 @@ export default function MapComponent() {
     const [startLat, startLon] = currentCenter;
     const duration = 1200;
     const startTime = performance.now();
+
     const animateFrame = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = progress * (2 - progress);
-      const newZoom = startZoom + (targetZoom - startZoom) * eased;
-      const newLat = startLat + (targetLat - startLat) * eased;
-      const newLon = startLon + (targetLon - startLon) * eased;
+
+      // Quadratic ease-out for position (smooth start, slower end)
+      const positionEased = progress * (2 - progress);
+
+      // Cubic ease-in for zoom (slow start, rapid end)
+      const zoomEased = progress * progress * progress;
+
+      const newZoom = startZoom + (targetZoom - startZoom) * zoomEased;
+      const newLat = startLat + (targetLat - startLat) * positionEased;
+      const newLon = startLon + (targetLon - startLon) * positionEased;
+
       setCurrentZoom(newZoom);
       setCurrentCenter([newLat, newLon]);
 
@@ -284,6 +292,7 @@ export default function MapComponent() {
         requestAnimationFrame(animateFrame);
       }
     };
+
     requestAnimationFrame(animateFrame);
   }
 
