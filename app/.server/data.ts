@@ -223,21 +223,44 @@ export function getStringLiteral(
   type: string
 ): string {
   const differenceInSeconds = eventTime - currentTime;
-  const absoluteDifferenceInHours = Math.abs(differenceInSeconds) / 3600;
-  const absoluteDifferenceInMinutes = Math.abs(differenceInSeconds) / 60;
+  const absoluteDifferenceInSeconds = Math.abs(differenceInSeconds);
+
+  // Convert to different time units
+  const absoluteDifferenceInMinutes = absoluteDifferenceInSeconds / 60;
+  const absoluteDifferenceInHours = absoluteDifferenceInSeconds / 3600;
+  const absoluteDifferenceInDays = absoluteDifferenceInSeconds / (3600 * 24);
+  const absoluteDifferenceInWeeks =
+    absoluteDifferenceInSeconds / (3600 * 24 * 7);
+
+  // Helper function for plural handling
+  const pluralize = (value: number, unit: string) =>
+    `${value} ${unit}${value === 1 ? "" : "s"}`;
+
+  // Just now
   if (absoluteDifferenceInMinutes < 1) {
-    return `${type == "sunset" ? "sunsetting" : "sunrising"} just now`;
+    return `${type === "sunset" ? "sunsetting" : "sunrising"} just now`;
   }
-  if (absoluteDifferenceInHours < 1) {
-    const minutes = Math.round(absoluteDifferenceInMinutes);
-    return differenceInSeconds < 0
-      ? `${type} ${minutes} minute${minutes === 1 ? "" : "s"} ago`
-      : `${type} in ${minutes} minute${minutes === 1 ? "" : "s"}`;
+
+  // Create the time string
+  let timeString: string;
+  if (absoluteDifferenceInWeeks >= 1) {
+    const weeks = Math.floor(absoluteDifferenceInWeeks);
+    timeString = pluralize(weeks, "week");
+  } else if (absoluteDifferenceInDays >= 1) {
+    const days = Math.floor(absoluteDifferenceInDays);
+    timeString = pluralize(days, "day");
+  } else if (absoluteDifferenceInHours >= 1) {
+    const hours = Math.floor(absoluteDifferenceInHours);
+    timeString = pluralize(hours, "hour");
+  } else {
+    const minutes = Math.floor(absoluteDifferenceInMinutes);
+    timeString = pluralize(minutes, "minute");
   }
-  const hours = Math.round(absoluteDifferenceInHours);
+
+  // Return formatted string
   return differenceInSeconds < 0
-    ? `${type} ${hours} hour${hours === 1 ? "" : "s"} ago`
-    : `${type} in ${hours} hour${hours === 1 ? "" : "s"}`;
+    ? `${type} ${timeString} ago`
+    : `${type} in ${timeString}`;
 }
 
 // Used for formatting text when displaying the date/time of an event
