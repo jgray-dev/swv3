@@ -68,3 +68,8 @@ export interface DbUpload {
   time: number;
   data: any | InterpolatedWeather[];
 }
+
+export interface ClassificationResult {
+  label: "nsfw" | "normal";
+  score: number;
+}
