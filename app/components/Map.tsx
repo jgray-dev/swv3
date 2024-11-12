@@ -176,11 +176,11 @@ export default function MapComponent() {
                   alt={sub.city}
                   className={`${
                     g.subs.length <= 3
-                      ? "max-w-32 max-h-32"
+                      ? "w-32 h-32"
                       : g.subs.length <= 6
-                      ? "max-w-24 max-h-24"
-                      : "max-w-16 max-h-16"
-                  } aspect-auto rounded-md transition-transform hover:scale-105 ${getBorderColor(
+                      ? "w-24 h-24"
+                      : "w-16 h-16"
+                  } object-cover rounded-md transition-transform hover:scale-105 ${getBorderColor(
                     sub.rating
                   )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
                 />
@@ -368,7 +368,29 @@ export default function MapComponent() {
 
               {currentZoom > 9 || visibleItems.length === 1
                 ? overlays
-                : visibleItems.map((sub: any) => (
+                : // visibleItems.map((sub:DbUpload)=>(
+                  //   <Overlay
+                  //     anchor={[sub.lat, sub.lon]}
+                  //     key={sub.time}
+                  //     offset={[64, 64]}
+                  //   >
+                  //     <button
+                  //       onMouseDown={() => {
+                  //         animateZoom(sub.lat, sub.lon);
+                  //         setSelectedSubmission(sub);
+                  //       }}
+                  //     >
+                  //       <img
+                  //         src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
+                  //         alt={sub.city}
+                  //         className={`max-w-32 max-h-32 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(
+                  //           sub.rating
+                  //         )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
+                  //       />
+                  //     </button>
+                  //   </Overlay>
+                  // ))
+                  visibleItems.map((sub: any) => (
                     <Marker
                       color={getHsl(sub.rating)}
                       anchor={[sub.lat, sub.lon]}
