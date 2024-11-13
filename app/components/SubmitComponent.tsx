@@ -18,6 +18,7 @@ export default function SubmitComponent() {
   const navigation = useNavigation();
   const formRef = useRef<HTMLFormElement>(null);
   const [selectedFile, setSelectedFile] = useState<string>("");
+  const [useToday, setUseToday] = useState(true);
 
   const isSubmitting = navigation.state === "submitting";
 
@@ -96,6 +97,7 @@ export default function SubmitComponent() {
         </div>
 
         {/* Hidden Fields */}
+        <input type="hidden" name="useToday" value={String(useToday)} />
         <input type="hidden" name="rating" value={allData.rating} />
         <input type="hidden" name="lat" value={allData.lat} />
         <input type="hidden" name="lon" value={allData.lon} />
@@ -127,28 +129,86 @@ export default function SubmitComponent() {
           </div>
         )}
 
-        {/* Toggle Switch */}
-        <div className="flex items-center justify-start">
-          <label className="inline-flex items-center cursor-pointer">
-            <div className="relative">
-              <input
-                type="checkbox"
-                defaultChecked={true}
-                className="sr-only peer"
-                name="current"
-              />
-              <div className="w-11 h-6 bg-gray-700 peer-checked:bg-green-600 rounded-full duration-150 ease-in-out transition-colors">
+        <div className="space-y-4">
+          <div className="flex items-center justify-start">
+            <label className="inline-flex items-center cursor-pointer">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={useToday}
+                  onChange={(e) => setUseToday(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-white/10 border border-white/20 peer-checked:bg-green-500/20 peer-checked:border-green-500/30 rounded-full duration-200 ease-in-out transition-all"></div>
+                <div
+                  className="absolute left-[2px] top-[2px] bg-slate-100 w-5 h-5 rounded-full 
+                    duration-200 ease-in-out
+                    peer-checked:translate-x-[20px]"
+                ></div>
               </div>
-              <div
-                className="absolute left-[2px] top-[2px] bg-white w-5 h-5 rounded-full 
-                      duration-150 ease-in-out
-                      peer-checked:translate-x-[20px]"
-              ></div>
+              <span className="ml-3 text-sm font-medium text-slate-100">
+                Image from today
+              </span>
+            </label>
+          </div>
+
+          {!useToday && (
+            <div className="space-y-3 pl-4">
+              <div>
+                <label
+                  htmlFor="imageDate"
+                  className="block text-sm text-slate-100 mb-1"
+                >
+                  Select date of image
+                </label>
+                <input
+                  type="date"
+                  id="submissionDate"
+                  min="2022-01-01"
+                  max={new Date().toISOString().split("T")[0]}
+                  name="submissionDate"
+                  required
+                  className="w-full p-2 rounded-md 
+                bg-white/10 border border-white/20
+                focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20
+                transition-all duration-200
+                text-slate-100"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="imageType"
+                  className="block text-sm text-slate-100 mb-1"
+                >
+                  Select type of event
+                </label>
+                <select
+                  id="eventType"
+                  name="eventType"
+                  required
+                  className="w-full p-2 rounded-md
+                bg-white/10 border border-white/20
+                focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20
+                transition-all duration-200
+                text-slate-100"
+                >
+                  <option
+                    value="sunrise"
+                    className={"hover:text-black text-black/80"}
+                  >
+                    Sunrise
+                  </option>
+                  <option
+                    value="sunset"
+                    className={"hover:text-black text-black/80"}
+                  >
+                    Sunset
+                  </option>
+                </select>
+              </div>
             </div>
-            <span className="ml-3 text-sm font-medium text-slate-300">
-              Image from today
-            </span>
-          </label>
+          )}
         </div>
 
         {actionData?.success && (
@@ -225,8 +285,15 @@ export default function SubmitComponent() {
             )}
           </div>
         </button>
-        <div className={`w-full text-center text-white/50 ${!selectedFile?"opacity-0 h-0":"opacity-100"}`}>Submitting a <span className={"text-white"}>{allData.eventType}</span> rated <span
-          className={"text-white"}>{allData.rating}</span> at <span className={"text-white"}>{allData.city}</span></div>
+        <div
+          className={`w-full text-center text-white/50 ${
+            !selectedFile ? "opacity-0 h-0" : "opacity-100"
+          }`}
+        >
+          Submitting a <span className={"text-white"}>{allData.eventType}</span>{" "}
+          rated <span className={"text-white"}>{allData.rating}</span> at{" "}
+          <span className={"text-white"}>{allData.city}</span>
+        </div>
       </Form>
     </div>
   );
