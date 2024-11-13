@@ -442,13 +442,13 @@ export function unixToApproximateString(unixTimestamp: number): string {
 }
 
 
-export async function checkImage(image: File): Promise<Boolean> {
+export async function checkImage(context:any ,image: File): Promise<Boolean> {
   const buffer = await image.arrayBuffer()
     const response = await fetch(
       "https://api-inference.huggingface.co/models/Falconsai/nsfw_image_detection",
       {
         headers: {
-          "Authorization": "Bearer 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",
+          "Authorization": `Bearer ${context.cloudflare.env.HF_TOKEN}`,
           "Content-Type": "application/json",
         },
         method: "POST",
