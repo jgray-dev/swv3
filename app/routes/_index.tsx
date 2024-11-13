@@ -43,6 +43,12 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+//
+// Well well well.. we have a timezone issue with the historic data attempts now...
+// the calendar selector from the LC returns YYYY-MM-DD, which is fine, but if we search los angeles, the date becomes a day off from the timezone.
+// frustrating error, will fix tommorrow im going to drink and play cs
+//
+
 export const loader: LoaderFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const lat = url.searchParams.get("lat");
