@@ -59,10 +59,13 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     Number(lat),
     Number(lon)
   );
-  let historic = false;
   let date;
-  if (dateUrl && type) {
+  let historic = false;
+  if (type) {
+    //@ts-ignore
     date = new Date(dateUrl);
+    console.log("DATE");
+    console.log(date);
     switch (type) {
       case "sunrise":
         historic = true;
@@ -74,9 +77,13 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       case "sunset":
         historic = true;
         eventType = "sunset";
-        eventTime = Math.round(
-          new Date(getSunset(Number(lat), Number(lon), date)).getTime() / 1000
-        );
+        console.log('Input date:', dateUrl);
+        console.log('Parsed date:', date);
+        console.log('Date timestamp:', date.getTime());
+        const sunsetTime = getSunset(Number(lat), Number(lon), new Date(date.getTime()));
+        console.log('Sunset time:', sunsetTime);
+        eventTime = Math.round(new Date(sunsetTime).getTime() / 1000);
+        console.log('Final eventTime:', eventTime);
         break;
       default:
         console.error(`Error parsing past URL. ${dateUrl} ${type}`);
@@ -88,16 +95,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
         };
     }
   }
-  if (!date) {
-    console.error(`Error parsing date parameter. ${date} ${dateUrl}`);
-    let mapData = await getSubmissions(context);
-    return {
-      message: "Error parsing date parameter.",
-      ok: false,
-      uploads: mapData,
-    };
-  }
 
+  //@ts-ignore
   if (!eventType) {
     let mapData = await getSubmissions(context);
     return {
@@ -119,12 +118,13 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   }
   const apiKey = context.cloudflare.env.METEO_KEY;
   const coords = generateCoordinateString(Number(lat), Number(lon), eventType);
-  const dayBefore = new Date(date.getTime() - 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
-  const dayAfter = new Date(date.getTime() + 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
+  let dayBefore, dayAfter;
+  if (historic) {
+    // @ts-ignore
+    dayBefore = new Date(date.getTime() - 86400000).toISOString().split("T")[0];
+    // @ts-ignore
+    dayAfter = new Date(date.getTime() + 86400000).toISOString().split("T")[0];
+  }
 
   const [mapData, response] = await Promise.all([
     getSubmissions(context),
@@ -208,10 +208,51 @@ export const action: ActionFunction = async ({ request, context }) => {
       const lon = formData.get("lon");
       const city = formData.get("city");
       const data = formData.get("data");
-      const current = formData.get("current");
-
+      const useToday = formData.get("useToday");
+      const eventType = formData.get("eventType");
+      const submissionDate = formData.get("submissionDate");
+      const now: Boolean = useToday === "true";
+      let date;
+      let time;
+      if (!now) {
+        if (!eventType || !submissionDate) {
+          return json(
+            {
+              error: `Error parsing submission details`,
+              success: false,
+            },
+            { status: 500 }
+          );
+        }
+        // @ts-ignore
+        date = new Date(submissionDate);
+        switch (eventType) {
+          case "sunrise":
+            time = Math.round(
+              new Date(getSunrise(Number(lat), Number(lon), date)).getTime() /
+                1000
+            );
+            break;
+          case "sunset":
+            time = Math.round(
+              new Date(getSunset(Number(lat), Number(lon), date)).getTime() /
+                1000
+            );
+            break;
+          default:
+            return json(
+              {
+                error: `Error parsing eventType switch`,
+                success: false,
+              },
+              { status: 500 }
+            );
+        }
+      }
+      console.log(time ? time : "");
+      console.log(eventType ? eventType : "");
       if (imageFile && imageFile instanceof Blob) {
-        const safe = await checkImage(context, imageFile)
+        const safe = await checkImage(context, imageFile);
         if (!safe)
           return json(
             {
@@ -220,7 +261,7 @@ export const action: ActionFunction = async ({ request, context }) => {
             },
             { status: 418 }
           );
-        
+
         try {
           const API_URL = `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/images/v1`;
           const imageFormData = new FormData();
@@ -337,25 +378,29 @@ export const action: ActionFunction = async ({ request, context }) => {
 
           // @ts-expect-error fts
           if (data.status === "OK") {
+
+            // @ts-expect-error fts
+            const lat = data.results[0].geometry.location.lat
+            // @ts-expect-error fts
+            const lon = data.results[0].geometry.location.lng
             const redirectUrl = new URL(url.origin);
             redirectUrl.searchParams.set(
               "lat",
-              // @ts-expect-error fts
-              data.results[0].geometry.location.lat
+              lat
             );
             redirectUrl.searchParams.set(
               "lon",
-              // @ts-expect-error fts
-              data.results[0].geometry.location.lng
+              lon
             );
             redirectUrl.searchParams.set(
               "city",
               // @ts-expect-error fts
               data.results[0].formatted_address
             );
-            redirectUrl.searchParams.set("date", date);
-            redirectUrl.searchParams.set("type", eventType);
-
+            if (date !== "next") {
+              redirectUrl.searchParams.set("date", date);
+              redirectUrl.searchParams.set("type", eventType);
+            }
             return redirect(redirectUrl.toString());
           } else {
             console.error("No geocoding results found");
