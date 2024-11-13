@@ -1,6 +1,7 @@
 import { computeDestinationPoint } from "geolib";
 import {
-  AveragedValues, ClassificationResult,
+  AveragedValues,
+  ClassificationResult,
   InterpolatedWeather,
   WeatherLocation,
 } from "~/.server/interfaces";
@@ -441,21 +442,21 @@ export function unixToApproximateString(unixTimestamp: number): string {
   }
 }
 
-
-export async function checkImage(context:any ,image: File): Promise<Boolean> {
-  const buffer = await image.arrayBuffer()
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/Falconsai/nsfw_image_detection",
-      {
-        headers: {
-          "Authorization": `Bearer ${context.cloudflare.env.HF_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-        body: buffer,
-      }
-    );
-    const result = await response.json() as ClassificationResult[];
-    const normalScore = result.find(item => item.label === 'normal')?.score ?? 0;
-    return normalScore >= 0.6;
+export async function checkImage(context: any, image: File): Promise<Boolean> {
+  const buffer = await image.arrayBuffer();
+  const response = await fetch(
+    "https://api-inference.huggingface.co/models/Falconsai/nsfw_image_detection",
+    {
+      headers: {
+        Authorization: `Bearer ${context.cloudflare.env.HF_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      body: buffer,
+    }
+  );
+  const result = (await response.json()) as ClassificationResult[];
+  const normalScore =
+    result.find((item) => item.label === "normal")?.score ?? 0;
+  return normalScore >= 0.6;
 }
