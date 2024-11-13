@@ -211,7 +211,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       const current = formData.get("current");
 
       if (imageFile && imageFile instanceof Blob) {
-        const safe = await checkImage(imageFile)
+        const safe = await checkImage(context, imageFile)
         if (!safe)
           return json(
             {
