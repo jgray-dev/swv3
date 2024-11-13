@@ -64,8 +64,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   if (type) {
     //@ts-ignore
     date = new Date(dateUrl);
-    console.log("DATE");
-    console.log(date);
     switch (type) {
       case "sunrise":
         historic = true;
@@ -76,14 +74,10 @@ export const loader: LoaderFunction = async ({ request, context }) => {
         break;
       case "sunset":
         historic = true;
-        eventType = "sunset";
-        console.log('Input date:', dateUrl);
-        console.log('Parsed date:', date);
-        console.log('Date timestamp:', date.getTime());
-        const sunsetTime = getSunset(Number(lat), Number(lon), new Date(date.getTime()));
-        console.log('Sunset time:', sunsetTime);
-        eventTime = Math.round(new Date(sunsetTime).getTime() / 1000);
-        console.log('Final eventTime:', eventTime);
+        eventType = "sunrise";
+        eventTime = Math.round(
+          new Date(getSunrise(Number(lat), Number(lon), date)).getTime() / 1000
+        );
         break;
       default:
         console.error(`Error parsing past URL. ${dateUrl} ${type}`);
@@ -249,8 +243,6 @@ export const action: ActionFunction = async ({ request, context }) => {
             );
         }
       }
-      console.log(time ? time : "");
-      console.log(eventType ? eventType : "");
       if (imageFile && imageFile instanceof Blob) {
         const safe = await checkImage(context, imageFile);
         if (!safe)
@@ -378,20 +370,13 @@ export const action: ActionFunction = async ({ request, context }) => {
 
           // @ts-expect-error fts
           if (data.status === "OK") {
-
             // @ts-expect-error fts
-            const lat = data.results[0].geometry.location.lat
+            const lat = data.results[0].geometry.location.lat;
             // @ts-expect-error fts
-            const lon = data.results[0].geometry.location.lng
+            const lon = data.results[0].geometry.location.lng;
             const redirectUrl = new URL(url.origin);
-            redirectUrl.searchParams.set(
-              "lat",
-              lat
-            );
-            redirectUrl.searchParams.set(
-              "lon",
-              lon
-            );
+            redirectUrl.searchParams.set("lat", lat);
+            redirectUrl.searchParams.set("lon", lon);
             redirectUrl.searchParams.set(
               "city",
               // @ts-expect-error fts
