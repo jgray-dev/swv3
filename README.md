@@ -32,10 +32,15 @@ Far zone; weather past the horizon. - this is mostly a "bonus" to the rating, as
 ### TODO:
 
 
-- [ ] Picture submitting
-- [ ] Map view of submitted pictures
-- [ ] "Featued" submissions section
-- [ ] 
+- [x] Picture submitting
+- [x] Map view of submitted pictures
+- [x] "Featued" submissions section
+- [x] NSFW submission detection+rejection
+- [ ] Historic data working properly
+- [ ] Historic submissions working properly
+- [ ] Integrate CF turnstile to verify submissions
+- [ ] UI cleanup lol
+- [ ] Code cleanup lol
 
 
 
