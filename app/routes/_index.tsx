@@ -325,6 +325,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         }
 
         const responseData = await response.json();
+        // @ts-ignore
         const image_id = responseData?.result?.id;
 
         if (!image_id) {
