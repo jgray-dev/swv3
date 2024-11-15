@@ -79,10 +79,10 @@ export default function SubmitComponent() {
               relative overflow-hidden rounded-lg
               border transition-all duration-200 ease-in-out
               ${
-              selectedFile
-                ? "bg-white/20 border-white/30"
-                : "bg-white/10 border-white/20 hover:bg-white/15"
-            }
+                selectedFile
+                  ? "bg-white/20 border-white/30"
+                  : "bg-white/10 border-white/20 hover:bg-white/15"
+              }
             `}
           >
             <input
@@ -158,7 +158,11 @@ export default function SubmitComponent() {
         <input type="hidden" name="lon" value={allData.lon} />
         <input type="hidden" name="city" value={allData.city} />
         <input type="hidden" name="element" value="userSubmission" />
-        <input type="hidden" name="data" value={JSON.stringify(allData.stats)} />
+        <input
+          type="hidden"
+          name="data"
+          value={JSON.stringify(allData.stats)}
+        />
 
         {/* Status Messages */}
         {actionData?.error && (
@@ -219,34 +223,54 @@ export default function SubmitComponent() {
         </div>
 
         {/*Future event warning*/}
-        {allData.relative === "future" && selectedFile && !actionData?.success && (
-          <div className={"flex justify-center items-center text-red-400 text-sm cursor-default"} title={`You cannot upload a picture from the future!`}>
-            <IoIosWarning className={"h-6 w-6 fill-red-500 mr-2"} />
-            This event hasn't happened yet!
-          </div>
-        )}
+        {allData.relative === "future" &&
+          selectedFile &&
+          !actionData?.success && (
+            <div
+              className={
+                "flex justify-center items-center text-red-400 text-sm cursor-default"
+              }
+              title={`You cannot upload a picture from the future!`}
+            >
+              <IoIosWarning className={"h-6 w-6 fill-red-500 mr-2"} />
+              This event hasn't happened yet!
+            </div>
+          )}
 
         {/*Relative warning*/}
-        {allData.relative === "past" && selectedFile && !actionData?.success && (
-          <div className={"flex justify-center items-center text-orange-400 text-sm cursor-default"} title={`Make sure the image you're uploading was taken ${allData.eventString.split(" ").slice(1).join(" ")}.`}>
-            <PiWarningCircle className={"h-6 w-6 fill-orange-500 mr-2"} />
-            This event happened {allData.eventString.split(" ").slice(1).join(" ")}.
-          </div>
-        )}
+        {allData.relative === "past" &&
+          selectedFile &&
+          !actionData?.success && (
+            <div
+              className={
+                "flex justify-center items-center text-orange-400 text-sm cursor-default"
+              }
+              title={`Make sure the image you're uploading was taken ${allData.eventString
+                .split(" ")
+                .slice(1)
+                .join(" ")}.`}
+            >
+              <PiWarningCircle className={"h-6 w-6 fill-orange-500 mr-2"} />
+              This event happened{" "}
+              {allData.eventString.split(" ").slice(1).join(" ")}.
+            </div>
+          )}
 
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={isSubmitting || !selectedFile || allData.relative === "future"}
+          disabled={
+            isSubmitting || !selectedFile || allData.relative === "future"
+          }
           className={`
             w-full px-4 py-3 rounded-lg
             font-medium text-sm
             transition-all duration-200
             ${
-            isSubmitting || !selectedFile || allData.relative === "future"
-              ? "bg-white/5 border-white/5 text-slate-400 cursor-not-allowed"
-              : "bg-white/20 border border-white/20 text-slate-100 hover:bg-white/30 active:bg-white/10"
-          }
+              isSubmitting || !selectedFile || allData.relative === "future"
+                ? "bg-white/5 border-white/5 text-slate-400 cursor-not-allowed"
+                : "bg-white/20 border border-white/20 text-slate-100 hover:bg-white/30 active:bg-white/10"
+            }
           `}
         >
           <div className="relative h-5">
