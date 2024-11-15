@@ -486,7 +486,6 @@ export function createNoonDate(dateStr: string, timezone: string) {
   // Adjust the time to ensure noon in the target timezone
   return new Date(date.getTime() - offset);
 }
-
 export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
   if (
     !response.results ||
@@ -496,21 +495,44 @@ export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
     return response.results[0].formatted_address;
   }
 
-  const cityComponent = response.results[0].address_components.find(
-    (component) => component.types.includes("locality")
+  const addressComponents = response.results[0].address_components;
+
+  const cityComponent = addressComponents.find((component) =>
+    component.types.includes("locality")
   );
 
-  if (cityComponent) {
-    return cityComponent.long_name;
+  const stateComponent = addressComponents.find((component) =>
+    component.types.includes("administrative_area_level_1")
+  );
+
+  const countryComponent = addressComponents.find((component) =>
+    component.types.includes("country")
+  );
+
+  let city = cityComponent?.long_name;
+
+  if (!city) {
+    const fallbackComponent = addressComponents.find(
+      (component) =>
+        component.types.includes("sublocality") ||
+        component.types.includes("administrative_area_level_3")
+    );
+    city = fallbackComponent?.long_name;
   }
 
-  const fallbackComponent = response.results[0].address_components.find(
-    (component) =>
-      component.types.includes("sublocality") ||
-      component.types.includes("administrative_area_level_3")
-  );
+  if (!city) {
+    return response.results[0].formatted_address;
+  }
 
-  return fallbackComponent
-    ? fallbackComponent.long_name
-    : response.results[0].formatted_address;
+  let locationParts = [city];
+
+  if (stateComponent?.short_name && stateComponent.long_name !== city) {
+    locationParts.push(stateComponent.short_name);
+  }
+
+  if (countryComponent?.short_name) {
+    locationParts.push(countryComponent.short_name);
+  }
+
+  return locationParts.join(", ");
 }
