@@ -7,7 +7,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { LoaderData } from "~/.server/interfaces";
 import {IoIosWarning} from "react-icons/io";
-import {PiWarningCircle, PiWarningCircleThin} from "react-icons/pi";
+import {PiWarningCircle} from "react-icons/pi";
 
 interface ActionData {
   success: boolean;
@@ -20,7 +20,6 @@ export default function SubmitComponent() {
   const navigation = useNavigation();
   const formRef = useRef<HTMLFormElement>(null);
   const [selectedFile, setSelectedFile] = useState<string>("");
-  const [useToday, setUseToday] = useState(true);
 
   const isSubmitting = navigation.state === "submitting";
 
