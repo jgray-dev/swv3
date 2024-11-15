@@ -4,7 +4,7 @@ import { CiLocationArrow1 } from "react-icons/ci";
 import { FaSearchLocation } from "react-icons/fa";
 import { LoaderData } from "~/.server/interfaces";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { GiSunrise , GiSunset } from "react-icons/gi";
+import { GiSunrise, GiSunset } from "react-icons/gi";
 import { HiChevronDown } from "react-icons/hi";
 
 export interface LocationData {
