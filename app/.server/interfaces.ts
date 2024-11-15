@@ -29,7 +29,8 @@ export interface LoaderData {
   relative: "future" | "past" | "current";
   ok: boolean;
   uploads: DbUpload[];
-  debug?: any
+  eventDate: string;
+  useNext: boolean;
 }
 
 export interface AveragedValues {
@@ -69,40 +70,6 @@ export interface TimeZoneApiResponse {
   timeZoneName: string;
 }
 
-// export interface WeatherApiResponse {
-//   reason?: string;
-//   error?: boolean;
-//   latitude: number;
-//   longitude: number;
-//   generationtime_ms: number;
-//   utc_offset_seconds: number;
-//   timezone: string;
-//   timezone_abbreviation: string;
-//   elevation: number;
-//   location_id?: number; // Optional since it's not present in the first object
-//   hourly_units: {
-//     time: string;
-//     temperature_2m: string;
-//     cloud_cover: string;
-//     cloud_cover_low: string;
-//     cloud_cover_mid: string;
-//     cloud_cover_high: string;
-//     visibility: string;
-//     freezing_level_height: string;
-//   };
-//   hourly: {
-//     time: number[];
-//     temperature_2m: number[];
-//     cloud_cover: number[];
-//     cloud_cover_low: number[];
-//     cloud_cover_mid: number[];
-//     cloud_cover_high: number[];
-//     visibility: number[];
-//     freezing_level_height: number[];
-//   };
-// }
-
-
 export interface WeatherLocation {
   distance: number;
   zone: "near" | "horizon" | "far";
@@ -118,4 +85,44 @@ export interface WeatherLocation {
     visibility: number[];
     freezing_level_height: number[];
   };
+}
+
+
+export interface GeocodeResponse {
+  results: GeocodeResult[];
+  status: string;
+}
+
+interface GeocodeResult {
+  address_components: AddressComponent[];
+  formatted_address: string;
+  geometry: {
+    location: {
+      lat: number;
+      lng: number;
+    };
+    location_type: string;
+    viewport: {
+      northeast: {
+        lat: number;
+        lng: number;
+      };
+      southwest: {
+        lat: number;
+        lng: number;
+      };
+    };
+  };
+  place_id: string;
+  plus_code?: {
+    compound_code: string;
+    global_code: string;
+  };
+  types: string[];
+}
+
+interface AddressComponent {
+  long_name: string;
+  short_name: string;
+  types: string[];
 }
