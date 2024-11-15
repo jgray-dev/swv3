@@ -9,7 +9,7 @@ import {
   checkImage,
   createNoonDate,
   findNextSunEvent,
-  generateCoordinateString,
+  generateCoordinateString, getCityFromGeocodeResponse,
   getRelative,
   getRelevantSunEvent,
   getStringLiteral,
@@ -19,7 +19,7 @@ import {
 } from "~/.server/data";
 import { skyRating } from "~/.server/rating";
 import {
-  AveragedValues,
+  AveragedValues, GeocodeResponse,
   InterpolatedWeather,
   LoaderData,
   TimeZoneApiResponse,
@@ -75,8 +75,10 @@ export const loader: LoaderFunction = async ({ request, context }) => {
 
   //Grab one day before and one day after of dates in YYYY-MM-DD format, for use in the open meteo api call
   let dayBefore, dayAfter;
+  let historic = false;
   let dateUrl = url.searchParams.get("date");
   if (dateUrl === "next" || !dateUrl) {
+    historic = true
     const date = new Date();
     dateUrl = date.toISOString().split("T")[0];
   }
@@ -211,6 +213,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     relative: getRelative(Math.round(Date.now() / 1000), eventTime),
     ok: true,
     uploads: mapData,
+    eventDate: dateUrl,
+    useNext: historic
   };
 };
 
@@ -240,53 +244,9 @@ export const action: ActionFunction = async ({ request, context }) => {
       const lon = formData.get("lon");
       const city = formData.get("city");
       const data = formData.get("data");
-      const useToday = formData.get("useToday");
+      const eventTime = formData.get("eventTime");
       const eventType = formData.get("eventType");
-      const submissionDate = formData.get("submissionDate");
-      const now: Boolean = useToday === "true";
-      let date;
-      let time;
-      if (!now) {
-        if (!eventType || !submissionDate) {
-          return json(
-            {
-              error: `Error parsing submission details`,
-              success: false,
-            },
-            { status: 500 }
-          );
-        }
-        // @ts-ignore
-        date = new Date(submissionDate);
-        switch (eventType) {
-          case "sunrise":
-            time = Math.round(
-              SunCalc.getTimes(
-                date,
-                Number(lat),
-                Number(lon)
-              ).sunrise.getTime() / 1000
-            );
-            break;
-          case "sunset":
-            time = Math.round(
-              SunCalc.getTimes(
-                date,
-                Number(lat),
-                Number(lon)
-              ).sunset.getTime() / 1000
-            );
-            break;
-          default:
-            return json(
-              {
-                error: `Error parsing eventType switch`,
-                success: false,
-              },
-              { status: 500 }
-            );
-        }
-      }
+      
       if (imageFile && imageFile instanceof Blob) {
         const safe = await checkImage(context, imageFile);
         if (!safe)
@@ -314,12 +274,7 @@ export const action: ActionFunction = async ({ request, context }) => {
           if (!response.ok) {
             return json(
               {
-                error: `Error uploading image to images provider ${
-                  // @ts-ignore
-                  responseData.errors?.[0]?.message.contains("image/jpeg")
-                    ? "[Invalid filetype]"
-                    : ""
-                }`,
+                error: `Error uploading image to images provider`,
                 success: false,
               },
               { status: 500 }
@@ -344,7 +299,8 @@ export const action: ActionFunction = async ({ request, context }) => {
               image_id: image_id,
               city: `${city}`,
               data: data,
-              time: Math.floor(Date.now() / 1000),
+              time: Number(eventTime),
+              type: `${eventType}`
             });
             return json(
               { message: "Uploaded to database", success: true },
@@ -409,21 +365,16 @@ export const action: ActionFunction = async ({ request, context }) => {
               console.error("Invalid locationData type");
           }
           const response = await fetch(geocodingUrl);
-          const data = await response.json();
+          const data = await response.json() as GeocodeResponse;
 
-          // @ts-expect-error fts
-          if (data.status === "OK") {
-            // @ts-expect-error fts
+          if (data.status === "OK" && data) {
             const lat = data.results[0].geometry.location.lat;
-            // @ts-expect-error fts
             const lon = data.results[0].geometry.location.lng;
             const redirectUrl = new URL(url.origin);
-            redirectUrl.searchParams.set("lat", lat);
-            redirectUrl.searchParams.set("lon", lon);
+            redirectUrl.searchParams.set("lat", `${lat}`);
+            redirectUrl.searchParams.set("lon", `${lon}`);
             redirectUrl.searchParams.set(
-              "city",
-              // @ts-expect-error fts
-              data.results[0].formatted_address
+              "city", getCityFromGeocodeResponse(data)
             );
             redirectUrl.searchParams.set(
               "date",
