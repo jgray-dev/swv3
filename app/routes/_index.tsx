@@ -7,6 +7,7 @@ import { LocationData } from "~/components/LocationComponent";
 import {
   averageData,
   checkImage,
+  createNoonDate,
   findNextSunEvent,
   generateCoordinateString,
   getRelative,
@@ -21,6 +22,7 @@ import {
   AveragedValues,
   InterpolatedWeather,
   LoaderData,
+  TimeZoneApiResponse,
   WeatherLocation,
 } from "~/.server/interfaces";
 import RatingDisplay from "~/components/RatingDisplay";
@@ -30,7 +32,7 @@ import CloudCoverDisplay from "~/components/CloudCoverDisplay";
 import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
 import { createUpload, getSubmissions } from "~/.server/database";
-import { getSunrise, getSunset } from "sunrise-sunset-js";
+import SunCalc from "suncalc";
 
 export const meta: MetaFunction = () => {
   return [
@@ -50,105 +52,137 @@ export const meta: MetaFunction = () => {
 //
 
 export const loader: LoaderFunction = async ({ request, context }) => {
+  const currentUnixTime = Math.floor(Date.now() / 1000);
   const url = new URL(request.url);
   const lat = url.searchParams.get("lat");
   const lon = url.searchParams.get("lon");
   const city = url.searchParams.get("city");
-  const dateUrl = url.searchParams.get("date");
-  const type = url.searchParams.get("type");
   let error = url.searchParams.get("error");
   if (!lat || !lon || !city) {
     let mapData = await getSubmissions(context);
     return { ok: false, message: error, uploads: mapData };
   }
+
+  const meteoApiKey = context.cloudflare.env.METEO_KEY;
+  const googleApiKey = context.cloudflare.env.GOOGLE_MAPS_API_KEY;
+
+  //Generate a coordinate string of locations looking in east/west (dep on eventType)
   let { type: eventType, time: eventTime } = getRelevantSunEvent(
     Number(lat),
     Number(lon)
   );
-  let date;
-  let historic = false;
-  if (type) {
-    //@ts-ignore
-    date = new Date(dateUrl);
-    switch (type) {
+  const coords = generateCoordinateString(Number(lat), Number(lon), eventType);
+
+  //Grab one day before and one day after of dates in YYYY-MM-DD format, for use in the open meteo api call
+  let dayBefore, dayAfter;
+  let dateUrl = url.searchParams.get("date");
+  if (dateUrl === "next" || !dateUrl) {
+    const date = new Date();
+    dateUrl = date.toISOString().split("T")[0];
+  }
+  dayBefore = new Date(
+    new Date(dateUrl).setDate(new Date(dateUrl).getDate() - 1)
+  )
+    .toISOString()
+    .split("T")[0];
+  dayAfter = new Date(
+    new Date(dateUrl).setDate(new Date(dateUrl).getDate() + 1)
+  )
+    .toISOString()
+    .split("T")[0];
+  const [mapData, meteoResponse, timezoneResponse] = await Promise.all([
+    getSubmissions(context),
+    fetch(
+      `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${coords}&start_date=${dayBefore}&end_date=${dayAfter}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${meteoApiKey}`
+    ),
+    fetch(
+      `https://maps.googleapis.com/maps/api/timezone/json?location=${encodeURIComponent(
+        lat
+      )}%2C${encodeURIComponent(lon)}&timestamp=${encodeURIComponent(
+        currentUnixTime
+      )}&key=${googleApiKey}`
+    ),
+  ]);
+
+  // Return error for failure to fetch database
+  if (!mapData) return;
+
+  // Await json and parse the timezone response
+  const parsedTimezoneResponse =
+    (await timezoneResponse.json()) as TimeZoneApiResponse;
+  // Return error for failure to parse timezone api response
+  if (parsedTimezoneResponse.status !== "OK")
+    redirect(
+      appendErrorToUrl(
+        url.search,
+        `Error fetching TimeZone API [${parsedTimezoneResponse.status}]`
+      )
+    );
+  //Grab the specific timezone from the api response
+  const timezone = parsedTimezoneResponse.timeZoneId;
+
+  //Create a correctly formatted date object at noon in the specified timezone
+  const noon = createNoonDate(dateUrl, timezone);
+  // Grab the event type ("sunrise" | "sunset" | "next") from the URL query
+  const typeUrl = url.searchParams.get("type");
+
+  // If the eventType is not "next", use manual time controls
+  if (typeUrl !== "next") {
+    switch (typeUrl) {
       case "sunrise":
-        historic = true;
         eventType = "sunrise";
         eventTime = Math.round(
-          new Date(getSunrise(Number(lat), Number(lon), date)).getTime() / 1000
+          SunCalc.getTimes(noon, Number(lat), Number(lon)).sunrise.getTime() /
+            1000
         );
         break;
       case "sunset":
-        historic = true;
-        eventType = "sunrise";
+        eventType = "sunset";
+
         eventTime = Math.round(
-          new Date(getSunrise(Number(lat), Number(lon), date)).getTime() / 1000
+          SunCalc.getTimes(noon, Number(lat), Number(lon)).sunset.getTime() /
+            1000
         );
         break;
       default:
-        console.error(`Error parsing past URL. ${dateUrl} ${type}`);
-        let mapData = await getSubmissions(context);
-        return {
-          message: "Error parsing URL parameters for historic data.",
-          ok: false,
-          uploads: mapData,
-        };
+        console.error("invalid type url");
     }
   }
 
+  // Parse our weather data as json.
+  let parsedAllWeatherData = await meteoResponse.json();
+  // @ts-ignore
+  if (parsedAllWeatherData?.error) {
+    return {
+      // @ts-ignore
+      message: `Error fetching weather API ${parsedAllWeatherData?.reason}`,
+      ok: false,
+      uploads: await getSubmissions(context),
+    };
+  }
   //@ts-ignore
   if (!eventType) {
-    let mapData = await getSubmissions(context);
     return {
       message: "No sunrise or sunsets found in the next 48 hours.",
       ok: false,
-      uploads: mapData,
+      uploads: await getSubmissions(context),
     };
   }
   if (!eventTime) {
-    const next = unixToApproximateString(
-      findNextSunEvent(Number(lat), Number(lon))
-    );
-    let mapData = await getSubmissions(context);
     return {
-      message: `No ${eventType} time found | Next event in approximately ${next}`,
+      message: `No ${eventType} time found | Next event in approximately ${unixToApproximateString(
+        findNextSunEvent(Number(lat), Number(lon))
+      )}`,
       ok: false,
-      uploads: mapData,
+      uploads: await getSubmissions(context),
     };
   }
-  const apiKey = context.cloudflare.env.METEO_KEY;
-  const coords = generateCoordinateString(Number(lat), Number(lon), eventType);
-  let dayBefore, dayAfter;
-  if (historic) {
-    // @ts-ignore
-    dayBefore = new Date(date.getTime() - 86400000).toISOString().split("T")[0];
-    // @ts-ignore
-    dayAfter = new Date(date.getTime() + 86400000).toISOString().split("T")[0];
-  }
-
-  const [mapData, response] = await Promise.all([
-    getSubmissions(context),
-    fetch(
-      historic
-        ? `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${coords}&start_date=${dayBefore}&end_date=${dayAfter}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${apiKey}`
-        : `https://customer-api.open-meteo.com/v1/forecast?${coords}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&past_days=1&forecast_days=2&apikey=${apiKey}`
-    ),
-  ]);
-  let weatherData = await response.json();
-  // @ts-ignore
-  if (weatherData?.error) {
-    let mapData = await getSubmissions(context);
-    return {
-      // @ts-ignore
-      message: `Error fetching weather API ${weatherData?.reason}`,
-      ok: false,
-      uploads: mapData,
-    };
-  }
-  if (!eventTime) return null;
-  weatherData = purgeDuplicates(weatherData as WeatherLocation[], eventType);
+  // Purge the duplicate locations and interpolate the weather data based on the eventTime
   const interpData = interpolateWeatherData(
-    weatherData as WeatherLocation[],
+    purgeDuplicates(
+      parsedAllWeatherData as WeatherLocation[],
+      eventType
+    ) as WeatherLocation[],
     eventTime
   );
   let { rating, debugData } = skyRating(interpData as InterpolatedWeather[]);
@@ -156,10 +190,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const stats = averageData(interpData);
   if ((!eventTime || !eventType) && !error)
     error = "No sunrise or sunset found";
-  if (!mapData)
-    return redirect(appendErrorToUrl(url.search, "Error fetching database"));
   return {
-    allData: weatherData,
+    allData: parsedAllWeatherData,
     lat: parseFloat(lat),
     lon: parseFloat(lon),
     city: String(city),
@@ -229,14 +261,20 @@ export const action: ActionFunction = async ({ request, context }) => {
         switch (eventType) {
           case "sunrise":
             time = Math.round(
-              new Date(getSunrise(Number(lat), Number(lon), date)).getTime() /
-                1000
+              SunCalc.getTimes(
+                date,
+                Number(lat),
+                Number(lon)
+              ).sunrise.getTime() / 1000
             );
             break;
           case "sunset":
             time = Math.round(
-              new Date(getSunset(Number(lat), Number(lon), date)).getTime() /
-                1000
+              SunCalc.getTimes(
+                date,
+                Number(lat),
+                Number(lon)
+              ).sunset.getTime() / 1000
             );
             break;
           default:
@@ -370,7 +408,6 @@ export const action: ActionFunction = async ({ request, context }) => {
             default:
               console.error("Invalid locationData type");
           }
-
           const response = await fetch(geocodingUrl);
           const data = await response.json();
 
@@ -388,10 +425,14 @@ export const action: ActionFunction = async ({ request, context }) => {
               // @ts-expect-error fts
               data.results[0].formatted_address
             );
-            if (date !== "next") {
-              redirectUrl.searchParams.set("date", date);
-              redirectUrl.searchParams.set("type", eventType);
-            }
+            redirectUrl.searchParams.set(
+              "date",
+              date !== "next" ? date : "next"
+            );
+            redirectUrl.searchParams.set(
+              "type",
+              date !== "next" ? eventType : "next"
+            );
             return redirect(redirectUrl.toString());
           } else {
             console.error("No geocoding results found");
