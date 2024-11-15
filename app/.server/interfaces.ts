@@ -12,22 +12,6 @@ export interface InterpolatedWeather {
   distance: number;
 }
 
-export interface WeatherLocation {
-  distance: number;
-  zone: "near" | "horizon" | "far";
-  latitude: number;
-  longitude: number;
-  hourly: {
-    time: number[];
-    temperature_2m: number[];
-    cloud_cover: number[];
-    cloud_cover_low: number[];
-    cloud_cover_mid: number[];
-    cloud_cover_high: number[];
-    visibility: number[];
-    freezing_level_height: number[];
-  };
-}
 
 export interface LoaderData {
   lat: number;
@@ -45,6 +29,7 @@ export interface LoaderData {
   relative: "future" | "past" | "current";
   ok: boolean;
   uploads: DbUpload[];
+  debug?: any
 }
 
 export interface AveragedValues {
@@ -72,4 +57,65 @@ export interface DbUpload {
 export interface ClassificationResult {
   label: "nsfw" | "normal";
   score: number;
+}
+
+
+
+export interface TimeZoneApiResponse {
+  dstOffset: number;
+  rawOffset: number;
+  status: string;
+  timeZoneId: string;
+  timeZoneName: string;
+}
+
+// export interface WeatherApiResponse {
+//   reason?: string;
+//   error?: boolean;
+//   latitude: number;
+//   longitude: number;
+//   generationtime_ms: number;
+//   utc_offset_seconds: number;
+//   timezone: string;
+//   timezone_abbreviation: string;
+//   elevation: number;
+//   location_id?: number; // Optional since it's not present in the first object
+//   hourly_units: {
+//     time: string;
+//     temperature_2m: string;
+//     cloud_cover: string;
+//     cloud_cover_low: string;
+//     cloud_cover_mid: string;
+//     cloud_cover_high: string;
+//     visibility: string;
+//     freezing_level_height: string;
+//   };
+//   hourly: {
+//     time: number[];
+//     temperature_2m: number[];
+//     cloud_cover: number[];
+//     cloud_cover_low: number[];
+//     cloud_cover_mid: number[];
+//     cloud_cover_high: number[];
+//     visibility: number[];
+//     freezing_level_height: number[];
+//   };
+// }
+
+
+export interface WeatherLocation {
+  distance: number;
+  zone: "near" | "horizon" | "far";
+  latitude: number;
+  longitude: number;
+  hourly: {
+    time: number[];
+    temperature_2m: number[];
+    cloud_cover: number[];
+    cloud_cover_low: number[];
+    cloud_cover_mid: number[];
+    cloud_cover_high: number[];
+    visibility: number[];
+    freezing_level_height: number[];
+  };
 }
