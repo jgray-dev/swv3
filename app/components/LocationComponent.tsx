@@ -205,7 +205,7 @@ export default function LocationComponent() {
                     type="date"
                     id="submissionDate"
                     min="2022-01-01"
-                    max={new Date().toISOString().split("T")[0]}
+                    max={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
                     name="submissionDate"
                     required
                     className="w-full p-2 rounded-md 
