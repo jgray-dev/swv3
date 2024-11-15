@@ -5,7 +5,8 @@ import {
   InterpolatedWeather,
   WeatherLocation,
 } from "~/.server/interfaces";
-import { getSunrise, getSunset } from "sunrise-sunset-js";
+import SunCalc from "suncalc";
+
 
 //Helper function for crafting the URL to fetch from open-meteo
 export function generateCoordinateString(
@@ -285,21 +286,23 @@ export function getRelevantSunEvent(lat: number, lon: number): SunEvent {
   yesterday.setDate(yesterday.getDate() - 1);
 
   const sunrises = [
-    Math.round(new Date(getSunrise(lat, lon, yesterday)).getTime() / 1000),
-    Math.round(new Date(getSunrise(lat, lon, today)).getTime() / 1000),
-    Math.round(new Date(getSunrise(lat, lon, tomorrow)).getTime() / 1000),
+    Math.round(SunCalc.getTimes(yesterday, lat, lon).sunrise.getTime() / 1000),
+    Math.round(SunCalc.getTimes(today, lat, lon).sunrise.getTime() / 1000),
+    Math.round(SunCalc.getTimes(tomorrow, lat, lon).sunrise.getTime() / 1000),
   ];
 
   const sunsets = [
-    Math.round(new Date(getSunset(lat, lon, yesterday)).getTime() / 1000),
-    Math.round(new Date(getSunset(lat, lon, today)).getTime() / 1000),
-    Math.round(new Date(getSunset(lat, lon, tomorrow)).getTime() / 1000),
+    Math.round(SunCalc.getTimes(yesterday, lat, lon).sunset.getTime() / 1000),
+    Math.round(SunCalc.getTimes(today, lat, lon).sunset.getTime() / 1000),
+    Math.round(SunCalc.getTimes(tomorrow, lat, lon).sunset.getTime() / 1000),
   ];
+
   const allEvents: SunEvent[] = [
     ...sunrises.map((time) => ({ type: "sunrise" as const, time })),
     ...sunsets.map((time) => ({ type: "sunset" as const, time })),
   ];
   allEvents.sort((a, b) => a.time - b.time);
+
   const NINETY_MINUTES = 90 * 60;
   const recentEvents = allEvents
     .filter(
@@ -321,7 +324,6 @@ export function getRelevantSunEvent(lat: number, lon: number): SunEvent {
 
   return allEvents[allEvents.length - 1];
 }
-
 export function purgeDuplicates(
   coordinates: WeatherLocation[],
   eventType: "sunrise" | "sunset"
@@ -354,30 +356,30 @@ export function purgeDuplicates(
   });
 }
 
-// Function only used for edge cases - when someone searches a location that doesnt have a sunrise/sunset in the coming days - like places in the arctic circle
 export function findNextSunEvent(latitude: number, longitude: number): number {
   const NOW = Date.now();
   const DAY_MS = 86400000;
   const MAX_DAYS_TO_SEARCH = 186;
   let left = 0;
   let right = MAX_DAYS_TO_SEARCH;
+
   const hasEvent = (timestamp: number): boolean => {
     try {
-      const sunrise = getSunrise(latitude, longitude, new Date(timestamp));
-      const sunset = getSunset(latitude, longitude, new Date(timestamp));
-      return !isNaN(sunrise.getTime()) || !isNaN(sunset.getTime());
+      const date = new Date(timestamp);
+      const times = SunCalc.getTimes(date, latitude, longitude);
+      return !isNaN(times.sunrise.getTime()) || !isNaN(times.sunset.getTime());
     } catch {
       return false;
     }
   };
+
   const getNextEvent = (timestamp: number): number | null => {
     try {
       const date = new Date(timestamp);
-      const sunrise = getSunrise(latitude, longitude, date);
-      const sunset = getSunset(latitude, longitude, date);
+      const times = SunCalc.getTimes(date, latitude, longitude);
 
-      const sunriseTime = sunrise.getTime();
-      const sunsetTime = sunset.getTime();
+      const sunriseTime = times.sunrise.getTime();
+      const sunsetTime = times.sunset.getTime();
       const validTimes = [sunriseTime, sunsetTime].filter(
         (time) => !isNaN(time) && time > NOW
       );
@@ -386,6 +388,7 @@ export function findNextSunEvent(latitude: number, longitude: number): number {
       return null;
     }
   };
+
   while (left < right) {
     const mid = Math.floor((left + right) / 2);
     const midTimestamp = NOW + mid * DAY_MS;
@@ -396,13 +399,16 @@ export function findNextSunEvent(latitude: number, longitude: number): number {
       left = mid + 1;
     }
   }
+
   if (left >= MAX_DAYS_TO_SEARCH) {
     throw new Error("No sunrise or sunset found within search period");
   }
+
   const startDay = NOW + left * DAY_MS;
   const nextDay = startDay + DAY_MS;
   const event1 = getNextEvent(startDay);
   const event2 = getNextEvent(nextDay);
+
   if (event1 !== null && event2 !== null) {
     return Math.min(event1, event2);
   } else if (event1 !== null) {
@@ -459,4 +465,23 @@ export async function checkImage(context: any, image: File): Promise<Boolean> {
   const normalScore =
     result.find((item) => item.label === "normal")?.score ?? 0;
   return normalScore >= 0.6;
+}
+
+
+export function createNoonDate(dateStr: string, timezone: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    throw new Error('Invalid date format. Use YYYY-MM-DD');
+  }
+
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+
+  // Create a date string with the timezone
+  const dateInTz = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+
+  // Calculate the timezone offset
+  const offset = dateInTz.getTime() - date.getTime();
+
+  // Adjust the time to ensure noon in the target timezone
+  return new Date(date.getTime() - offset);
 }
