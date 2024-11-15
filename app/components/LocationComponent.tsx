@@ -82,7 +82,7 @@ export default function LocationComponent() {
       role="region"
       aria-label="Location Search"
     >
-      <div className="max-w-2xl mx-auto bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+      <div className="max-w-2xl mx-auto bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 transition-transform duration-200">
         <Form onSubmit={handleManualSubmit} className="flex flex-col gap-6">
           <input type="hidden" name="element" value="locationComponent" />
 
@@ -146,7 +146,7 @@ export default function LocationComponent() {
                     : "Use GPS location"
                 }
               >
-                {gettingGeolocation ? (
+                {(gettingGeolocation && !gotGeolocation) ? (
                   <div
                     className="h-5 w-5 rounded-full border-2 border-slate-100 border-t-transparent animate-spin"
                     role="status"
