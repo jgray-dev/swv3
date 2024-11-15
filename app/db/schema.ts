@@ -9,4 +9,5 @@ export const uploads = sqliteTable("uploads", {
   time: integer("time").notNull(),
   city: text("city").notNull(),
   data: text("data").notNull(),
+  type: text("type").notNull()
 });
