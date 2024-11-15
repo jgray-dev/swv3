@@ -12,7 +12,6 @@ export interface InterpolatedWeather {
   distance: number;
 }
 
-
 export interface LoaderData {
   lat: number;
   lon: number;
@@ -60,8 +59,6 @@ export interface ClassificationResult {
   score: number;
 }
 
-
-
 export interface TimeZoneApiResponse {
   dstOffset: number;
   rawOffset: number;
@@ -86,7 +83,6 @@ export interface WeatherLocation {
     freezing_level_height: number[];
   };
 }
-
 
 export interface GeocodeResponse {
   results: GeocodeResult[];
