@@ -3,6 +3,9 @@ import { Form, useFetcher, useRouteLoaderData } from "@remix-run/react";
 import { CiLocationArrow1 } from "react-icons/ci";
 import { FaSearchLocation } from "react-icons/fa";
 import { LoaderData } from "~/.server/interfaces";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { BsSunrise, BsSunset } from "react-icons/bs";
+import { HiChevronDown } from "react-icons/hi";
 
 export interface LocationData {
   type: "geolocation" | "input";
@@ -17,13 +20,13 @@ export default function LocationComponent() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
   const [input, setInput] = useState<string>(allData?.city ? allData.city : "");
   const fetcher = useFetcher();
-  const [useNextEvent, setUseNextEvent] = useState(true);
+  const [useNextEvent, setUseNextEvent] = useState(allData?.useNext ?? true);
 
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    allData?.eventDate ?? new Date().toISOString().split("T")[0]
   );
   const [eventType, setEventType] = useState<"sunrise" | "sunset">(
-    allData?.eventType || "sunrise"
+    allData?.eventType ?? "sunrise"
   );
 
   useEffect(() => {
@@ -32,8 +35,8 @@ export default function LocationComponent() {
         {
           locationData: JSON.stringify(locationData),
           element: "locationComponent",
-          date: useNextEvent?"next":selectedDate,
-          eventType: useNextEvent?"next":eventType,
+          date: useNextEvent ? "next" : selectedDate,
+          eventType: useNextEvent ? "next" : eventType,
         },
         { method: "post" }
       );
@@ -98,14 +101,20 @@ export default function LocationComponent() {
                   type="text"
                   required
                   className="w-full px-4 py-2.5 
-                           bg-white/10 border border-white/20 
-                           rounded-lg text-slate-100 placeholder-slate-400
-                           focus:outline-none focus:ring-2 focus:ring-blue-400/50 
-                           focus:bg-white/20 transition-all duration-200"
+           bg-white/10 border border-white/20 
+           rounded-lg text-slate-100 placeholder-slate-400
+           focus:outline-none focus:ring-2 focus:ring-blue-400/50 
+           focus:bg-white/20 transition-all duration-200"
                   placeholder="Enter location manually"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onFocus={(e) => e.target.select()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleManualSubmit(e);
+                    }
+                  }}
                 />
               </div>
               <button
@@ -118,14 +127,14 @@ export default function LocationComponent() {
                   }
                 }}
                 className={`min-w-12 h-11 rounded-lg transition-all duration-200
-                           flex items-center justify-center
-                           border ${
-                             geolocationError
-                               ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
-                               : gotGeolocation
-                               ? "bg-green-500/20 border-green-500/30"
-                               : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10"
-                           }`}
+             flex items-center justify-center
+             border ${
+               geolocationError
+                 ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
+                 : gotGeolocation
+                 ? "bg-green-500/20 border-green-500/30"
+                 : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10"
+             }`}
                 disabled={
                   geolocationError || gettingGeolocation || gotGeolocation
                 }
@@ -137,7 +146,7 @@ export default function LocationComponent() {
                     : "Use GPS location"
                 }
               >
-                {gettingGeolocation && !gotGeolocation ? (
+                {gettingGeolocation ? (
                   <div
                     className="h-5 w-5 rounded-full border-2 border-slate-100 border-t-transparent animate-spin"
                     role="status"
@@ -145,7 +154,7 @@ export default function LocationComponent() {
                   />
                 ) : (
                   <CiLocationArrow1
-                    className={`${gettingGeolocation?"hidden":"visible"} h-5 w-5 transition-all duration-200 ${
+                    className={`h-5 w-5 transition-all duration-200 ${
                       geolocationError
                         ? "text-red-400"
                         : gotGeolocation
@@ -176,8 +185,8 @@ export default function LocationComponent() {
                   ></div>
                 </div>
                 <span className="ml-3 text-sm font-medium text-slate-100">
-                Use the next event
-              </span>
+                  Use the next event
+                </span>
               </label>
             </div>
 
@@ -192,7 +201,7 @@ export default function LocationComponent() {
                   </label>
                   <input
                     value={selectedDate}
-                    onChange={(e)=>setSelectedDate(e.target.value)}
+                    onChange={(e) => setSelectedDate(e.target.value)}
                     type="date"
                     id="submissionDate"
                     min="2022-01-01"
@@ -214,32 +223,70 @@ export default function LocationComponent() {
                   >
                     Select type of event
                   </label>
-                  <select
-                    id="eventType"
-                    name="eventType"
-                    required
-                    value={eventType}
-                    // @ts-ignore
-                    onChange={(e)=>setEventType(e.target.value)}
-                    className="w-full p-2 rounded-md
-                bg-white/10 border border-white/20
-                focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20
-                transition-all duration-200
-                text-slate-100"
+                  <Menu
+                    as="div"
+                    className="relative inline-block w-full text-left"
                   >
-                    <option
-                      value="sunrise"
-                      className={"hover:text-black text-black/80"}
+                    <MenuButton
+                      className="inline-flex w-full justify-between items-center gap-x-1.5 rounded-md 
+    bg-white/10 px-3 py-2 text-sm text-slate-100
+    border border-white/20
+    hover:bg-white/20
+    focus:outline-none focus:ring-2 focus:ring-white/50
+    transition-all duration-200"
                     >
-                      Sunrise
-                    </option>
-                    <option
-                      value="sunset"
-                      className={"hover:text-black text-black/80"}
+                      <span className="flex items-center gap-2">
+                        {eventType === "sunrise" ? (
+                          <BsSunrise className="size-4" />
+                        ) : (
+                          <BsSunset className="size-4" />
+                        )}
+                        {eventType === "sunrise" ? "Sunrise" : "Sunset"}
+                      </span>
+                      <HiChevronDown className="size-5" aria-hidden="true" />
+                    </MenuButton>
+
+                    <MenuItems
+                      className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-md 
+    bg-black/90 backdrop-blur-md
+    shadow-lg ring-1 ring-black/5 focus:outline-none"
                     >
-                      Sunset
-                    </option>
-                  </select>
+                      <div className="px-1 py-1">
+                        <MenuItem>
+                          {({ focus }) => (
+                            <button
+                              onClick={() => setEventType("sunrise")}
+                              className={`${
+                                focus ? "bg-white/20" : ""
+                              } group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-100`}
+                            >
+                              <BsSunrise
+                                className="mr-2 size-4"
+                                aria-hidden="true"
+                              />
+                              Sunrise
+                            </button>
+                          )}
+                        </MenuItem>
+                        <MenuItem>
+                          {({ focus }) => (
+                            <button
+                              onClick={() => setEventType("sunset")}
+                              className={`${
+                                focus ? "bg-white/20" : ""
+                              } group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-100`}
+                            >
+                              <BsSunset
+                                className="mr-2 size-4"
+                                aria-hidden="true"
+                              />
+                              Sunset
+                            </button>
+                          )}
+                        </MenuItem>
+                      </div>
+                    </MenuItems>
+                  </Menu>
                 </div>
               </div>
             )}
