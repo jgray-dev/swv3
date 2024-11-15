@@ -61,10 +61,10 @@ export default function SubmitComponent() {
               relative overflow-hidden rounded-lg
               border transition-all duration-200 ease-in-out
               ${
-                selectedFile
-                  ? "bg-white/20 border-white/30"
-                  : "bg-white/10 border-white/20 hover:bg-white/15"
-              }
+              selectedFile
+                ? "bg-white/20 border-white/30"
+                : "bg-white/10 border-white/20 hover:bg-white/15"
+            }
             `}
           >
             <input
@@ -87,7 +87,8 @@ export default function SubmitComponent() {
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <path
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
               </svg>
               <span className="text-sm text-slate-100">
                 {selectedFile || "Choose an image"}
@@ -97,12 +98,12 @@ export default function SubmitComponent() {
         </div>
 
         {/* Hidden Fields */}
-        <input type="hidden" name="useToday" value={String(useToday)} />
-        <input type="hidden" name="rating" value={allData.rating} />
-        <input type="hidden" name="lat" value={allData.lat} />
-        <input type="hidden" name="lon" value={allData.lon} />
-        <input type="hidden" name="city" value={allData.city} />
-        <input type="hidden" name="element" value="userSubmission" />
+        <input type="hidden" name="useToday" value={String(useToday)}/>
+        <input type="hidden" name="rating" value={allData.rating}/>
+        <input type="hidden" name="lat" value={allData.lat}/>
+        <input type="hidden" name="lon" value={allData.lon}/>
+        <input type="hidden" name="city" value={allData.city}/>
+        <input type="hidden" name="element" value="userSubmission"/>
         <input
           type="hidden"
           name="data"
@@ -139,7 +140,8 @@ export default function SubmitComponent() {
                   onChange={(e) => setUseToday(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-white/10 border border-white/20 peer-checked:bg-green-500/20 peer-checked:border-green-500/30 rounded-full duration-200 ease-in-out transition-all"></div>
+                <div
+                  className="w-11 h-6 bg-white/10 border border-white/20 peer-checked:bg-green-500/20 peer-checked:border-green-500/30 rounded-full duration-200 ease-in-out transition-all"></div>
                 <div
                   className="absolute left-[2px] top-[2px] bg-slate-100 w-5 h-5 rounded-full 
                     duration-200 ease-in-out
@@ -152,63 +154,7 @@ export default function SubmitComponent() {
             </label>
           </div>
 
-          {!useToday && (
-            <div className="space-y-3 pl-4">
-              <div>
-                <label
-                  htmlFor="imageDate"
-                  className="block text-sm text-slate-100 mb-1"
-                >
-                  Select date of image
-                </label>
-                <input
-                  type="date"
-                  id="submissionDate"
-                  min="2022-01-01"
-                  max={new Date().toISOString().split("T")[0]}
-                  name="submissionDate"
-                  required
-                  className="w-full p-2 rounded-md 
-                bg-white/10 border border-white/20
-                focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20
-                transition-all duration-200
-                text-slate-100"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="imageType"
-                  className="block text-sm text-slate-100 mb-1"
-                >
-                  Select type of event
-                </label>
-                <select
-                  id="eventType"
-                  name="eventType"
-                  required
-                  className="w-full p-2 rounded-md
-                bg-white/10 border border-white/20
-                focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20
-                transition-all duration-200
-                text-slate-100"
-                >
-                  <option
-                    value="sunrise"
-                    className={"hover:text-black text-black/80"}
-                  >
-                    Sunrise
-                  </option>
-                  <option
-                    value="sunset"
-                    className={"hover:text-black text-black/80"}
-                  >
-                    Sunset
-                  </option>
-                </select>
-              </div>
-            </div>
-          )}
+          {!useToday && <div>Please ensure...</div>}
         </div>
 
         {actionData?.success && (
@@ -232,6 +178,21 @@ export default function SubmitComponent() {
           </div>
         )}
 
+        <div
+          className={`w-full text-center text-white/50 ${
+            !selectedFile ? "opacity-0 h-0" : "opacity-100"
+          }`}
+        >
+          Submitting a <span className={"text-white"}>{allData.eventType}</span>{" "}
+          rated <span className={"text-white"}>{allData.rating}</span> at{" "}
+          <span className={"text-white"}>{allData.city}</span> on {" "}<span className={"text-white"}>
+  {new Date(allData.eventTime * 1000).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  })}
+</span>
+        </div>
         {/* Submit Button */}
         <button
           type="submit"
@@ -241,10 +202,10 @@ export default function SubmitComponent() {
             font-medium text-sm
             transition-all duration-200
             ${
-              isSubmitting || !selectedFile
-                ? "bg-white/5 border-white/5 text-slate-400 cursor-not-allowed"
-                : "bg-white/20 border border-white/20 text-slate-100 hover:bg-white/30 active:bg-white/10"
-            }
+            isSubmitting || !selectedFile
+              ? "bg-white/5 border-white/5 text-slate-400 cursor-not-allowed"
+              : "bg-white/20 border border-white/20 text-slate-100 hover:bg-white/30 active:bg-white/10"
+          }
           `}
         >
           <div className="relative h-5">
@@ -285,15 +246,6 @@ export default function SubmitComponent() {
             )}
           </div>
         </button>
-        <div
-          className={`w-full text-center text-white/50 ${
-            !selectedFile ? "opacity-0 h-0" : "opacity-100"
-          }`}
-        >
-          Submitting a <span className={"text-white"}>{allData.eventType}</span>{" "}
-          rated <span className={"text-white"}>{allData.rating}</span> at{" "}
-          <span className={"text-white"}>{allData.city}</span>
-        </div>
       </Form>
     </div>
   );
