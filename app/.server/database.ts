@@ -14,7 +14,7 @@ export async function createUpload(
     city,
     data,
     time,
-    type
+    type,
   }: {
     lat: number;
     lon: number;
@@ -38,7 +38,7 @@ export async function createUpload(
         time: time,
         city: city,
         data: data,
-        type: type
+        type: type,
       })
       .returning();
 
