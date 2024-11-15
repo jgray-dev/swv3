@@ -234,6 +234,17 @@ export const action: ActionFunction = async ({ request, context }) => {
   }
   switch (element) {
     case "userSubmission": {
+      // Check if all required fields are present
+      const requiredFields = ["image", "rating", "lat", "lon", "city", "data", "eventTime", "eventType"];
+      for (const field of requiredFields) {
+        if (!formData.get(field)) {
+          return json({
+            error: `Missing required field: ${field}`,
+            success: false
+          }, { status: 400 });
+        }
+      }
+
       const imageFile = formData.get("image");
       const rating = formData.get("rating");
       const lat = formData.get("lat");
@@ -243,81 +254,123 @@ export const action: ActionFunction = async ({ request, context }) => {
       const eventTime = formData.get("eventTime");
       const eventType = formData.get("eventType");
 
-      if (imageFile && imageFile instanceof Blob) {
+      // Validate data types
+      if (!imageFile || !(imageFile instanceof Blob)) {
+        return json({
+          error: "Invalid image format",
+          success: false
+        }, { status: 400 });
+      }
+
+      // Validate numeric values
+      if (isNaN(Number(rating)) || isNaN(Number(lat)) || isNaN(Number(lon)) || isNaN(Number(eventTime))) {
+        return json({
+          error: "Invalid numeric values provided",
+          details: {
+            rating: isNaN(Number(rating)) ? "invalid" : "valid",
+            lat: isNaN(Number(lat)) ? "invalid" : "valid",
+            lon: isNaN(Number(lon)) ? "invalid" : "valid",
+            eventTime: isNaN(Number(eventTime)) ? "invalid" : "valid"
+          },
+          success: false
+        }, { status: 400 });
+      }
+
+      // Check image safety
+      try {
         const safe = await checkImage(context, imageFile);
-        if (!safe)
-          return json(
-            {
-              error: `Unsafe image detected.`,
-              success: false,
-            },
-            { status: 418 }
-          );
+        if (!safe) {
+          return json({
+            error: "Unsafe image detected",
+            success: false
+          }, { status: 418 });
+        }
+      } catch (error) {
+        return json({
+          error: "Failed to check image safety",
+          details: error instanceof Error ? error.message : "Unknown error",
+          success: false
+        }, { status: 500 });
+      }
+
+      try {
+        const API_URL = `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/images/v1`;
+
+        // Validate Cloudflare credentials
+        if (!context.cloudflare.env.CF_ACCOUNT_ID || !context.cloudflare.env.CF_TOKEN) {
+          return json({
+            error: "Missing Cloudflare credentials",
+            success: false
+          }, { status: 500 });
+        }
+
+        const imageFormData = new FormData();
+        imageFormData.append("file", imageFile);
+
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${context.cloudflare.env.CF_TOKEN}`,
+            Accept: "application/json",
+          },
+          body: imageFormData,
+        });
+
+        if (!response.ok) {
+          return json({
+            error: "Error uploading image to images provider",
+            details: `HTTP ${response.status}: ${response.statusText}`,
+            success: false
+          }, { status: response.status });
+        }
+
+        const responseData = await response.json();
+        const image_id = responseData?.result?.id;
+
+        if (!image_id) {
+          return json({
+            error: "Error uploading image to images provider",
+            details: "No image ID returned",
+            responseData,
+            success: false
+          }, { status: 500 });
+        }
 
         try {
-          const API_URL = `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/images/v1`;
-          const imageFormData = new FormData();
-          imageFormData.append("file", imageFile);
-          const response = await fetch(API_URL, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${context.cloudflare.env.CF_TOKEN}`,
-              Accept: "application/json",
-            },
-            body: imageFormData,
+          await createUpload(context, {
+            lat: Number(lat),
+            lon: Number(lon),
+            rating: Number(rating),
+            image_id: image_id,
+            city: String(city),
+            data: data,
+            time: Number(eventTime),
+            type: String(eventType),
           });
-          const responseData = await response.json();
-          if (!response.ok) {
-            return json(
-              {
-                error: `Error uploading image to images provider`,
-                success: false,
-              },
-              { status: 500 }
-            );
-          }
-          // @ts-ignore
-          const image_id = responseData?.result?.id;
-          if (!image_id) {
-            return json(
-              {
-                error: `Error uploading image to images provider [invalid image_id]`,
-                success: false,
-              },
-              { status: 500 }
-            );
-          }
-          try {
-            await createUpload(context, {
-              lat: Number(lat),
-              lon: Number(lon),
-              rating: Number(rating),
-              image_id: image_id,
-              city: `${city}`,
-              data: data,
-              time: Number(eventTime),
-              type: `${eventType}`,
-            });
-            return json(
-              { message: "Uploaded to database", success: true },
-              { status: 201 }
-            );
-          } catch (error) {
-            console.error("Error posting database: ", error);
-            return json(
-              { error: "Failed to post database", success: false },
-              { status: 500 }
-            );
-          }
+
+          return json({
+            message: "Uploaded to database",
+            image_id,
+            success: true
+          }, { status: 201 });
+
         } catch (error) {
-          console.error("Error uploading image:", error);
-          return json(
-            { error: "Failed to upload image", success: false },
-            { status: 500 }
-          );
+          console.error("Error posting to database:", error);
+          return json({
+            error: "Failed to post to database",
+            details: error instanceof Error ? error.message : "Unknown error",
+            success: false
+          }, { status: 500 });
         }
+
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        return json({
+          error: "Failed to upload image",
+          details: error instanceof Error ? error.message : "Unknown error",
+          success: false
+        }, { status: 500 });
       }
-      return json({ error: "No image file provided" }, { status: 400 });
     }
 
     case "locationComponent": {
