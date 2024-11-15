@@ -4,7 +4,7 @@ import { CiLocationArrow1 } from "react-icons/ci";
 import { FaSearchLocation } from "react-icons/fa";
 import { LoaderData } from "~/.server/interfaces";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { BsSunrise, BsSunset } from "react-icons/bs";
+import { GiSunrise , GiSunset } from "react-icons/gi";
 import { HiChevronDown } from "react-icons/hi";
 
 export interface LocationData {
@@ -237,9 +237,9 @@ export default function LocationComponent() {
                     >
                       <span className="flex items-center gap-2">
                         {eventType === "sunrise" ? (
-                          <BsSunrise className="size-4" />
+                          <GiSunrise className="size-4" />
                         ) : (
-                          <BsSunset className="size-4" />
+                          <GiSunset className="size-4" />
                         )}
                         {eventType === "sunrise" ? "Sunrise" : "Sunset"}
                       </span>
@@ -260,7 +260,7 @@ export default function LocationComponent() {
                                 focus ? "bg-white/20" : ""
                               } group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-100`}
                             >
-                              <BsSunrise
+                              <GiSunrise
                                 className="mr-2 size-4"
                                 aria-hidden="true"
                               />
@@ -276,7 +276,7 @@ export default function LocationComponent() {
                                 focus ? "bg-white/20" : ""
                               } group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-100`}
                             >
-                              <BsSunset
+                              <GiSunset
                                 className="mr-2 size-4"
                                 aria-hidden="true"
                               />
