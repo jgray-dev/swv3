@@ -6,8 +6,8 @@ import {
 } from "@remix-run/react";
 import React, { useEffect, useRef, useState } from "react";
 import { LoaderData } from "~/.server/interfaces";
-import {IoIosWarning} from "react-icons/io";
-import {PiWarningCircle} from "react-icons/pi";
+import { IoIosWarning } from "react-icons/io";
+import { PiWarningCircle } from "react-icons/pi";
 
 interface ActionData {
   success: boolean;
@@ -20,20 +20,37 @@ export default function SubmitComponent() {
   const navigation = useNavigation();
   const formRef = useRef<HTMLFormElement>(null);
   const [selectedFile, setSelectedFile] = useState<string>("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const isSubmitting = navigation.state === "submitting";
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file.name);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    } else {
+      setSelectedFile("");
+      setPreviewUrl(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   useEffect(() => {
     if (actionData?.success) {
       formRef.current?.reset();
       setSelectedFile("");
+      setPreviewUrl(null);
     }
   }, [actionData]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileName = e.target.files?.[0]?.name || "";
-    setSelectedFile(fileName);
-  };
 
   if (!allData?.ok) return null;
 
@@ -62,10 +79,10 @@ export default function SubmitComponent() {
               relative overflow-hidden rounded-lg
               border transition-all duration-200 ease-in-out
               ${
-                selectedFile
-                  ? "bg-white/20 border-white/30"
-                  : "bg-white/10 border-white/20 hover:bg-white/15"
-              }
+              selectedFile
+                ? "bg-white/20 border-white/30"
+                : "bg-white/10 border-white/20 hover:bg-white/15"
+            }
             `}
           >
             <input
@@ -95,6 +112,42 @@ export default function SubmitComponent() {
               </span>
             </div>
           </div>
+
+          {/* Image Preview */}
+          {previewUrl && (
+            <div className="mt-4">
+              <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full h-full object-contain bg-black/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewUrl(null);
+                    setSelectedFile("");
+                    formRef.current?.reset();
+                  }}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+                >
+                  <svg
+                    className="w-5 h-5 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Hidden Fields */}
@@ -105,11 +158,7 @@ export default function SubmitComponent() {
         <input type="hidden" name="lon" value={allData.lon} />
         <input type="hidden" name="city" value={allData.city} />
         <input type="hidden" name="element" value="userSubmission" />
-        <input
-          type="hidden"
-          name="data"
-          value={JSON.stringify(allData.stats)}
-        />
+        <input type="hidden" name="data" value={JSON.stringify(allData.stats)} />
 
         {/* Status Messages */}
         {actionData?.error && (
@@ -168,16 +217,23 @@ export default function SubmitComponent() {
           </span>{" "}
           at <span className={"text-white"}>{allData.city}</span>
         </div>
+
         {/*Future event warning*/}
-        {(allData.relative === "future" && selectedFile && !actionData?.success)&& <div className={"flex justify-center items-center text-red-400 text-sm"}>
+        {allData.relative === "future" && selectedFile && !actionData?.success && (
+          <div className={"flex justify-center items-center text-red-400 text-sm cursor-default"} title={`You cannot upload a picture from the future!`}>
             <IoIosWarning className={"h-6 w-6 fill-red-500 mr-2"} />
-            This event hasnt happened yet!</div>}
+            This event hasn't happened yet!
+          </div>
+        )}
 
         {/*Relative warning*/}
-        {(allData.relative === "past" && selectedFile && !actionData?.success)&& <div className={"flex justify-center items-center text-orange-400 text-sm"}>
-            <PiWarningCircle  className={"h-6 w-6 fill-orange-500 mr-2"} />
-            This event happened {allData.eventString.split(' ').slice(1).join(' ')}</div>}
-        
+        {allData.relative === "past" && selectedFile && !actionData?.success && (
+          <div className={"flex justify-center items-center text-orange-400 text-sm cursor-default"} title={`Make sure the image you're uploading was taken ${allData.eventString.split(" ").slice(1).join(" ")}.`}>
+            <PiWarningCircle className={"h-6 w-6 fill-orange-500 mr-2"} />
+            This event happened {allData.eventString.split(" ").slice(1).join(" ")}.
+          </div>
+        )}
+
         {/* Submit Button */}
         <button
           type="submit"
@@ -187,10 +243,10 @@ export default function SubmitComponent() {
             font-medium text-sm
             transition-all duration-200
             ${
-              isSubmitting || !selectedFile || allData.relative === "future"
-                ? "bg-white/5 border-white/5 text-slate-400 cursor-not-allowed"
-                : "bg-white/20 border border-white/20 text-slate-100 hover:bg-white/30 active:bg-white/10"
-            }
+            isSubmitting || !selectedFile || allData.relative === "future"
+              ? "bg-white/5 border-white/5 text-slate-400 cursor-not-allowed"
+              : "bg-white/20 border border-white/20 text-slate-100 hover:bg-white/30 active:bg-white/10"
+          }
           `}
         >
           <div className="relative h-5">
