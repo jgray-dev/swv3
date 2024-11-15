@@ -9,7 +9,8 @@ import {
   checkImage,
   createNoonDate,
   findNextSunEvent,
-  generateCoordinateString, getCityFromGeocodeResponse,
+  generateCoordinateString,
+  getCityFromGeocodeResponse,
   getRelative,
   getRelevantSunEvent,
   getStringLiteral,
@@ -19,7 +20,8 @@ import {
 } from "~/.server/data";
 import { skyRating } from "~/.server/rating";
 import {
-  AveragedValues, GeocodeResponse,
+  AveragedValues,
+  GeocodeResponse,
   InterpolatedWeather,
   LoaderData,
   TimeZoneApiResponse,
@@ -72,7 +74,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   let historic = false;
   let dateUrl = url.searchParams.get("date");
   if (dateUrl === "next" || !dateUrl) {
-    historic = true
+    historic = true;
     const date = new Date();
     dateUrl = date.toISOString().split("T")[0];
   }
@@ -208,7 +210,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     ok: true,
     uploads: mapData,
     eventDate: dateUrl,
-    useNext: historic
+    useNext: historic,
   };
 };
 
@@ -240,7 +242,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       const data = formData.get("data");
       const eventTime = formData.get("eventTime");
       const eventType = formData.get("eventType");
-      
+
       if (imageFile && imageFile instanceof Blob) {
         const safe = await checkImage(context, imageFile);
         if (!safe)
@@ -294,7 +296,7 @@ export const action: ActionFunction = async ({ request, context }) => {
               city: `${city}`,
               data: data,
               time: Number(eventTime),
-              type: `${eventType}`
+              type: `${eventType}`,
             });
             return json(
               { message: "Uploaded to database", success: true },
@@ -359,7 +361,7 @@ export const action: ActionFunction = async ({ request, context }) => {
               console.error("Invalid locationData type");
           }
           const response = await fetch(geocodingUrl);
-          const data = await response.json() as GeocodeResponse;
+          const data = (await response.json()) as GeocodeResponse;
 
           if (data.status === "OK" && data) {
             const lat = data.results[0].geometry.location.lat;
@@ -368,7 +370,8 @@ export const action: ActionFunction = async ({ request, context }) => {
             redirectUrl.searchParams.set("lat", `${lat}`);
             redirectUrl.searchParams.set("lon", `${lon}`);
             redirectUrl.searchParams.set(
-              "city", getCityFromGeocodeResponse(data)
+              "city",
+              getCityFromGeocodeResponse(data)
             );
             redirectUrl.searchParams.set(
               "date",
