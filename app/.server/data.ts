@@ -1,7 +1,7 @@
 import { computeDestinationPoint } from "geolib";
 import {
   AveragedValues,
-  ClassificationResult,
+  ClassificationResult, GeocodeResponse,
   InterpolatedWeather,
   WeatherLocation,
 } from "~/.server/interfaces";
@@ -484,4 +484,26 @@ export function createNoonDate(dateStr: string, timezone: string) {
 
   // Adjust the time to ensure noon in the target timezone
   return new Date(date.getTime() - offset);
+}
+
+
+export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
+  if (!response.results || !response.results[0] || !response.results[0].address_components) {
+    return response.results[0].formatted_address;
+  }
+
+  const cityComponent = response.results[0].address_components.find(component =>
+    component.types.includes('locality')
+  );
+
+  if (cityComponent) {
+    return cityComponent.long_name;
+  }
+
+  const fallbackComponent = response.results[0].address_components.find(component =>
+    component.types.includes('sublocality') ||
+    component.types.includes('administrative_area_level_3')
+  );
+
+  return fallbackComponent ? fallbackComponent.long_name : response.results[0].formatted_address;
 }
