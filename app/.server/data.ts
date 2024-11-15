@@ -1,12 +1,12 @@
 import { computeDestinationPoint } from "geolib";
 import {
   AveragedValues,
-  ClassificationResult, GeocodeResponse,
+  ClassificationResult,
+  GeocodeResponse,
   InterpolatedWeather,
   WeatherLocation,
 } from "~/.server/interfaces";
 import SunCalc from "suncalc";
-
 
 //Helper function for crafting the URL to fetch from open-meteo
 export function generateCoordinateString(
@@ -467,17 +467,18 @@ export async function checkImage(context: any, image: File): Promise<Boolean> {
   return normalScore >= 0.6;
 }
 
-
 export function createNoonDate(dateStr: string, timezone: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    throw new Error('Invalid date format. Use YYYY-MM-DD');
+    throw new Error("Invalid date format. Use YYYY-MM-DD");
   }
 
-  const [year, month, day] = dateStr.split('-').map(Number);
+  const [year, month, day] = dateStr.split("-").map(Number);
   const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
 
   // Create a date string with the timezone
-  const dateInTz = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+  const dateInTz = new Date(
+    date.toLocaleString("en-US", { timeZone: timezone })
+  );
 
   // Calculate the timezone offset
   const offset = dateInTz.getTime() - date.getTime();
@@ -486,24 +487,30 @@ export function createNoonDate(dateStr: string, timezone: string) {
   return new Date(date.getTime() - offset);
 }
 
-
 export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
-  if (!response.results || !response.results[0] || !response.results[0].address_components) {
+  if (
+    !response.results ||
+    !response.results[0] ||
+    !response.results[0].address_components
+  ) {
     return response.results[0].formatted_address;
   }
 
-  const cityComponent = response.results[0].address_components.find(component =>
-    component.types.includes('locality')
+  const cityComponent = response.results[0].address_components.find(
+    (component) => component.types.includes("locality")
   );
 
   if (cityComponent) {
     return cityComponent.long_name;
   }
 
-  const fallbackComponent = response.results[0].address_components.find(component =>
-    component.types.includes('sublocality') ||
-    component.types.includes('administrative_area_level_3')
+  const fallbackComponent = response.results[0].address_components.find(
+    (component) =>
+      component.types.includes("sublocality") ||
+      component.types.includes("administrative_area_level_3")
   );
 
-  return fallbackComponent ? fallbackComponent.long_name : response.results[0].formatted_address;
+  return fallbackComponent
+    ? fallbackComponent.long_name
+    : response.results[0].formatted_address;
 }
