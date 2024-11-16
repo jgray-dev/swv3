@@ -1,12 +1,13 @@
 import { useRouteLoaderData } from "@remix-run/react";
 import { LoaderData } from "~/.server/interfaces";
 import { GoAlert } from "react-icons/go";
-import { useEffect } from "react";
+// import { useEffect } from "react";
+
 export default function Alert() {
   let allData = useRouteLoaderData<LoaderData>("routes/_index");
-  useEffect(() => {
-    console.log(allData);
-  }, [allData]);
+  // useEffect(() => {
+  //   console.log(allData);
+  // }, [allData]);
   if (!allData?.message) return null;
   return (
     <div
