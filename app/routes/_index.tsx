@@ -266,10 +266,13 @@ export const action: ActionFunction = async ({ request, context }) => {
     );
     if (!turnstileVerification.success) {
       return redirect(
-        appendErrorToUrl(url.search, `Turnstile verification failed ${turnstileVerification["error-codes"]}`)
+        appendErrorToUrl(
+          url.search,
+          `Turnstile verification failed ${turnstileVerification["error-codes"]}`
+        )
       );
     } else {
-      console.log("turnstile verified? do stuff here ig??")
+      console.log("turnstile verified? do stuff here ig??");
     }
   } catch (err) {
     console.error("Error in first action try/catch");
@@ -686,6 +689,12 @@ export default function Sunwatch() {
       <RatingDisplay />
       <CloudCoverDisplay />
       <Map />
+      <div className={"w-screen flex justify-center items-center"}>
+        <div
+          className="cf-turnstile"
+          data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
+        ></div>
+      </div>
       <SubmitComponent />
     </div>
   );
