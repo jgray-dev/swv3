@@ -265,14 +265,11 @@ export const action: ActionFunction = async ({ request, context }) => {
       ip
     );
     if (!turnstileVerification.success) {
-      return json(
-        {
-          success: false,
-          message: "Turnstile verification failed",
-          errors: turnstileVerification["error-codes"],
-        },
-        { status: 400 }
+      return redirect(
+        appendErrorToUrl(url.search, `Turnstile verification failed ${turnstileVerification["error-codes"]}`)
       );
+    } else {
+      console.log("turnstile verified? do stuff here ig??")
     }
   } catch (err) {
     console.error("Error in first action try/catch");
