@@ -111,7 +111,9 @@ export default function RatingDisplay() {
           </svg>
           <div className="absolute flex items-center justify-center">
             <span
-              className={`text-2xl sm:text-4xl md:-translate-y-3 font-bold -translate-y-2 ${rating===100?"gradient default":""}`}
+              className={`text-2xl sm:text-4xl md:-translate-y-3 font-bold -translate-y-2 ${
+                rating === 100 ? "gradient default" : ""
+              }`}
               aria-live="polite"
             >
               {Math.round(displayNumber)}
