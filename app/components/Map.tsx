@@ -371,8 +371,6 @@ export default function MapComponent() {
                 }
               }}
             >
-              <ZoomControl />
-
               {currentZoom > 10 || visibleItems.length === 1
                 ? overlays
                 : // visibleItems.map((sub:DbUpload)=>(
@@ -408,6 +406,7 @@ export default function MapComponent() {
                       }}
                     />
                   ))}
+              <ZoomControl />
             </Map>
           )}
         </div>
