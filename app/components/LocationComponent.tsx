@@ -146,7 +146,7 @@ export default function LocationComponent() {
                     : "Use GPS location"
                 }
               >
-                {(gettingGeolocation && !gotGeolocation) ? (
+                {gettingGeolocation && !gotGeolocation ? (
                   <div
                     className="h-5 w-5 rounded-full border-2 border-slate-100 border-t-transparent animate-spin"
                     role="status"
@@ -205,7 +205,11 @@ export default function LocationComponent() {
                     type="date"
                     id="submissionDate"
                     min="2022-01-01"
-                    max={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
+                    max={
+                      new Date(Date.now() + 86400000)
+                        .toISOString()
+                        .split("T")[0]
+                    }
                     name="submissionDate"
                     required
                     className="w-full p-2 rounded-md 
