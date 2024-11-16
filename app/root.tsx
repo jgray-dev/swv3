@@ -51,14 +51,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <title></title>
       </head>
       <body className={"text-white"}>
-        {children}
-        <ScrollRestoration />
-        <Scripts />
+
+      <div
+        className="cf-turnstile"
+        data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
+      ></div>
+      {children}
+      <ScrollRestoration/>
+      <Scripts/>
       </body>
     </html>
   );
 }
 
 export default function App() {
-  return <Outlet />;
+  return <Outlet/>;
 }
