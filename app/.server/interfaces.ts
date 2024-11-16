@@ -123,7 +123,6 @@ interface AddressComponent {
   types: string[];
 }
 
-
 export interface TurnstileVerifyResponse {
   success: boolean;
   challenge_ts: string;
@@ -131,4 +130,4 @@ export interface TurnstileVerifyResponse {
   "error-codes"?: string[];
   action?: string;
   cdata?: string;
-};
+}
