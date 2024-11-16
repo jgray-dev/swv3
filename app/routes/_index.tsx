@@ -235,13 +235,25 @@ export const action: ActionFunction = async ({ request, context }) => {
   switch (element) {
     case "userSubmission": {
       // Check if all required fields are present
-      const requiredFields = ["image", "rating", "lat", "lon", "city", "data", "eventTime", "eventType"];
+      const requiredFields = [
+        "image",
+        "rating",
+        "lat",
+        "lon",
+        "city",
+        "data",
+        "eventTime",
+        "eventType",
+      ];
       for (const field of requiredFields) {
         if (!formData.get(field)) {
-          return json({
-            error: `Missing required field: ${field}`,
-            success: false
-          }, { status: 400 });
+          return json(
+            {
+              error: `Missing required field: ${field}`,
+              success: false,
+            },
+            { status: 400 }
+          );
         }
       }
 
@@ -256,52 +268,75 @@ export const action: ActionFunction = async ({ request, context }) => {
 
       // Validate data types
       if (!imageFile || !(imageFile instanceof Blob)) {
-        return json({
-          error: "Invalid image format",
-          success: false
-        }, { status: 400 });
+        return json(
+          {
+            error: "Invalid image format",
+            success: false,
+          },
+          { status: 400 }
+        );
       }
 
       // Validate numeric values
-      if (isNaN(Number(rating)) || isNaN(Number(lat)) || isNaN(Number(lon)) || isNaN(Number(eventTime))) {
-        return json({
-          error: "Invalid numeric values provided",
-          details: {
-            rating: isNaN(Number(rating)) ? "invalid" : "valid",
-            lat: isNaN(Number(lat)) ? "invalid" : "valid",
-            lon: isNaN(Number(lon)) ? "invalid" : "valid",
-            eventTime: isNaN(Number(eventTime)) ? "invalid" : "valid"
+      if (
+        isNaN(Number(rating)) ||
+        isNaN(Number(lat)) ||
+        isNaN(Number(lon)) ||
+        isNaN(Number(eventTime))
+      ) {
+        return json(
+          {
+            error: "Invalid numeric values provided",
+            details: {
+              rating: isNaN(Number(rating)) ? "invalid" : "valid",
+              lat: isNaN(Number(lat)) ? "invalid" : "valid",
+              lon: isNaN(Number(lon)) ? "invalid" : "valid",
+              eventTime: isNaN(Number(eventTime)) ? "invalid" : "valid",
+            },
+            success: false,
           },
-          success: false
-        }, { status: 400 });
+          { status: 400 }
+        );
       }
 
       // Check image safety
       try {
         const safe = await checkImage(context, imageFile);
         if (!safe) {
-          return json({
-            error: "Unsafe image detected",
-            success: false
-          }, { status: 418 });
+          return json(
+            {
+              error: "Unsafe image detected",
+              success: false,
+            },
+            { status: 418 }
+          );
         }
       } catch (error) {
-        return json({
-          error: "Failed to check image safety",
-          details: error instanceof Error ? error.message : "Unknown error",
-          success: false
-        }, { status: 500 });
+        return json(
+          {
+            error: "Failed to check image safety",
+            details: error instanceof Error ? error.message : "Unknown error",
+            success: false,
+          },
+          { status: 500 }
+        );
       }
 
       try {
         const API_URL = `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/images/v1`;
 
         // Validate Cloudflare credentials
-        if (!context.cloudflare.env.CF_ACCOUNT_ID || !context.cloudflare.env.CF_TOKEN) {
-          return json({
-            error: "Missing Cloudflare credentials",
-            success: false
-          }, { status: 500 });
+        if (
+          !context.cloudflare.env.CF_ACCOUNT_ID ||
+          !context.cloudflare.env.CF_TOKEN
+        ) {
+          return json(
+            {
+              error: "Missing Cloudflare credentials",
+              success: false,
+            },
+            { status: 500 }
+          );
         }
 
         const imageFormData = new FormData();
@@ -317,11 +352,14 @@ export const action: ActionFunction = async ({ request, context }) => {
         });
 
         if (!response.ok) {
-          return json({
-            error: "Error uploading image to images provider",
-            details: `HTTP ${response.status}: ${response.statusText}`,
-            success: false
-          }, { status: response.status });
+          return json(
+            {
+              error: "Error uploading image to images provider",
+              details: `HTTP ${response.status}: ${response.statusText}`,
+              success: false,
+            },
+            { status: response.status }
+          );
         }
 
         const responseData = await response.json();
@@ -329,12 +367,15 @@ export const action: ActionFunction = async ({ request, context }) => {
         const image_id = responseData?.result?.id;
 
         if (!image_id) {
-          return json({
-            error: "Error uploading image to images provider",
-            details: "No image ID returned",
-            responseData,
-            success: false
-          }, { status: 500 });
+          return json(
+            {
+              error: "Error uploading image to images provider",
+              details: "No image ID returned",
+              responseData,
+              success: false,
+            },
+            { status: 500 }
+          );
         }
 
         try {
@@ -349,28 +390,35 @@ export const action: ActionFunction = async ({ request, context }) => {
             type: String(eventType),
           });
 
-          return json({
-            message: "Uploaded to database",
-            image_id,
-            success: true
-          }, { status: 201 });
-
+          return json(
+            {
+              message: "Uploaded to database",
+              image_id,
+              success: true,
+            },
+            { status: 201 }
+          );
         } catch (error) {
           console.error("Error posting to database:", error);
-          return json({
-            error: "Failed to post to database",
-            details: error instanceof Error ? error.message : "Unknown error",
-            success: false
-          }, { status: 500 });
+          return json(
+            {
+              error: "Failed to post to database",
+              details: error instanceof Error ? error.message : "Unknown error",
+              success: false,
+            },
+            { status: 500 }
+          );
         }
-
       } catch (error) {
         console.error("Error uploading image:", error);
-        return json({
-          error: "Failed to upload image",
-          details: error instanceof Error ? error.message : "Unknown error",
-          success: false
-        }, { status: 500 });
+        return json(
+          {
+            error: "Failed to upload image",
+            details: error instanceof Error ? error.message : "Unknown error",
+            success: false,
+          },
+          { status: 500 }
+        );
       }
     }
 
