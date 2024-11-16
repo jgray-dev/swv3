@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import StatItem from "~/components/StatItem";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import {useDeepCompareMemo} from "use-deep-compare";
+import { useDeepCompareMemo } from "use-deep-compare";
 
 export interface Bounds {
   ne: [number, number];
@@ -59,8 +59,7 @@ export default function MapComponent() {
       isWithinBounds(sub.lat, sub.lon, currentBounds)
     );
   }, [submissions, currentBounds]);
-  
-  
+
   const groups = useMemo(() => {
     return groupCoordinates(visibleItems);
   }, [currentZoom]);
@@ -68,7 +67,7 @@ export default function MapComponent() {
   const overlays = useDeepCompareMemo(() => {
     return renderOverlays(visibleItems);
   }, [groups]);
-  
+
   function isWithinBounds(
     lat: number,
     lon: number,
