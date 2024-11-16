@@ -50,15 +50,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
         <title></title>
       </head>
-      <body className={"text-white"}>
-      {children}
-      <ScrollRestoration/>
-      <Scripts/>
+      <body>
+        <div className="turnstile-container">
+          <div
+            className="cf-turnstile"
+            data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
+            data-theme="light"
+            data-callback={function (token: string) {
+              console.log(`Turnstile token: ${token}`);
+            }}
+            data-error-callback={function (error: any) {
+              console.error("Turnstile error:", error);
+            }}
+          />
+        </div>
+        {children}
+        <ScrollRestoration />
+        <Scripts />
       </body>
     </html>
   );
 }
 
 export default function App() {
-  return <Outlet/>;
+  return <Outlet />;
 }
