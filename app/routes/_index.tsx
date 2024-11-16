@@ -36,7 +36,7 @@ import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
 import { createUpload, getSubmissions } from "~/.server/database";
 import SunCalc from "suncalc";
-import Turnstile from "react-turnstile";
+import TurnstileComponent from "~/components/TurnstileComponent";
 
 export const meta: MetaFunction = () => {
   return [
@@ -690,9 +690,7 @@ export default function Sunwatch() {
       <RatingDisplay />
       <CloudCoverDisplay />
       <Map />
-      <div className={"w-screen flex justify-center items-center"}>
-        <Turnstile sitekey={'0x4AAAAAAAx9XpnBsPXGv7Q0'} />
-      </div>
+      <TurnstileComponent/>
       <SubmitComponent />
     </div>
   );
