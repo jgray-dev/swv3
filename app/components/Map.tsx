@@ -373,28 +373,7 @@ export default function MapComponent() {
             >
               {currentZoom > 10 || visibleItems.length === 1
                 ? overlays
-                : // visibleItems.map((sub:DbUpload)=>(
-                  //   <Overlay
-                  //     anchor={[sub.lat, sub.lon]}
-                  //     key={sub.time}
-                  //     offset={[64, 64]}
-                  //   >
-                  //     <button
-                  //       onMouseDown={() => {
-                  //         animateZoom(sub.lat, sub.lon);
-                  //         setSelectedSubmission(sub);
-                  //       }}
-                  //     >
-                  //       <img
-                  //         src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
-                  //         alt={sub.city}
-                  //         className={`max-w-32 max-h-32 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(
-                  //           sub.rating
-                  //         )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
-                  //       />
-                  //     </button>
-                  //   </Overlay>
-                  // ))
+                :
                   visibleItems.map((sub: any) => (
                     <Marker
                       color={getHsl(sub.rating)}
