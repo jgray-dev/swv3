@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import StatItem from "~/components/StatItem";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import {useDeepCompareMemo} from "use-deep-compare";
 
 export interface Bounds {
   ne: [number, number];
@@ -58,11 +59,16 @@ export default function MapComponent() {
       isWithinBounds(sub.lat, sub.lon, currentBounds)
     );
   }, [submissions, currentBounds]);
+  
+  
+  const groups = useMemo(() => {
+    return groupCoordinates(visibleItems);
+  }, [currentZoom]);
 
-  const overlays = useMemo(() => {
+  const overlays = useDeepCompareMemo(() => {
     return renderOverlays(visibleItems);
-  }, [visibleItems]);
-
+  }, [groups]);
+  
   function isWithinBounds(
     lat: number,
     lon: number,
@@ -70,7 +76,7 @@ export default function MapComponent() {
   ): boolean {
     if (!bounds) return true;
 
-    const tolerance = 0.5;
+    const tolerance = 0.1;
     return (
       lat <= bounds.ne[0] + tolerance &&
       lat >= bounds.sw[0] - tolerance &&
@@ -153,7 +159,6 @@ export default function MapComponent() {
   // Submission overlays
   function renderOverlays(subs: DbUpload[]): ReactElement[] | ReactElement {
     if (!(subs.length > 0)) return <></>;
-    const groups = groupCoordinates(subs);
     if (!groups) return <></>;
     return groups.map((g) =>
       g.group ? (
@@ -174,13 +179,7 @@ export default function MapComponent() {
                 <img
                   src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
                   alt={sub.city}
-                  className={`${
-                    g.subs.length <= 3
-                      ? "w-32 h-32"
-                      : g.subs.length <= 6
-                      ? "w-24 h-24"
-                      : "w-16 h-16"
-                  } object-cover rounded-md transition-transform hover:scale-105 ${getBorderColor(
+                  className={`w-24 h-24 object-cover rounded-md transition-transform hover:scale-105 ${getBorderColor(
                     sub.rating
                   )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
                 />
@@ -375,7 +374,7 @@ export default function MapComponent() {
             >
               <ZoomControl />
 
-              {currentZoom > 9 || visibleItems.length === 1
+              {currentZoom > 10 || visibleItems.length === 1
                 ? overlays
                 : // visibleItems.map((sub:DbUpload)=>(
                   //   <Overlay
