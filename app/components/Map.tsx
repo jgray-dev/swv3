@@ -75,7 +75,7 @@ export default function MapComponent() {
   ): boolean {
     if (!bounds) return true;
 
-    const tolerance = 0.1;
+    const tolerance = 0.01;
     return (
       lat <= bounds.ne[0] + tolerance &&
       lat >= bounds.sw[0] - tolerance &&
