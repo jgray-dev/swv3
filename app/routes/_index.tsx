@@ -228,6 +228,34 @@ export function isLocationData(data: any): data is LocationData {
 export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const formData = await request.formData();
+  if (!formData) {
+    return redirect(
+      appendErrorToUrl(
+        url.search, "Request didn't include any body"
+      )
+    );
+  } else {
+    const token = formData.get("cf-turnstile-response");
+    const ip = request.headers.get("CF-Connecting-IP");
+    if (ip && token) {
+      let turnstileForm = new FormData();
+      turnstileForm.append("secret", context.cloudflare.env.CF_TOKEN);
+      turnstileForm.append("response", token);
+      turnstileForm.append("remoteip", ip);
+      const cfResult = await fetch(`https://challenges.cloudflare.com/turnstile/v0/siteverify`, {
+        body: turnstileForm,
+        method: "POST",
+      });
+      console.log("CLOUDFLARE RESULT:")
+      console.log(cfResult)
+    } else {
+      return redirect(
+        appendErrorToUrl(
+          url.search, "ip || token are null"
+        )
+      );
+    }
+  }
   const element = formData.get("element");
   if (!element || typeof element !== "string") {
     return json({ error: "Missing form identifier" }, { status: 500 });
