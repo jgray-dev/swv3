@@ -36,7 +36,6 @@ import Map from "~/components/Map";
 import SubmitComponent from "~/components/SubmitComponent";
 import { createUpload, getSubmissions } from "~/.server/database";
 import SunCalc from "suncalc";
-import TurnstileComponent from "~/components/TurnstileComponent";
 
 export const meta: MetaFunction = () => {
   return [
@@ -251,8 +250,12 @@ async function verifyTurnstileToken(
 export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const formData = await request.formData();
+
+  // Log all form data to see what's being received
+  console.log("Form data received:", Object.fromEntries(formData.entries()));
+  const token = formData.get("cf-turnstile-response");
+  console.log("Turnstile token:", token);
   try {
-    const token = formData.get("cf-turnstile-response");
     if (!token || typeof token !== "string") {
       return json(
         { success: false, message: "Turnstile token is required" },
@@ -690,7 +693,6 @@ export default function Sunwatch() {
       <RatingDisplay />
       <CloudCoverDisplay />
       <Map />
-      <TurnstileComponent/>
       <SubmitComponent />
     </div>
   );
