@@ -79,10 +79,10 @@ export default function SubmitComponent() {
               relative overflow-hidden rounded-lg
               border transition-all duration-200 ease-in-out
               ${
-              selectedFile
-                ? "bg-white/20 border-white/30"
-                : "bg-white/10 border-white/20 hover:bg-white/15"
-            }
+                selectedFile
+                  ? "bg-white/20 border-white/30"
+                  : "bg-white/10 border-white/20 hover:bg-white/15"
+              }
             `}
           >
             <input
@@ -105,8 +105,7 @@ export default function SubmitComponent() {
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <span className="text-sm text-slate-100">
                 {selectedFile || "Choose an image"}
@@ -152,13 +151,13 @@ export default function SubmitComponent() {
         </div>
 
         {/* Hidden Fields */}
-        <input type="hidden" name="eventType" value={allData.eventType}/>
-        <input type="hidden" name="eventTime" value={allData.eventTime}/>
-        <input type="hidden" name="rating" value={allData.rating}/>
-        <input type="hidden" name="lat" value={allData.lat}/>
-        <input type="hidden" name="lon" value={allData.lon}/>
-        <input type="hidden" name="city" value={allData.city}/>
-        <input type="hidden" name="element" value="userSubmission"/>
+        <input type="hidden" name="eventType" value={allData.eventType} />
+        <input type="hidden" name="eventTime" value={allData.eventTime} />
+        <input type="hidden" name="rating" value={allData.rating} />
+        <input type="hidden" name="lat" value={allData.lat} />
+        <input type="hidden" name="lon" value={allData.lon} />
+        <input type="hidden" name="city" value={allData.city} />
+        <input type="hidden" name="element" value="userSubmission" />
         <input
           type="hidden"
           name="data"
@@ -233,7 +232,7 @@ export default function SubmitComponent() {
               }
               title={`You cannot upload a picture from the future!`}
             >
-              <IoIosWarning className={"h-6 w-6 fill-red-500 mr-2"}/>
+              <IoIosWarning className={"h-6 w-6 fill-red-500 mr-2"} />
               This event hasn't happened yet!
             </div>
           )}
@@ -251,7 +250,7 @@ export default function SubmitComponent() {
                 .slice(1)
                 .join(" ")}.`}
             >
-              <PiWarningCircle className={"h-6 w-6 fill-orange-500 mr-2"}/>
+              <PiWarningCircle className={"h-6 w-6 fill-orange-500 mr-2"} />
               This event happened{" "}
               {allData.eventString.split(" ").slice(1).join(" ")}.
             </div>
@@ -268,10 +267,10 @@ export default function SubmitComponent() {
             font-medium text-sm
             transition-all duration-200
             ${
-            isSubmitting || !selectedFile || allData.relative === "future"
-              ? "bg-white/5 border-white/5 text-slate-400 cursor-not-allowed"
-              : "bg-white/20 border border-white/20 text-slate-100 hover:bg-white/30 active:bg-white/10"
-          }
+              isSubmitting || !selectedFile || allData.relative === "future"
+                ? "bg-white/5 border-white/5 text-slate-400 cursor-not-allowed"
+                : "bg-white/20 border border-white/20 text-slate-100 hover:bg-white/30 active:bg-white/10"
+            }
           `}
         >
           <div className="relative h-5">
