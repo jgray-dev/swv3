@@ -251,7 +251,6 @@ export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const formData = await request.formData();
   try {
-    const formData = await request.formData();
     const token = formData.get("cf-turnstile-response");
     if (!token || typeof token !== "string") {
       return json(
