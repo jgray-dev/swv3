@@ -24,7 +24,8 @@ import {
   GeocodeResponse,
   InterpolatedWeather,
   LoaderData,
-  TimeZoneApiResponse, TurnstileVerifyResponse,
+  TimeZoneApiResponse,
+  TurnstileVerifyResponse,
   WeatherLocation,
 } from "~/.server/interfaces";
 import RatingDisplay from "~/components/RatingDisplay";
@@ -225,8 +226,11 @@ export function isLocationData(data: any): data is LocationData {
   );
 }
 
-
-async function verifyTurnstileToken(token: string, secret: string, ip?: string) {
+async function verifyTurnstileToken(
+  token: string,
+  secret: string,
+  ip?: string
+) {
   const formData = new FormData();
   formData.append("secret", secret);
   formData.append("response", token);
@@ -240,9 +244,8 @@ async function verifyTurnstileToken(token: string, secret: string, ip?: string) 
     body: formData,
   });
 
-  return await result.json() as TurnstileVerifyResponse;
+  return (await result.json()) as TurnstileVerifyResponse;
 }
-
 
 export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
@@ -269,17 +272,17 @@ export const action: ActionFunction = async ({ request, context }) => {
           message: "Turnstile verification failed",
           errors: turnstileVerification["error-codes"],
         },
-        {status: 400}
+        { status: 400 }
       );
     }
-  } catch(err) {
-    console.error("Error in first action try/catch")
-    console.error(err)
+  } catch (err) {
+    console.error("Error in first action try/catch");
+    console.error(err);
     return redirect(
       appendErrorToUrl(url.search, `Error in try catch statement ${err}`)
     );
   }
-  
+
   const element = formData.get("element");
   if (!element || typeof element !== "string") {
     return json({ error: "Missing form identifier" }, { status: 500 });
