@@ -51,11 +51,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <title></title>
       </head>
       <body className={"text-white"}>
-
-      <div
-        className="cf-turnstile"
-        data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
-      ></div>
       {children}
       <ScrollRestoration/>
       <Scripts/>
