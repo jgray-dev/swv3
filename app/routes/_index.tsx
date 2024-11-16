@@ -24,7 +24,7 @@ import {
   GeocodeResponse,
   InterpolatedWeather,
   LoaderData,
-  TimeZoneApiResponse,
+  TimeZoneApiResponse, TurnstileVerifyResponse,
   WeatherLocation,
 } from "~/.server/interfaces";
 import RatingDisplay from "~/components/RatingDisplay";
@@ -225,37 +225,61 @@ export function isLocationData(data: any): data is LocationData {
   );
 }
 
+
+async function verifyTurnstileToken(token: string, secret: string, ip?: string) {
+  const formData = new FormData();
+  formData.append("secret", secret);
+  formData.append("response", token);
+  if (ip) {
+    formData.append("remoteip", ip);
+  }
+
+  const url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+  const result = await fetch(url, {
+    method: "POST",
+    body: formData,
+  });
+
+  return await result.json() as TurnstileVerifyResponse;
+}
+
+
 export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const formData = await request.formData();
-  if (!formData) {
-    return redirect(
-      appendErrorToUrl(
-        url.search, "Request didn't include any body"
-      )
-    );
-  } else {
+  try {
+    const formData = await request.formData();
     const token = formData.get("cf-turnstile-response");
-    const ip = request.headers.get("CF-Connecting-IP");
-    if (ip && token) {
-      let turnstileForm = new FormData();
-      turnstileForm.append("secret", context.cloudflare.env.CF_TOKEN);
-      turnstileForm.append("response", token);
-      turnstileForm.append("remoteip", ip);
-      const cfResult = await fetch(`https://challenges.cloudflare.com/turnstile/v0/siteverify`, {
-        body: turnstileForm,
-        method: "POST",
-      });
-      console.log("CLOUDFLARE RESULT:")
-      console.log(cfResult)
-    } else {
-      return redirect(
-        appendErrorToUrl(
-          url.search, "ip || token are null"
-        )
+    if (!token || typeof token !== "string") {
+      return json(
+        { success: false, message: "Turnstile token is required" },
+        { status: 400 }
       );
     }
+    const ip = request.headers.get("CF-Connecting-IP") ?? undefined;
+    const turnstileVerification = await verifyTurnstileToken(
+      token,
+      context.cloudflare.env.TURNSTILE_SECRET,
+      ip
+    );
+    if (!turnstileVerification.success) {
+      return json(
+        {
+          success: false,
+          message: "Turnstile verification failed",
+          errors: turnstileVerification["error-codes"],
+        },
+        {status: 400}
+      );
+    }
+  } catch(err) {
+    console.error("Error in first action try/catch")
+    console.error(err)
+    return redirect(
+      appendErrorToUrl(url.search, `Error in try catch statement ${err}`)
+    );
   }
+  
   const element = formData.get("element");
   if (!element || typeof element !== "string") {
     return json({ error: "Missing form identifier" }, { status: 500 });
