@@ -5,8 +5,7 @@ export default function TurnstileComponent() {
     <div className={"w-screen flex items-center justify-center"}>
       <div
         className="cf-turnstile"
-        data-sitekey="yourSitekey"
-        data-callback="javascriptCallback"
+        data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
       ></div>
     </div>
   );
