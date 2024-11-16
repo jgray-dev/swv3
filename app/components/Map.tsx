@@ -373,8 +373,7 @@ export default function MapComponent() {
             >
               {currentZoom > 10 || visibleItems.length === 1
                 ? overlays
-                :
-                  visibleItems.map((sub: any) => (
+                : visibleItems.map((sub: any) => (
                     <Marker
                       color={getHsl(sub.rating)}
                       anchor={[sub.lat, sub.lon]}
@@ -389,21 +388,21 @@ export default function MapComponent() {
               <ZoomControl
                 style={{
                   right: 10,
-                  top: 10
+                  top: 10,
                 }}
                 buttonStyle={{
-                  width: '50px',
-                  height: '50px',
-                  fontSize: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '5px',
-                  cursor: 'pointer',
-                  backgroundColor: 'white',
-                  border: '2px solid rgba(0,0,0,0.2)',
-                  borderRadius: '4px',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)'
+                  width: "50px",
+                  height: "50px",
+                  fontSize: "24px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "5px",
+                  cursor: "pointer",
+                  backgroundColor: "white",
+                  border: "2px solid rgba(0,0,0,0.2)",
+                  borderRadius: "4px",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
                 }}
               />
             </Map>
