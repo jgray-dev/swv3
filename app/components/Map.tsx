@@ -4,7 +4,7 @@ import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
 import React, { useEffect, useState } from "react";
 import StatItem from "~/components/StatItem";
 import { useDeepCompareMemo } from "use-deep-compare";
-import {useScrollLock} from "~/hooks/useScrollLock";
+import { useScrollLock } from "~/hooks/useScrollLock";
 
 export interface Bounds {
   ne: [number, number];
@@ -120,8 +120,7 @@ export default function MapComponent() {
       ></div>
       <div className="relative w-screen overflow-x-hidden min-h-[20vh] mt-24 text-center font-bold mx-4">
         User submissions
-        <div
-          className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full overflow-x-scroll min-h-[234px]">
+        <div className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full overflow-x-scroll min-h-[234px]">
           {[...visibleItems]
             .sort((a, b) => (b.rating || 0) - (a.rating || 0))
             .map((sub) => (
@@ -160,7 +159,7 @@ export default function MapComponent() {
               animate={true}
               minZoom={2}
               maxZoom={16}
-              onBoundsChanged={({zoom, bounds, center}) => {
+              onBoundsChanged={({ zoom, bounds, center }) => {
                 if (zoom !== currentZoom) {
                   setCurrentZoom(zoom);
                 }
@@ -215,10 +214,7 @@ export default function MapComponent() {
             }`}
           >
             <div className="md:max-h-[400px] w-full">
-              <div
-                className="relative w-full h-full rounded-lg overflow-hidden group"
-                
-              >
+              <div className="relative w-full h-full rounded-lg overflow-hidden group">
                 <img
                   src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${selectedSubmission.image_id}/public`}
                   alt={selectedSubmission.city}
@@ -229,8 +225,7 @@ export default function MapComponent() {
                     )
                   }
                 />
-                <div
-                  className="absolute bottom-0 left-0 right-0 max-h-fit bg-black/50 backdrop-blur-sm px-4 py-3 w-full flex justify-between">
+                <div className="absolute bottom-0 left-0 right-0 max-h-fit bg-black/50 backdrop-blur-sm px-4 py-3 w-full flex justify-between">
                   <h2 className="text-slate-100 text-md font-bold">
                     {selectedSubmission.city}
                   </h2>
@@ -318,7 +313,9 @@ export default function MapComponent() {
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            className={`absolute -top-4 -right-4 h-8 w-8 bg-red-600 hover:bg-red-700 rounded-full text-white font-bold transition-colors duration-200 ${imgModal?"visible":"hidden"}`}
+            className={`absolute -top-4 -right-4 h-8 w-8 bg-red-600 hover:bg-red-700 rounded-full text-white font-bold transition-colors duration-200 ${
+              imgModal ? "visible" : "hidden"
+            }`}
             onClick={() => setImgModal(null)}
           >
             ×
@@ -344,15 +341,15 @@ function getDateString(eventTime: number): string {
     return "just now";
   }
   const timeUnits = [
-    {seconds: 31536000, unit: "year"},
-    {seconds: 2592000, unit: "month"},
-    {seconds: 604800, unit: "week"},
-    {seconds: 86400, unit: "day"},
-    {seconds: 3600, unit: "hour"},
-    {seconds: 60, unit: "minute"},
-    {seconds: 1, unit: "second"},
+    { seconds: 31536000, unit: "year" },
+    { seconds: 2592000, unit: "month" },
+    { seconds: 604800, unit: "week" },
+    { seconds: 86400, unit: "day" },
+    { seconds: 3600, unit: "hour" },
+    { seconds: 60, unit: "minute" },
+    { seconds: 1, unit: "second" },
   ];
-  for (const {seconds, unit} of timeUnits) {
+  for (const { seconds, unit } of timeUnits) {
     const value = Math.floor(differenceInSeconds / seconds);
     if (value >= 1) {
       const plural = value === 1 ? "" : "s";
