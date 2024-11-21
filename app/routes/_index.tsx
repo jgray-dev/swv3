@@ -250,40 +250,6 @@ async function verifyTurnstileToken(
 export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const formData = await request.formData();
-  console.log("Form data received:", Object.fromEntries(formData.entries()));
-  const token = formData.get("cf-turnstile-response");
-  console.log("Turnstile token:", token);
-  try {
-    if (!token || typeof token !== "string") {
-      return json(
-        { success: false, message: "Turnstile token is required" },
-        { status: 400 }
-      );
-    }
-    const ip = request.headers.get("CF-Connecting-IP") ?? undefined;
-    const turnstileVerification = await verifyTurnstileToken(
-      token,
-      context.cloudflare.env.TURNSTILE_SECRET,
-      ip
-    );
-    if (!turnstileVerification.success) {
-      return redirect(
-        appendErrorToUrl(
-          url.search,
-          `Turnstile verification failed ${turnstileVerification["error-codes"]}`
-        )
-      );
-    } else {
-      console.log("turnstile verified? do stuff here ig??");
-    }
-  } catch (err) {
-    console.error("Error in first action try/catch");
-    console.error(err);
-    return redirect(
-      appendErrorToUrl(url.search, `Error in try catch statement ${err}`)
-    );
-  }
-
   const element = formData.get("element");
   if (!element || typeof element !== "string") {
     return json({ error: "Missing form identifier" }, { status: 500 });
