@@ -122,4 +122,3 @@ interface AddressComponent {
   short_name: string;
   types: string[];
 }
-
