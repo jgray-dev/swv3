@@ -82,49 +82,31 @@ export default function MapComponent() {
     const stageDuration = 450;
     const stageDelay = 225;
     const startTime = performance.now();
-
-    // Smoothstep function for better easing
     const smoothstep = (x: number): number => {
-      // Improved smooth interpolation
       return x * x * x * (x * (x * 6 - 15) + 10);
     };
-
-    // Custom ease-in-out that peaks during overlap
     const customEaseInOut = (t: number): number => {
-      // Smoother acceleration and deceleration
       return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     };
-
     const animateFrame = (currentTime: number) => {
       const elapsed = currentTime - startTime;
-
-      // Calculate separate progress for position and zoom
       const positionProgress = Math.min(elapsed / stageDuration, 1);
       const zoomProgress = Math.min((elapsed - stageDelay) / stageDuration, 1);
-
-      // Only animate position if we haven't reached the end
       if (positionProgress < 1) {
-        // Smoother position easing
         const positionEased = smoothstep(positionProgress);
         const newLat = startLat + (targetLat - startLat) * positionEased;
         const newLon = startLon + (targetLon - startLon) * positionEased;
         setCurrentCenter([newLat, newLon]);
       }
-
-      // Only animate zoom if we're past the delay and haven't reached the end
       if (elapsed >= stageDelay && zoomProgress < 1) {
-        // Smoother zoom easing
         const zoomEased = customEaseInOut(zoomProgress);
         const newZoom = startZoom + (targetZoom - startZoom) * zoomEased;
         setCurrentZoom(newZoom);
       }
-
-      // Continue animation if either stage isn't complete
       if (elapsed < totalDuration) {
         requestAnimationFrame(animateFrame);
       }
     };
-
     requestAnimationFrame(animateFrame);
   }
 
