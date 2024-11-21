@@ -250,8 +250,6 @@ async function verifyTurnstileToken(
 export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const formData = await request.formData();
-
-  // Log all form data to see what's being received
   console.log("Form data received:", Object.fromEntries(formData.entries()));
   const token = formData.get("cf-turnstile-response");
   console.log("Turnstile token:", token);
