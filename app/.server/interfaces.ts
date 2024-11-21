@@ -123,11 +123,3 @@ interface AddressComponent {
   types: string[];
 }
 
-export interface TurnstileVerifyResponse {
-  success: boolean;
-  challenge_ts: string;
-  hostname: string;
-  "error-codes"?: string[];
-  action?: string;
-  cdata?: string;
-}
