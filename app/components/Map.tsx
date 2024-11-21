@@ -1,15 +1,8 @@
 import { useRouteLoaderData } from "@remix-run/react";
-import { Map, Marker, Overlay, ZoomControl } from "pigeon-maps";
+import { Map, Marker, ZoomControl } from "pigeon-maps";
 import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
-import React, {
-  useEffect,
-  useState,
-  useMemo,
-  ReactElement,
-  useRef,
-} from "react";
+import React, { useEffect, useState } from "react";
 import StatItem from "~/components/StatItem";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useDeepCompareMemo } from "use-deep-compare";
 
 export interface Bounds {
@@ -54,19 +47,11 @@ export default function MapComponent() {
     );
   }, [allData]);
 
-  const visibleItems = useMemo(() => {
+  const visibleItems = useDeepCompareMemo(() => {
     return Object.values(submissions).filter((sub) =>
       isWithinBounds(sub.lat, sub.lon, currentBounds)
     );
   }, [submissions, currentBounds]);
-
-  const groups = useMemo(() => {
-    return groupCoordinates(visibleItems);
-  }, [currentZoom, setSelectedSubmission]);
-
-  const overlays = useDeepCompareMemo(() => {
-    return renderOverlays(visibleItems);
-  }, [groups]);
 
   function isWithinBounds(
     lat: number,
@@ -84,180 +69,7 @@ export default function MapComponent() {
     );
   }
 
-  //Submission grouping logic
-  interface CoordGroup {
-    center: [number, number];
-    subs: DbUpload[];
-    group: boolean;
-  }
-
-  function isWithinBuffer(
-    point1: [number, number],
-    point2: [number, number]
-  ): boolean {
-    const buffer = getBuffer();
-    return (
-      Math.abs(point1[0] - point2[0]) <= buffer &&
-      Math.abs(point1[1] - point2[1]) <= buffer
-    );
-  }
-
-  function getBuffer() {
-    const maxZoom = 14,
-      minZoom = 11,
-      maxValue = 0.15,
-      minValue = 0.01;
-    const zoomRange = maxZoom - minZoom,
-      valueRange = minValue - maxValue;
-    const zoomFraction = (Math.min(currentZoom, 14) - minZoom) / zoomRange;
-    return maxValue + zoomFraction * valueRange;
-  }
-
-  function groupCoordinates(subs: DbUpload[]): CoordGroup[] {
-    const groups: CoordGroup[] = [];
-    const used = new Set<number>();
-    for (let i = 0; i < subs.length; i++) {
-      if (used.has(i)) continue;
-      let closestGroup: CoordGroup | null = null;
-      let minDistance = Infinity;
-      for (const group of groups) {
-        if (isWithinBuffer([subs[i].lat, subs[i].lon], group.center)) {
-          const distance = calculateDistance(
-            [subs[i].lat, subs[i].lon],
-            group.center
-          );
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestGroup = group;
-          }
-        }
-      }
-      if (closestGroup) {
-        closestGroup.subs.push(subs[i]);
-        closestGroup.group = true;
-        used.add(i);
-        closestGroup.center = [
-          closestGroup.subs.reduce((sum, sub) => sum + sub.lat, 0) /
-            closestGroup.subs.length,
-          closestGroup.subs.reduce((sum, sub) => sum + sub.lon, 0) /
-            closestGroup.subs.length,
-        ];
-      } else {
-        const newGroup: CoordGroup = {
-          center: [subs[i].lat, subs[i].lon],
-          subs: [subs[i]],
-          group: false,
-        };
-        groups.push(newGroup);
-        used.add(i);
-      }
-    }
-    return groups;
-  }
-
-  // Submission overlays
-  function renderOverlays(subs: DbUpload[]): ReactElement[] | ReactElement {
-    if (!(subs.length > 0)) return <></>;
-    if (!groups) return <></>;
-    return groups.map((g) =>
-      g.group ? (
-        <Overlay
-          anchor={g.center}
-          key={Math.random() * g.center[0]}
-          offset={[Math.min(g.subs.length, 3) * 32, 64]}
-        >
-          <div className={`gap-1 grid-cols-3 grid`}>
-            {g.subs.map((sub) => (
-              <button
-                onClick={() => {
-                  animateZoom(sub.lat, sub.lon);
-                  setSelectedSubmission(sub);
-                }}
-                key={sub.time}
-              >
-                <img
-                  src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/thumbnail`}
-                  alt={sub.city}
-                  className={`w-24 h-24 object-cover rounded-md transition-transform hover:scale-105 ${getBorderColor(
-                    sub.rating
-                  )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
-                />
-              </button>
-            ))}
-          </div>
-        </Overlay>
-      ) : (
-        <Overlay
-          anchor={g.center}
-          key={Math.random() * g.center[0]}
-          offset={[64, 64]}
-        >
-          <button
-            onMouseDown={() => {
-              animateZoom(g.subs[0].lat, g.subs[0].lon);
-              setSelectedSubmission(g.subs[0]);
-            }}
-          >
-            <img
-              src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${g.subs[0].image_id}/thumbnail`}
-              alt={g.subs[0].city}
-              className={`max-w-32 max-h-32 aspect-auto rounded-lg transition-transform hover:scale-105 ${getBorderColor(
-                g.subs[0].rating
-              )} border-2 drop-shadow-xl shadow-xl hover:z-50 z-10`}
-            />
-          </button>
-        </Overlay>
-      )
-    );
-  }
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [parallaxOffset, setParallaxOffset] = useState(0);
-  const [maxScroll, setMaxScroll] = useState(0);
-  const lastScrollY = useRef(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!containerRef.current) return;
-      const currentScroll = window.scrollY;
-      const delta = currentScroll - lastScrollY.current;
-      lastScrollY.current = currentScroll;
-
-      setParallaxOffset((prev) => {
-        const newOffset = prev + delta * 1.5;
-        return Math.min(Math.max(0, newOffset), maxScroll);
-      });
-    };
-
-    const calculateMaxScroll = () => {
-      if (!containerRef.current) return;
-      const containerWidth = containerRef.current.scrollWidth;
-      const viewportWidth = window.innerWidth;
-      setMaxScroll(Math.max(0, containerWidth - viewportWidth) + 32);
-    };
-
-    calculateMaxScroll();
-    window.addEventListener("scroll", handleScroll);
-    window.addEventListener("resize", calculateMaxScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", calculateMaxScroll);
-    };
-  }, [maxScroll]);
-
-  const handleScroll = (direction: "left" | "right") => {
-    setParallaxOffset((prev) => {
-      const newOffset = direction === "left" ? prev - 300 : prev + 300;
-      return Math.min(Math.max(0, newOffset), maxScroll);
-    });
-  };
-
   if (!allData?.uploads) return null;
-
-  const sortedUploads = [...allData.uploads].sort(
-    (a, b) => (b.rating ?? 0) - (a.rating ?? 0)
-  );
 
   function animateZoom(
     targetLat: number,
@@ -266,27 +78,49 @@ export default function MapComponent() {
   ) {
     const startZoom = currentZoom;
     const [startLat, startLon] = currentCenter;
-    const duration = 1200;
+    const totalDuration = 900;
+    const stageDuration = 600;
+    const stageDelay = 300;
     const startTime = performance.now();
+
+    // Smoothstep function for better easing
+    const smoothstep = (x: number): number => {
+      // Improved smooth interpolation
+      return x * x * x * (x * (x * 6 - 15) + 10);
+    };
+
+    // Custom ease-in-out that peaks during overlap
+    const customEaseInOut = (t: number): number => {
+      // Smoother acceleration and deceleration
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    };
 
     const animateFrame = (currentTime: number) => {
       const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
 
-      // Quadratic ease-out for position (smooth start, slower end)
-      const positionEased = progress * (2 - progress);
+      // Calculate separate progress for position and zoom
+      const positionProgress = Math.min(elapsed / stageDuration, 1);
+      const zoomProgress = Math.min((elapsed - stageDelay) / stageDuration, 1);
 
-      // Cubic ease-in for zoom (slow start, rapid end)
-      const zoomEased = progress * progress * progress;
+      // Only animate position if we haven't reached the end
+      if (positionProgress < 1) {
+        // Smoother position easing
+        const positionEased = smoothstep(positionProgress);
+        const newLat = startLat + (targetLat - startLat) * positionEased;
+        const newLon = startLon + (targetLon - startLon) * positionEased;
+        setCurrentCenter([newLat, newLon]);
+      }
 
-      const newZoom = startZoom + (targetZoom - startZoom) * zoomEased;
-      const newLat = startLat + (targetLat - startLat) * positionEased;
-      const newLon = startLon + (targetLon - startLon) * positionEased;
+      // Only animate zoom if we're past the delay and haven't reached the end
+      if (elapsed >= stageDelay && zoomProgress < 1) {
+        // Smoother zoom easing
+        const zoomEased = customEaseInOut(zoomProgress);
+        const newZoom = startZoom + (targetZoom - startZoom) * zoomEased;
+        setCurrentZoom(newZoom);
+      }
 
-      setCurrentZoom(newZoom);
-      setCurrentCenter([newLat, newLon]);
-
-      if (progress < 1) {
+      // Continue animation if either stage isn't complete
+      if (elapsed < totalDuration) {
         requestAnimationFrame(animateFrame);
       }
     };
@@ -300,20 +134,16 @@ export default function MapComponent() {
         className={`${allData?.ok ? "hidden" : "visible min-h-[10vh]"}`}
       ></div>
 
-      <div className="relative w-screen overflow-x-hidden min-h-[20vh] mt-24 text-center font-bold">
-        Featured user submissions
-        <div
-          className="flex gap-4 py-8 transition-transform duration-150 ease-in-out mr-4 ml-4 w-full"
-          ref={containerRef}
-          style={{ transform: `translateX(-${parallaxOffset}px)` }}
-        >
-          {sortedUploads.map((sub) => (
+      <div className="relative w-screen overflow-x-hidden min-h-[20vh] mt-24 text-center font-bold mx-4">
+        User submissions
+        <div className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full overflow-x-scroll">
+          {visibleItems.map((sub) => (
             <div
               key={sub.image_id}
               className="flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-md"
               onClick={() => {
                 setSelectedSubmission(sub);
-                animateZoom(sub.lat, sub.lon);
+                animateZoom(sub.lat, sub.lon, 15);
               }}
             >
               <img
@@ -324,24 +154,6 @@ export default function MapComponent() {
             </div>
           ))}
         </div>
-        <button
-          onClick={() => handleScroll("left")}
-          className={`absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 p-3 rounded-full text-white hover:bg-black/70 transition-opacity backdrop-blur-xs ${
-            parallaxOffset === 0 ? "opacity-0" : "opacity-100"
-          }`}
-          disabled={parallaxOffset === 0}
-        >
-          <FaChevronLeft size={24} />
-        </button>
-        <button
-          onClick={() => handleScroll("right")}
-          className={`absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 p-3 rounded-full text-white hover:bg-black/70 transition-opacity backdrop-blur-xs ${
-            parallaxOffset >= maxScroll ? "opacity-0" : "opacity-100"
-          }`}
-          disabled={parallaxOffset >= maxScroll}
-        >
-          <FaChevronRight size={24} />
-        </button>
       </div>
       <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
         <div
@@ -371,19 +183,17 @@ export default function MapComponent() {
                 }
               }}
             >
-              {currentZoom > 10 || visibleItems.length === 1
-                ? overlays
-                : visibleItems.map((sub: any) => (
-                    <Marker
-                      color={getHsl(sub.rating)}
-                      anchor={[sub.lat, sub.lon]}
-                      key={sub.time}
-                      onClick={() => {
-                        setSelectedSubmission(sub);
-                        animateZoom(sub.lat, sub.lon, 12);
-                      }}
-                    />
-                  ))}
+              {visibleItems.map((sub: any) => (
+                <Marker
+                  color={getHsl(sub.rating)}
+                  anchor={[sub.lat, sub.lon]}
+                  key={sub.time}
+                  onClick={() => {
+                    setSelectedSubmission(sub);
+                    animateZoom(sub.lat, sub.lon, 16);
+                  }}
+                />
+              ))}
 
               <ZoomControl
                 style={{
@@ -524,15 +334,6 @@ function getDateString(eventTime: number): string {
     }
   }
   return "just now";
-}
-
-function calculateDistance(
-  coord1: [number, number],
-  coord2: [number, number]
-): number {
-  const [lat1, lon1] = coord1;
-  const [lat2, lon2] = coord2;
-  return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lon2 - lon1, 2));
 }
 
 function getHsl(rating: number): string {
