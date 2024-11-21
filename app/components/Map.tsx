@@ -78,9 +78,9 @@ export default function MapComponent() {
   ) {
     const startZoom = currentZoom;
     const [startLat, startLon] = currentCenter;
-    const totalDuration = 900;
-    const stageDuration = 600;
-    const stageDelay = 300;
+    const totalDuration = 600;
+    const stageDuration = 450;
+    const stageDelay = 225;
     const startTime = performance.now();
 
     // Smoothstep function for better easing
@@ -136,25 +136,27 @@ export default function MapComponent() {
 
       <div className="relative w-screen overflow-x-hidden min-h-[20vh] mt-24 text-center font-bold mx-4">
         User submissions
-        <div className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full overflow-x-scroll">
-          {visibleItems.map((sub) => (
-            <div
-              key={sub.image_id}
-              className={`flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-md ${getBorderColor(
-                sub.rating
-              )} border`}
-              onClick={() => {
-                setSelectedSubmission(sub);
-                animateZoom(sub.lat, sub.lon, 15);
-              }}
-            >
-              <img
-                src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/public`}
-                alt="Featured submission"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ))}
+        <div className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full overflow-x-scroll min-h-[234px]">
+          {[...visibleItems]
+            .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+            .map((sub) => (
+              <div
+                key={sub.image_id}
+                className={`flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-md ${getBorderColor(
+                  sub.rating
+                )} border`}
+                onClick={() => {
+                  setSelectedSubmission(sub);
+                  animateZoom(sub.lat, sub.lon, 15);
+                }}
+              >
+                <img
+                  src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/public`}
+                  alt="Featured submission"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
         </div>
       </div>
       <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
