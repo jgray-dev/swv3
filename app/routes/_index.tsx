@@ -25,7 +25,6 @@ import {
   InterpolatedWeather,
   LoaderData,
   TimeZoneApiResponse,
-  TurnstileVerifyResponse,
   WeatherLocation,
 } from "~/.server/interfaces";
 import RatingDisplay from "~/components/RatingDisplay";
@@ -226,26 +225,6 @@ export function isLocationData(data: any): data is LocationData {
   );
 }
 
-async function verifyTurnstileToken(
-  token: string,
-  secret: string,
-  ip?: string
-) {
-  const formData = new FormData();
-  formData.append("secret", secret);
-  formData.append("response", token);
-  if (ip) {
-    formData.append("remoteip", ip);
-  }
-
-  const url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-  const result = await fetch(url, {
-    method: "POST",
-    body: formData,
-  });
-
-  return (await result.json()) as TurnstileVerifyResponse;
-}
 
 export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
