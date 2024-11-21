@@ -62,7 +62,7 @@ export default function MapComponent() {
 
   const groups = useMemo(() => {
     return groupCoordinates(visibleItems);
-  }, [currentZoom]);
+  }, [currentZoom, setSelectedSubmission]);
 
   const overlays = useDeepCompareMemo(() => {
     return renderOverlays(visibleItems);
