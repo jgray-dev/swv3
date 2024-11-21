@@ -225,7 +225,6 @@ export function isLocationData(data: any): data is LocationData {
   );
 }
 
-
 export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const formData = await request.formData();
