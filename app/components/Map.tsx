@@ -1,3 +1,5 @@
+'use client';
+
 import { useRouteLoaderData } from "@remix-run/react";
 import { Map, Marker, ZoomControl } from "pigeon-maps";
 import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
@@ -131,7 +133,7 @@ export default function MapComponent() {
                 )} border`}
                 onClick={() => {
                   setSelectedSubmission(sub);
-                  animateZoom(sub.lat, sub.lon, 15);
+                  animateZoom(sub.lat, sub.lon, 12);
                 }}
               >
                 <img
@@ -178,7 +180,7 @@ export default function MapComponent() {
                   key={sub.time}
                   onClick={() => {
                     setSelectedSubmission(sub);
-                    animateZoom(sub.lat, sub.lon, 16);
+                    animateZoom(sub.lat, sub.lon, 12);
                   }}
                 />
               ))}
