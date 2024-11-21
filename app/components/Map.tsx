@@ -140,7 +140,7 @@ export default function MapComponent() {
           {visibleItems.map((sub) => (
             <div
               key={sub.image_id}
-              className="flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-md"
+              className={`flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-md ${getBorderColor(sub.rating)} border`}
               onClick={() => {
                 setSelectedSubmission(sub);
                 animateZoom(sub.lat, sub.lon, 15);
