@@ -9,40 +9,34 @@ export default function RatingDisplay() {
   const startTimeRef = useRef<number>(0);
   const startValueRef = useRef(displayNumber);
 
-  // Move useEffect here, before any conditional returns
   useEffect(() => {
-    if (!allData?.ok) return; // Add early return inside useEffect
+    if (!allData?.ok) return;
 
     startTimeRef.current = performance.now();
     startValueRef.current = displayNumber;
     let animationFrameId: number;
-
     const animateNumber = (currentTime: number) => {
       const elapsed = currentTime - startTimeRef.current;
       const progress = Math.min(elapsed / ANIMATION_DURATION, 1);
-
       if (progress < 1) {
         const newValue =
           startValueRef.current + (rating - startValueRef.current) * progress;
-        setDisplayNumber(Math.max(0, newValue));
+        setDisplayNumber(Math.min(Math.max(0, newValue), 100));
         animationFrameId = requestAnimationFrame(animateNumber);
       } else {
-        setDisplayNumber(rating);
+        setDisplayNumber(Math.min(Math.max(0, rating), 100));
       }
     };
-
     animationFrameId = requestAnimationFrame(animateNumber);
-
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [allData?.rating, displayNumber]); // Updated dependencies
+  }, [allData?.rating]);
 
-  // Return null after ALL hooks are declared
   if (!allData?.ok) return null;
 
   const rating = Math.max(0, Math.min(100, allData.rating));
-  const ANIMATION_DURATION = 50;
+  const ANIMATION_DURATION = 500;
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const progress = (rating / 100) * circumference;
