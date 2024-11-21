@@ -4,6 +4,7 @@ import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
 import React, { useEffect, useState } from "react";
 import StatItem from "~/components/StatItem";
 import { useDeepCompareMemo } from "use-deep-compare";
+import {useScrollLock} from "~/hooks/useScrollLock";
 
 export interface Bounds {
   ne: [number, number];
@@ -27,6 +28,8 @@ export default function MapComponent() {
       ? [allData.lat, allData.lon]
       : [40.7128, -74.006]
   );
+  const [imgModal, setImgModal] = useState<string | null>(null);
+  useScrollLock(!!imgModal);
 
   useEffect(() => {
     if (allData?.uploads) {
@@ -115,10 +118,10 @@ export default function MapComponent() {
       <div
         className={`${allData?.ok ? "hidden" : "visible min-h-[10vh]"}`}
       ></div>
-
       <div className="relative w-screen overflow-x-hidden min-h-[20vh] mt-24 text-center font-bold mx-4">
         User submissions
-        <div className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full overflow-x-scroll min-h-[234px]">
+        <div
+          className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full overflow-x-scroll min-h-[234px]">
           {[...visibleItems]
             .sort((a, b) => (b.rating || 0) - (a.rating || 0))
             .map((sub) => (
@@ -133,7 +136,7 @@ export default function MapComponent() {
                 }}
               >
                 <img
-                  src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/public`}
+                  src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/mid`}
                   alt="Featured submission"
                   className="w-full h-full object-cover"
                 />
@@ -157,7 +160,7 @@ export default function MapComponent() {
               animate={true}
               minZoom={2}
               maxZoom={16}
-              onBoundsChanged={({ zoom, bounds, center }) => {
+              onBoundsChanged={({zoom, bounds, center}) => {
                 if (zoom !== currentZoom) {
                   setCurrentZoom(zoom);
                 }
@@ -212,13 +215,22 @@ export default function MapComponent() {
             }`}
           >
             <div className="md:max-h-[400px] w-full">
-              <div className="relative w-full h-full rounded-lg overflow-hidden">
+              <div
+                className="relative w-full h-full rounded-lg overflow-hidden group"
+                
+              >
                 <img
                   src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${selectedSubmission.image_id}/public`}
                   alt={selectedSubmission.city}
-                  className="object-cover w-full max-h-full"
+                  className="object-cover w-full max-h-full group-hover:scale-105 duration-150"
+                  onClick={() =>
+                    setImgModal(
+                      `https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${selectedSubmission.image_id}/public`
+                    )
+                  }
                 />
-                <div className="absolute bottom-0 left-0 right-0 max-h-fit bg-black/50 backdrop-blur-sm px-4 py-3 w-full flex justify-between">
+                <div
+                  className="absolute bottom-0 left-0 right-0 max-h-fit bg-black/50 backdrop-blur-sm px-4 py-3 w-full flex justify-between">
                   <h2 className="text-slate-100 text-md font-bold">
                     {selectedSubmission.city}
                   </h2>
@@ -292,6 +304,34 @@ export default function MapComponent() {
           <div className={"w-0 duration-300"}></div>
         )}
       </div>
+
+      <div
+        className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-400 backdrop-blur-sm ${
+          imgModal ? "visible bg-black/80" : "invisible"
+        }`}
+        onClick={() => setImgModal(null)}
+      >
+        <div
+          className={`relative max-w-[90vw] max-h-[90vh] transition-all duration-400 ${
+            imgModal ? "opacity-100 scale-100" : "opacity-0 scale-90"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className={`absolute -top-4 -right-4 h-8 w-8 bg-red-600 hover:bg-red-700 rounded-full text-white font-bold transition-colors duration-200 ${imgModal?"visible":"hidden"}`}
+            onClick={() => setImgModal(null)}
+          >
+            ×
+          </button>
+          {imgModal && (
+            <img
+              src={imgModal}
+              alt="Modal content"
+              className="rounded-lg shadow-2xl max-w-full max-h-[90vh] object-contain"
+            />
+          )}
+        </div>
+      </div>
     </>
   );
 }
@@ -304,15 +344,15 @@ function getDateString(eventTime: number): string {
     return "just now";
   }
   const timeUnits = [
-    { seconds: 31536000, unit: "year" },
-    { seconds: 2592000, unit: "month" },
-    { seconds: 604800, unit: "week" },
-    { seconds: 86400, unit: "day" },
-    { seconds: 3600, unit: "hour" },
-    { seconds: 60, unit: "minute" },
-    { seconds: 1, unit: "second" },
+    {seconds: 31536000, unit: "year"},
+    {seconds: 2592000, unit: "month"},
+    {seconds: 604800, unit: "week"},
+    {seconds: 86400, unit: "day"},
+    {seconds: 3600, unit: "hour"},
+    {seconds: 60, unit: "minute"},
+    {seconds: 1, unit: "second"},
   ];
-  for (const { seconds, unit } of timeUnits) {
+  for (const {seconds, unit} of timeUnits) {
     const value = Math.floor(differenceInSeconds / seconds);
     if (value >= 1) {
       const plural = value === 1 ? "" : "s";
