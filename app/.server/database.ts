@@ -28,12 +28,12 @@ export async function createUpload(
 ) {
   try {
     const db = drizzle(context.cloudflare.env.swv3_d1);
-    
+
     const result = await db
       .insert(uploads)
       .values({
-        lat: lat + (Math.random() * 0.0004) - 0.0002,
-        lon: lon + (Math.random() * 0.0004) - 0.0002,
+        lat: lat + Math.random() * 0.0004 - 0.0002,
+        lon: lon + Math.random() * 0.0004 - 0.0002,
         rating: rating,
         image_id: image_id,
         time: time,
