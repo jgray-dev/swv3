@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useRouteLoaderData } from "@remix-run/react";
 import { Map, Marker, ZoomControl } from "pigeon-maps";
