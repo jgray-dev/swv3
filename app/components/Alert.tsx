@@ -1,6 +1,6 @@
 import { useRouteLoaderData } from "@remix-run/react";
-import { LoaderData } from "~/.server/interfaces";
 import { GoAlert } from "react-icons/go";
+import { LoaderData } from "~/.server/interfaces";
 // import { useEffect } from "react";
 
 export default function Alert() {
