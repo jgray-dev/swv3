@@ -1,4 +1,5 @@
 import { computeDestinationPoint } from "geolib";
+import SunCalc from "suncalc";
 import {
   AveragedValues,
   ClassificationResult,
@@ -6,7 +7,6 @@ import {
   InterpolatedWeather,
   WeatherLocation,
 } from "~/.server/interfaces";
-import SunCalc from "suncalc";
 
 //Helper function for crafting the URL to fetch from open-meteo
 export function generateCoordinateString(
