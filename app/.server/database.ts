@@ -1,7 +1,7 @@
-import { drizzle } from "drizzle-orm/d1";
-import { uploads } from "~/db/schema";
 import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 import { DbUpload } from "~/.server/interfaces";
+import { uploads } from "~/db/schema";
 
 // Database interaction function
 export async function createUpload(
@@ -75,10 +75,10 @@ export async function getSubmissions(
         distance: sql<number>`
           ROUND(
             (6371 * acos(
-              cos(radians(${lat})) * 
-              cos(radians(${uploads.lat})) * 
-              cos(radians(${uploads.lon}) - radians(${lon})) + 
-              sin(radians(${lat})) * 
+              cos(radians(${lat})) *
+              cos(radians(${uploads.lat})) *
+              cos(radians(${uploads.lon}) - radians(${lon})) +
+              sin(radians(${lat})) *
               sin(radians(${uploads.lat}))
             )),
             2
