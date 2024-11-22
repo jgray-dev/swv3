@@ -106,7 +106,7 @@ export default function RatingDisplay() {
           <div className="absolute flex items-center justify-center">
             <span
               className={`text-2xl sm:text-4xl md:-translate-y-3 font-bold -translate-y-2 ${
-                rating === 100 ? "gradient default" : ""
+                rating >= 95 ? "gradient-small default" : ""
               }`}
               aria-live="polite"
             >
