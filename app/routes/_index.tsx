@@ -1,9 +1,8 @@
 import type { ActionFunction, MetaFunction } from "@remix-run/cloudflare";
-import LocationComponent from "~/components/LocationComponent";
-import React, { useEffect } from "react";
-import { json, LoaderFunction } from "@remix-run/router";
 import { Link, redirect, useRouteLoaderData } from "@remix-run/react";
-import { LocationData } from "~/components/LocationComponent";
+import { json, LoaderFunction } from "@remix-run/router";
+import { useEffect } from "react";
+import SunCalc from "suncalc";
 import {
   averageData,
   checkImage,
@@ -18,7 +17,7 @@ import {
   purgeDuplicates,
   unixToApproximateString,
 } from "~/.server/data";
-import { skyRating } from "~/.server/rating";
+import { createUpload, getSubmissions } from "~/.server/database";
 import {
   AveragedValues,
   GeocodeResponse,
@@ -27,14 +26,16 @@ import {
   TimeZoneApiResponse,
   WeatherLocation,
 } from "~/.server/interfaces";
-import RatingDisplay from "~/components/RatingDisplay";
-import LocationDisplay from "~/components/LocationDisplay";
+import { skyRating } from "~/.server/rating";
 import Alert from "~/components/Alert";
 import CloudCoverDisplay from "~/components/CloudCoverDisplay";
+import LocationComponent, {
+  LocationData,
+} from "~/components/LocationComponent";
+import LocationDisplay from "~/components/LocationDisplay";
 import Map from "~/components/Map";
+import RatingDisplay from "~/components/RatingDisplay";
 import SubmitComponent from "~/components/SubmitComponent";
-import { createUpload, getSubmissions } from "~/.server/database";
-import SunCalc from "suncalc";
 
 export const meta: MetaFunction = () => {
   return [
