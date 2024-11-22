@@ -1,11 +1,9 @@
-"use client";
-
 import { useRouteLoaderData } from "@remix-run/react";
 import { Map, Marker, ZoomControl } from "pigeon-maps";
-import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
 import React, { useEffect, useState } from "react";
-import StatItem from "~/components/StatItem";
 import { useDeepCompareMemo } from "use-deep-compare";
+import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
+import StatItem from "~/components/StatItem";
 import { useScrollLock } from "~/hooks/useScrollLock";
 
 export interface Bounds {
@@ -133,7 +131,7 @@ export default function MapComponent() {
                 )} border`}
                 onClick={() => {
                   setSelectedSubmission(sub);
-                  animateZoom(sub.lat, sub.lon, Math.min(16, currentZoom+4));
+                  animateZoom(sub.lat, sub.lon, Math.min(16, currentZoom + 4));
                 }}
               >
                 <img
@@ -180,7 +178,11 @@ export default function MapComponent() {
                   key={sub.time}
                   onClick={() => {
                     setSelectedSubmission(sub);
-                    animateZoom(sub.lat, sub.lon, Math.min(16, currentZoom+4));
+                    animateZoom(
+                      sub.lat,
+                      sub.lon,
+                      Math.min(16, currentZoom + 4)
+                    );
                   }}
                 />
               ))}
