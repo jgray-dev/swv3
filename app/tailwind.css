@@ -69,6 +69,13 @@ body {
   );
 }
 
+.gradient-small {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 250% 250%;
+  animation: gradient 5s ease infinite;
+}
+
 .gradient {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
