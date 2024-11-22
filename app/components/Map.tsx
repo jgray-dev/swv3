@@ -133,7 +133,7 @@ export default function MapComponent() {
                 )} border`}
                 onClick={() => {
                   setSelectedSubmission(sub);
-                  animateZoom(sub.lat, sub.lon, 12);
+                  animateZoom(sub.lat, sub.lon, Math.min(16, currentZoom+4));
                 }}
               >
                 <img
@@ -180,7 +180,7 @@ export default function MapComponent() {
                   key={sub.time}
                   onClick={() => {
                     setSelectedSubmission(sub);
-                    animateZoom(sub.lat, sub.lon, 12);
+                    animateZoom(sub.lat, sub.lon, Math.min(16, currentZoom+4));
                   }}
                 />
               ))}
@@ -241,7 +241,7 @@ export default function MapComponent() {
                   }
                   onMouseDown={() => setSelectedSubmission(null)}
                 >
-                  X
+                  x
                 </button>
               </div>
             </div>
