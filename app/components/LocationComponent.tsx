@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Form, useFetcher, useRouteLoaderData } from "@remix-run/react";
+import React, { useEffect, useState } from "react";
 import { CiLocationArrow1 } from "react-icons/ci";
 import { FaSearchLocation } from "react-icons/fa";
-import { LoaderData } from "~/.server/interfaces";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { GiSunrise, GiSunset } from "react-icons/gi";
 import { HiChevronDown } from "react-icons/hi";
+import { LoaderData } from "~/.server/interfaces";
 
 export interface LocationData {
   type: "geolocation" | "input";
@@ -100,10 +100,10 @@ export default function LocationComponent() {
                   id="location-input"
                   type="text"
                   required
-                  className="w-full px-4 py-2.5 
-           bg-white/10 border border-white/20 
+                  className="w-full px-4 py-2.5
+           bg-white/10 border border-white/20
            rounded-lg text-slate-100 placeholder-slate-400
-           focus:outline-none focus:ring-2 focus:ring-blue-400/50 
+           focus:outline-none focus:ring-2 focus:ring-blue-400/50
            focus:bg-white/20 transition-all duration-200"
                   placeholder="Enter location manually"
                   value={input}
@@ -179,7 +179,7 @@ export default function LocationComponent() {
                   />
                   <div className="w-11 h-6 bg-white/10 border border-white/20 peer-checked:bg-green-500/20 peer-checked:border-green-500/30 rounded-full duration-200 ease-in-out transition-all"></div>
                   <div
-                    className="absolute left-[2px] top-[2px] bg-slate-100 w-5 h-5 rounded-full 
+                    className="absolute left-[2px] top-[2px] bg-slate-100 w-5 h-5 rounded-full
                     duration-200 ease-in-out
                     peer-checked:translate-x-[20px]"
                   ></div>
@@ -212,7 +212,7 @@ export default function LocationComponent() {
                     }
                     name="submissionDate"
                     required
-                    className="w-full p-2 rounded-md 
+                    className="w-full p-2 rounded-md
                 bg-white/10 border border-white/20
                 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20
                 transition-all duration-200
@@ -232,7 +232,7 @@ export default function LocationComponent() {
                     className="relative inline-block w-full text-left"
                   >
                     <MenuButton
-                      className="inline-flex w-full justify-between items-center gap-x-1.5 rounded-md 
+                      className="inline-flex w-full justify-between items-center gap-x-1.5 rounded-md
     bg-white/10 px-3 py-2 text-sm text-slate-100
     border border-white/20
     hover:bg-white/20
@@ -251,7 +251,7 @@ export default function LocationComponent() {
                     </MenuButton>
 
                     <MenuItems
-                      className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-md 
+                      className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-md
     bg-black/90 backdrop-blur-md
     shadow-lg ring-1 ring-black/5 focus:outline-none"
                     >
@@ -300,7 +300,7 @@ export default function LocationComponent() {
                 type="submit"
                 className="w-full h-11 px-6
                          bg-blue-500/20 border border-blue-500/30
-                         rounded-lg hover:bg-blue-500/30 
+                         rounded-lg hover:bg-blue-500/30
                          active:bg-blue-500/10
                          transition-all duration-200
                          text-slate-100 flex items-center justify-center gap-2"
