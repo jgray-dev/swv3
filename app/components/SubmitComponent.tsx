@@ -53,7 +53,6 @@ export default function SubmitComponent() {
   }, [actionData]);
 
   if (!allData?.ok) return null;
-
   return (
     <div className="w-full max-w-lg mx-auto px-4 py-6">
       <h2 className="text-xl font-medium text-slate-100 mb-6 text-center">
@@ -222,7 +221,7 @@ export default function SubmitComponent() {
         </div>
 
         {/*Future event warning*/}
-        {allData.relative === "future" &&
+        {allData.eventTime >= Date.now() / 1000 + 1200 &&
           selectedFile &&
           !actionData?.success && (
             <div
@@ -259,14 +258,18 @@ export default function SubmitComponent() {
         <button
           type="submit"
           disabled={
-            isSubmitting || !selectedFile || allData.relative === "future"
+            isSubmitting ||
+            !selectedFile ||
+            allData.eventTime >= Date.now() / 1000 + 1200
           }
           className={`
             w-full px-4 py-3 rounded-lg
             font-medium text-sm
             transition-all duration-200
             ${
-              isSubmitting || !selectedFile || allData.relative === "future"
+              isSubmitting ||
+              !selectedFile ||
+              allData.eventTime >= Date.now() / 1000 + 1200
                 ? "bg-white/5 border-white/5 text-slate-400 cursor-not-allowed"
                 : "bg-white/20 border border-white/20 text-slate-100 hover:bg-white/30 active:bg-white/10"
             }
