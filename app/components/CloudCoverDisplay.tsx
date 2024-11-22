@@ -40,7 +40,7 @@ const CloudLevel: React.FC<CloudLevelProps> = ({ coverage, label }) => {
       <span className="text-xs font-medium uppercase tracking-wide">
         {label}
       </span>
-      <span className="text-lg font-bold">{coverage.toFixed(2)}%</span>
+      <span className="text-lg font-bold">{Math.round(coverage)}%</span>
     </div>
   );
 };
