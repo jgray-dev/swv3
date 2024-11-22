@@ -1,5 +1,5 @@
-import { AveragedValues, InterpolatedWeather } from "~/.server/interfaces";
 import { averageData } from "~/.server/data";
+import { AveragedValues, InterpolatedWeather } from "~/.server/interfaces";
 
 // 25 for near data
 // 50 for horizon data
