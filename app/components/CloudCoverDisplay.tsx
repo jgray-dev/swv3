@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { WiCloudyWindy, WiCloudy, WiDayCloudy } from "react-icons/wi";
-import { HiChevronDown, HiChevronUp } from "react-icons/hi";
 import { useRouteLoaderData } from "@remix-run/react";
-import type { LoaderData, InterpolatedWeather } from "~/.server/interfaces";
+import React, { useState } from "react";
+import { HiChevronDown, HiChevronUp } from "react-icons/hi";
+import { WiCloudy, WiCloudyWindy, WiDayCloudy } from "react-icons/wi";
+import type { InterpolatedWeather, LoaderData } from "~/.server/interfaces";
 
 interface CloudLevelProps {
   coverage: number;
@@ -76,7 +76,7 @@ const LocationCard: React.FC<LocationCardProps> = ({ location, index }) => {
     <div
       className={`
         flex flex-col p-5 rounded-2xl
-        bg-white/10 
+        bg-white/10
         border ${getZoneBorderClass(location.zone)}
         transition-all duration-300
         hover:bg-white/15
