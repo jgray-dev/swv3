@@ -119,9 +119,9 @@ export default function MapComponent() {
         className={`${allData?.ok ? "hidden" : "visible min-h-[10vh]"}`}
       ></div>
       <div className="relative w-screen overflow-x-hidden min-h-[20vh] mt-24 text-center font-bold mx-4">
-        User submissions
+        User submissions near {allData.city ?? "New York City"}
         <div className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full overflow-x-scroll min-h-[234px]">
-          {[...visibleItems]
+          {[...allData.uploads]
             .sort((a, b) => (b.rating || 0) - (a.rating || 0))
             .map((sub) => (
               <div
