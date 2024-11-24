@@ -221,7 +221,7 @@ export default function SubmitComponent() {
         </div>
 
         {/*Future event warning*/}
-        {allData.eventTime >= Date.now() / 1000 + 1200 &&
+        {allData.eventTime >= Date.now() / 1000 + 2400 &&
           selectedFile &&
           !actionData?.success && (
             <div
