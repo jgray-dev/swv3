@@ -32,8 +32,8 @@ export async function createUpload(
     const result = await db
       .insert(uploads)
       .values({
-        lat: lat + Math.random() * 0.0006 - 0.0003,
-        lon: lon + Math.random() * 0.0006 - 0.0003,
+        lat: lat + Math.random() * 0.001 - 0.0005,
+        lon: lon + Math.random() * 0.001 - 0.0005,
         rating: rating,
         image_id: image_id,
         time: time,
