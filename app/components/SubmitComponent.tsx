@@ -221,7 +221,7 @@ export default function SubmitComponent() {
         </div>
 
         {/*Future event warning*/}
-        {allData.eventTime >= Date.now() / 1000 + 2400 &&
+        {allData.eventTime >= Date.now() / 1000 + 2700 &&
           selectedFile &&
           !actionData?.success && (
             <div
@@ -260,7 +260,7 @@ export default function SubmitComponent() {
           disabled={
             isSubmitting ||
             !selectedFile ||
-            allData.eventTime >= Date.now() / 1000 + 1200
+            allData.eventTime >= Date.now() / 1000 + 2700
           }
           className={`
             w-full px-4 py-3 rounded-lg
@@ -269,7 +269,7 @@ export default function SubmitComponent() {
             ${
               isSubmitting ||
               !selectedFile ||
-              allData.eventTime >= Date.now() / 1000 + 1200
+              allData.eventTime >= Date.now() / 1000 + 2700
                 ? "bg-white/5 border-white/5 text-slate-400 cursor-not-allowed"
                 : "bg-white/20 border border-white/20 text-slate-100 hover:bg-white/30 active:bg-white/10"
             }
