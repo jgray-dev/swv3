@@ -62,7 +62,7 @@ export async function getSubmissions(
 ): Promise<DbUpload[] | null> {
   try {
     const db = drizzle(context.cloudflare.env.swv3_d1);
-    const query = db
+    return await db
       .select({
         id: uploads.id,
         lat: uploads.lat,
@@ -86,9 +86,8 @@ export async function getSubmissions(
         `,
       })
       .from(uploads)
-      .orderBy(sql`distance_km`);
-
-    return await query.limit(50);
+      .orderBy(sql`distance_km`)
+      .limit(50);
   } catch (error) {
     console.error("Database error:", error);
     throw new Error(`Database error: ${error}`);
