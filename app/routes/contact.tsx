@@ -66,17 +66,48 @@ export const action: ActionFunction = async ({ request, context }) => {
   const outcome = await result.json();
   // @ts-ignore
   if (outcome.success) {
-    console.log("Turnstile success");
+
+    try {
+      await fetch(`https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/email/routing/rules`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${context.cloudflare.env.CF_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: ['nohaxjutdoge@gmail.com'],
+          subject: 'New Contact Form Submission',
+          content: formData.toString(),
+        }),
+      });
+
+      return json(
+        {
+          message: `Message sent.`,
+          success: true,
+        },
+        { status: 200 }
+      );
+    } catch (error) {
+      return json(
+        {
+          message: `Failed to send form.`,
+          success: false,
+        },
+        { status: 50 }
+      );
+    }
+    
   } else {
     console.log("Turnstile NOT success");
+    return json(
+      {
+        message: `Turnstile verification failed.`,
+        success: false,
+      },
+      { status: 400 }
+    );
   }
-  return json(
-    {
-      message: `done`,
-      success: true,
-    },
-    { status: 200 }
-  );
 };
 
 interface ActionData {
