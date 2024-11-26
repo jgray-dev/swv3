@@ -5,9 +5,8 @@ import React, {useEffect, useState} from "react";
 import { json } from "@remix-run/router";
 
 export const action: ActionFunction = async ({ request, context }) => {
-  const url = new URL(request.url);
   const body = await request.formData();
-  const requiredFields = ["name", "email", "message"];
+  const requiredFields = ["name", "email", "message", "cf-turnstile-response"];
   for (const field of requiredFields) {
     if (!body.get(field)) {
       return json(
@@ -22,31 +21,29 @@ export const action: ActionFunction = async ({ request, context }) => {
   const name = body.get("name");
   const email = body.get("email");
   const message = body.get("message");
-  try {
-    const token = body.get("cf-turnstile-response");
-    console.log("TOKEN: ", token);
-  } catch (err) {
-    console.log("No turnstile response");
-  }
-  // const token = body.get("cf-turnstile-response");
-  // const ip = request.headers.get("CF-Connecting-IP");
-  // console.log(token, ip)
-  // console.log(name)
-  // console.log(email)
-  // console.log(message)
+  const token = body.get("cf-turnstile-response");
+  const ip = request.headers.get("CF-Connecting-IP");
 
-  // Validate the token by calling the
-  // "/siteverify" API endpoint.
-  // let formData = new FormData();
-  // formData.append("secret", context.cloudflare.env.TURNSTILE_SECRET);
-  // formData.append("response", token);
-  // formData.append("remoteip", ip);
-  //
-  // const url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-  // const result = await fetch(url, {
-  //   body: formData,
-  //   method: "POST",
-  // });
+  if (!token || !ip) {
+    return json(
+      {
+        error: `Token or ip null. ${token} ${ip}`,
+        success: false,
+      },
+      { status: 400 }
+    );
+  }
+  let formData = new FormData();
+  formData.append("secret", context.cloudflare.env.TURNSTILE_SECRET);
+  formData.append("response", token);
+  formData.append("remoteip", ip);
+
+  const url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+  const result = await fetch(url, {
+    body: formData,
+    method: "POST",
+  });
+  console.log(await result.json())
 
   return 0;
 };
@@ -94,10 +91,6 @@ export default function Contact() {
           method="post"
           className="space-y-6 bg-white/10 backdrop-blur-sm rounded-lg p-8"
         >
-          <div
-            className="cf-turnstile"
-            data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
-          ></div>
           <h2 className="text-3xl font-bold text-white text-center">
             Contact Us
           </h2>
@@ -159,6 +152,10 @@ export default function Contact() {
             />
           </div>
 
+          <div
+            className="cf-turnstile"
+            data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
+          ></div>
           <div>
             <button
               type="submit"
@@ -169,7 +166,7 @@ export default function Contact() {
           </div>
         </Form>
       </div>
-      <Footer />
+      <Footer/>
     </div>
   );
 }
