@@ -1,3 +1,5 @@
+// This is all Claude generated.. I just told it what data we had, how to access it, and said i wanted an intuitive way to visualize such a large amount of data. Tweaks and compatability made by yours truly
+
 import { useRouteLoaderData } from "@remix-run/react";
 import React, { useState } from "react";
 import { HiChevronDown, HiChevronUp } from "react-icons/hi";
