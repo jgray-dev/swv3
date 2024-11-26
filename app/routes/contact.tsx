@@ -180,12 +180,24 @@ export default function Contact() {
             data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
           ></div>
           {/*@ts-ignore*/}
-          {actionData?.success==false && (
-            <div className={"w-full h-14 bg-red-400/30 rounded-lg p-4 text-cetner border border-red-500/50 flex justify-center text-center text-white"}>{actionData?.message}</div>
+          {actionData?.success == false && (
+            <div
+              className={
+                "w-full h-14 bg-red-400/30 rounded-lg p-4 text-cetner border border-red-500/50 flex justify-center text-center text-white"
+              }
+            >
+              {actionData?.message}
+            </div>
           )}
           {/*@ts-ignore*/}
-          {actionData?.success==true && (
-            <div className={"w-full h-14 bg-green-400/30 rounded-lg p-4 text-cetner border border-green-500/50 flex justify-center text-center text-white"}>{actionData?.message}</div>
+          {actionData?.success == true && (
+            <div
+              className={
+                "w-full h-14 bg-green-400/30 rounded-lg p-4 text-cetner border border-green-500/50 flex justify-center text-center text-white"
+              }
+            >
+              {actionData?.message}
+            </div>
           )}
           <div>
             <button
