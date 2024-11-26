@@ -335,7 +335,9 @@ export function purgeDuplicates(
       return a.longitude - b.longitude;
     }
   });
-
+  //0->3
+  //5->13
+  //15->24
   const distances = [0, 3, 5, 6.5, 8, 9.5, 11, 13, 15, 18, 21, 24];
   const withZones = sortedCoords.map((coord, index) => ({
     ...coord,
