@@ -1,5 +1,6 @@
 import type { MetaFunction } from "@remix-run/cloudflare";
 import Footer from "~/components/Footer";
+import {Link} from "@remix-run/react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -41,22 +42,22 @@ export default function About() {
           <span className={"pl-6"}></span>Ever wondered if tomorrow's sunrise
           will be worth waking up early for? That's exactly what Sunwatch helps
           you figure out! We use
-          <a
-            href={"https://github.com/open-meteo/open-meteo"}
+          <Link
+            to={"https://github.com/open-meteo/open-meteo"}
             className={
               "relative no-underline font-semibold text-white after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white after:transition-transform hover:after:scale-x-100"
             }
           >
             open meteo
-          </a>{" "}
+          </Link>{" "}
           to collect detailed weather information not just at your location, but
           also at multiple points in the direction you'll be looking during
           sunrise or sunset.
           <br />
           <br />
           <span className={"pl-6"}></span>Our
-          <a
-            href={
+          <Link
+            to={
               "https://github.com/jgray-dev/swv3/blob/main/app/.server/rating.ts"
             }
             className={
@@ -64,7 +65,7 @@ export default function About() {
             }
           >
             special scoring system
-          </a>{" "}
+          </Link>{" "}
           analyzes cloud patterns and weather conditions to give you a score
           from <span className="font-semibold text-yellow-200">0-100</span>.
           Think of it like a weather forecast specifically designed for
@@ -129,14 +130,14 @@ export default function About() {
           beauty.
         </div>
         <div className={"mt-20 text-lg"}>
-          <a
-            href={"/"}
+          <Link
+            to={"/"}
             className={
               "relative no-underline font-semibold text-white after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white after:transition-transform hover:after:scale-x-100"
             }
           >
             Start exploring!
-          </a>
+          </Link>
         </div>
       </div>
 
