@@ -15,5 +15,6 @@ export default function Footer() {
       >
         jackson
       </a>
-    </div>)
+    </div>
+  );
 }
