@@ -12,7 +12,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export default function Sunwatch() {
+export default function About() {
   return (
     <div
       className={
