@@ -1,7 +1,6 @@
 import { useRouteLoaderData } from "@remix-run/react";
 import { Map, Marker, ZoomControl } from "pigeon-maps";
 import React, { useEffect, useState } from "react";
-import { useDeepCompareMemo } from "use-deep-compare";
 import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
 import StatItem from "~/components/StatItem";
 import { useScrollLock } from "~/hooks/useScrollLock";
@@ -14,14 +13,13 @@ export interface Bounds {
 export default function MapComponent() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
 
-  const [submissions, setSubmissions] = useState<DbUpload[]>(
-    allData?.uploads ? allData.uploads : []
-  );
   const [currentZoom, setCurrentZoom] = useState<number>(8);
   const [currentBounds, setCurrentBounds] = useState<Bounds | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<DbUpload | null>(
     null
   );
+  
+  
   const [isMounted, setIsMounted] = useState(false);
   const [currentCenter, setCurrentCenter] = useState<[number, number]>(
     allData?.lat && allData?.lon
@@ -32,16 +30,6 @@ export default function MapComponent() {
   useScrollLock(!!imgModal);
 
   useEffect(() => {
-    if (allData?.uploads) {
-      const newSubmissions = allData.uploads.reduce((acc, upload) => {
-        acc[upload.id] = upload;
-        return acc;
-      }, {} as DbUpload[]);
-      setSubmissions(newSubmissions);
-    }
-  }, [allData?.uploads]);
-
-  useEffect(() => {
     setIsMounted(true);
     setCurrentCenter(
       allData?.lat && allData?.lon
@@ -49,28 +37,6 @@ export default function MapComponent() {
         : [40.7128, -74.006]
     );
   }, [allData]);
-
-  const visibleItems = useDeepCompareMemo(() => {
-    return Object.values(submissions).filter((sub) =>
-      isWithinBounds(sub.lat, sub.lon, currentBounds)
-    );
-  }, [submissions, currentBounds]);
-
-  function isWithinBounds(
-    lat: number,
-    lon: number,
-    bounds: Bounds | null
-  ): boolean {
-    if (!bounds) return true;
-
-    const tolerance = 0.01;
-    return (
-      lat <= bounds.ne[0] + tolerance &&
-      lat >= bounds.sw[0] - tolerance &&
-      lon >= bounds.sw[1] - tolerance &&
-      lon <= bounds.ne[1] + tolerance
-    );
-  }
 
   if (!allData?.uploads) return null;
 
@@ -173,7 +139,7 @@ export default function MapComponent() {
                 }
               }}
             >
-              {visibleItems.map((sub: any) => (
+              {allData.uploads.map((sub: any) => (
                 <Marker
                   color={getHsl(sub.rating)}
                   anchor={[sub.lat, sub.lon]}
