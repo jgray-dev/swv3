@@ -68,7 +68,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   if (outcome.success) {
 
     try {
-      await fetch(`https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/email/routing/rules`, {
+      const resp = await fetch(`https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/email/routing/rules`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${context.cloudflare.env.CF_TOKEN}`,
@@ -80,7 +80,7 @@ export const action: ActionFunction = async ({ request, context }) => {
           content: formData.toString(),
         }),
       });
-
+      console.log(await resp.json())
       return json(
         {
           message: `Message sent.`,
