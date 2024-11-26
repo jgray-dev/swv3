@@ -618,7 +618,7 @@ export default function Sunwatch() {
       <div className={"w-screen text-center mx-auto"}>
         <Link
           to={"/"}
-          className={"text-white/50 text-xs cursor-pointer"}
+          className={"text-white/40 text-xs cursor-pointer"}
           onMouseDown={() => {
             const colors = getBackgroundColors(null);
             const root = document.documentElement;
@@ -628,7 +628,7 @@ export default function Sunwatch() {
             root.style.setProperty("--gradient-2-color", colors.gradient2);
           }}
         >
-          SWV3
+          Sunwatch
         </Link>
       </div>
       <LocationComponent />
