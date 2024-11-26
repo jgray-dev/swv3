@@ -1,8 +1,20 @@
-import type { ActionFunction } from "@remix-run/cloudflare";
+import type {ActionFunction, MetaFunction} from "@remix-run/cloudflare";
 import Footer from "~/components/Footer";
-import { Form, useActionData } from "@remix-run/react";
+import {Form, Link, useActionData} from "@remix-run/react";
 import React, { useEffect, useState } from "react";
 import { json } from "@remix-run/router";
+
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Sunwatch - Contact" },
+    {
+      name: "Sunwatch",
+      content:
+        "Sunwatch. An app designed to show visual ratings for sunrises and sunsets around the world.",
+    },
+  ];
+};
 
 export const action: ActionFunction = async ({ request, context }) => {
   const body = await request.formData();
@@ -132,7 +144,7 @@ export default function Contact() {
               value={formData.name}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 bg-white/20 text-white"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 bg-white/20 text-white p-1"
               aria-label="Your name"
             />
           </div>
@@ -151,7 +163,7 @@ export default function Contact() {
               value={formData.email}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 bg-white/20 text-white"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 bg-white/20 text-white p-1"
               aria-label="Your email address"
             />
           </div>
@@ -178,6 +190,7 @@ export default function Contact() {
           <div
             className="cf-turnstile"
             data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
+            data-callback="setTurnstileStatus(false)"
           ></div>
           {/*@ts-ignore*/}
           {actionData?.success == false && (
@@ -202,14 +215,14 @@ export default function Contact() {
           <div>
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              className={`hover:bg-purple-700 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 focus:outline-none duration-150`}
             >
               Send Message
             </button>
           </div>
         </Form>
       </div>
-      <Footer />
+      <Footer/>
     </div>
   );
 }
