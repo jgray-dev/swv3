@@ -84,7 +84,7 @@ export default function MapComponent() {
         className={`${allData?.ok ? "hidden" : "visible min-h-[10vh]"}`}
       ></div>
       <div className="w-full min-h-[20vh] mt-24 text-center font-bold">
-        User submissions near {allData.city ?? "New York City"}
+        <span className={"select-none"}> User submissions near {allData.city ?? "New York City"}</span>
         {/* start */}
         <div className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full px-4 overflow-x-scroll min-h-[234px] scrollbar scrollbar-thumb-white/10">
           {[...allData.uploads]
@@ -112,7 +112,7 @@ export default function MapComponent() {
       </div>
       <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
         <div
-          className={`transition-all duration-400 ease-in-out w-full md:w-3/4 transform ${
+          className={`transition-all duration-400 ease-in-out w-full md:w-3/4 transform select-none ${
             selectedSubmission ? "md:!w-1/2" : ""
           } h-[500px] md:h-[800px] rounded-lg overflow-hidden shadow-lg mx-auto`}
           role="region"
@@ -189,7 +189,7 @@ export default function MapComponent() {
                 <img
                   src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${selectedSubmission.image_id}/public`}
                   alt={selectedSubmission.city}
-                  className="object-cover w-full max-h-full group-hover:scale-105 duration-150"
+                  className="object-cover w-full max-h-full group-hover:scale-105 duration-150 select-none"
                   onClick={() =>
                     setImgModal(
                       `https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${selectedSubmission.image_id}/public`
