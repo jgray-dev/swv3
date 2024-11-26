@@ -1,29 +1,13 @@
-import type {ActionFunction, MetaFunction} from "@remix-run/cloudflare";
+import type { ActionFunction } from "@remix-run/cloudflare";
 import Footer from "~/components/Footer";
 import { Form } from "@remix-run/react";
-import React, { useState } from "react";
-import {json} from "@remix-run/router";
-
-export const meta: MetaFunction = () => {
-  return [
-    { title: "Sunwatch - Contact" },
-    {
-      name: "Sunwatch",
-      content:
-        "Sunwatch. An app designed to show visual ratings for sunrises and sunsets around the world.",
-    },
-  ];
-};
-
+import React, {useEffect, useState} from "react";
+import { json } from "@remix-run/router";
 
 export const action: ActionFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const body = await request.formData();
-  const requiredFields = [
-    "name",
-    "email",
-    "message",
-  ];
+  const requiredFields = ["name", "email", "message"];
   for (const field of requiredFields) {
     if (!body.get(field)) {
       return json(
@@ -39,10 +23,10 @@ export const action: ActionFunction = async ({ request, context }) => {
   const email = body.get("email");
   const message = body.get("message");
   try {
-    const token = body.get("cf-turnstile-response")
-    console.log("TOKEN: ", token)
+    const token = body.get("cf-turnstile-response");
+    console.log("TOKEN: ", token);
   } catch (err) {
-    console.log("No turnstile response")
+    console.log("No turnstile response");
   }
   // const token = body.get("cf-turnstile-response");
   // const ip = request.headers.get("CF-Connecting-IP");
@@ -63,12 +47,26 @@ export const action: ActionFunction = async ({ request, context }) => {
   //   body: formData,
   //   method: "POST",
   // });
-  
-  return 0
-}
 
+  return 0;
+};
 
 export default function Contact() {
+
+  useEffect(() => {
+    // Load the Turnstile script
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup on unmount
+      document.head.removeChild(script);
+    };
+  }, []);
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -171,7 +169,7 @@ export default function Contact() {
           </div>
         </Form>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 }
