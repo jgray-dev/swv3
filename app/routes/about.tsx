@@ -1,5 +1,4 @@
-import { LoaderFunction } from "@remix-run/router";
-import type { ActionFunction, MetaFunction } from "@remix-run/cloudflare";
+import type { MetaFunction } from "@remix-run/cloudflare";
 import Footer from "~/components/Footer";
 
 export const meta: MetaFunction = () => {
