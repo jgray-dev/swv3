@@ -55,8 +55,8 @@ export default function Sunwatch() {
           </a>{" "}
           to gather weather data from whatever location you select, along with
           up-to 12 locations in the direction of the sunrise or sunset.
-          <br/>
-          <br/>
+          <br />
+          <br />
           <span className={"pl-6"}></span>The
           <a
             href={
@@ -91,8 +91,8 @@ export default function Sunwatch() {
           includes a multiplier that can significantly reduce the final score if
           conditions are poor, as nearby obstructions have the most immediate
           impact on viewing.
-          <br/>
-          <br/>
+          <br />
+          <br />
           <span className="text-blue-200 pl-6">
             The horizon zone (5-13 miles)
           </span>{" "}
@@ -103,8 +103,8 @@ export default function Sunwatch() {
           algorithm also considers the relationship between cloud heights and
           the freezing level in this zone, as this can affect the likelihood of
           colorful conditions.
-          <br/>
-          <br/>
+          <br />
+          <br />
           <span className="text-blue-200 pl-6">
             The far zone (15-24 miles)
           </span>{" "}
@@ -122,24 +122,24 @@ export default function Sunwatch() {
           the page. When uploading an image, make sure the location you have
           selected is correct, and the date is accurate with the image! You can
           upload any sunrise or sunset picture taken in the last 2 years.
-          <br/>
-          <br/>
+          <br />
+          <br />
           Each submission will be placed on the interactive map, with the
           marker's color corresponding to the rating for that submission.
         </div>
-        <div className={"mt-20 text-lg"}><a
-          href={
-            "/"
-          }
-          className={
-            "relative no-underline font-semibold text-white after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white after:transition-transform hover:after:scale-x-100"
-          }
-        >
-          Go explore!
-        </a></div>
+        <div className={"mt-20 text-lg"}>
+          <a
+            href={"/"}
+            className={
+              "relative no-underline font-semibold text-white after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white after:transition-transform hover:after:scale-x-100"
+            }
+          >
+            Go explore!
+          </a>
+        </div>
       </div>
 
-      <Footer/>
+      <Footer />
     </div>
   );
 }
