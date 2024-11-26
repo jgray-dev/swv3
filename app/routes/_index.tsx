@@ -631,13 +631,13 @@ export default function Sunwatch() {
           SWV3
         </Link>
       </div>
-      <LocationComponent/>
-      <Alert/>
-      <LocationDisplay/>
-      <RatingDisplay/>
-      <CloudCoverDisplay/>
-      <Map/>
-      <SubmitComponent/>
+      <LocationComponent />
+      <Alert />
+      <LocationDisplay />
+      <RatingDisplay />
+      <CloudCoverDisplay />
+      <Map />
+      <SubmitComponent />
 
       <div
         className={
@@ -654,7 +654,7 @@ export default function Sunwatch() {
           about sunwatch
         </a>
       </div>
-        <Footer/>
-      </div>
-      );
-      }
+      <Footer />
+    </div>
+  );
+}
