@@ -4,7 +4,6 @@ import {
 } from "@remix-run/dev";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
-import mkcert from "vite-plugin-mkcert";
 
 declare module "@remix-run/cloudflare" {
   interface Future {
@@ -14,7 +13,6 @@ declare module "@remix-run/cloudflare" {
 
 export default defineConfig({
   plugins: [
-    mkcert(),
     remixCloudflareDevProxy(),
     remix({
       future: {
