@@ -18,8 +18,7 @@ export default function MapComponent() {
   const [selectedSubmission, setSelectedSubmission] = useState<DbUpload | null>(
     null
   );
-  
-  
+
   const [isMounted, setIsMounted] = useState(false);
   const [currentCenter, setCurrentCenter] = useState<[number, number]>(
     allData?.lat && allData?.lon
