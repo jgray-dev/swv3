@@ -84,7 +84,10 @@ export default function MapComponent() {
         className={`${allData?.ok ? "hidden" : "visible min-h-[10vh]"}`}
       ></div>
       <div className="w-full min-h-[20vh] mt-24 text-center font-bold">
-        <span className={"select-none"}> User submissions near {allData.city ?? "New York City"}</span>
+        <span className={"select-none"}>
+          {" "}
+          User submissions near {allData.city ?? "New York City"}
+        </span>
         {/* start */}
         <div className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full px-4 overflow-x-scroll min-h-[234px] scrollbar scrollbar-thumb-white/10">
           {[...allData.uploads]
