@@ -114,19 +114,20 @@ export default function MapComponent() {
   }
 
   return (
-    <>
+    <div className={"w-screen"}>
       <div
         className={`${allData?.ok ? "hidden" : "visible min-h-[10vh]"}`}
       ></div>
-      <div className="relative w-screen overflow-x-hidden min-h-[20vh] mt-24 text-center font-bold mx-4">
+      <div className="w-full min-h-[20vh] mt-24 text-center font-bold">
         User submissions near {allData.city ?? "New York City"}
-        <div className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full overflow-x-scroll min-h-[234px]">
+        {/* start */}
+        <div className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full px-4 overflow-x-scroll min-h-[234px] scrollbar scrollbar-thumb-white/10">
           {[...allData.uploads]
             .sort((a, b) => (b.rating || 0) - (a.rating || 0))
             .map((sub) => (
               <div
                 key={sub.image_id}
-                className={`flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-md ${getBorderColor(
+                className={`flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-md cursor-pointer ${getBorderColor(
                   sub.rating
                 )} border`}
                 onClick={() => {
@@ -142,6 +143,7 @@ export default function MapComponent() {
               </div>
             ))}
         </div>
+        {/* end */}
       </div>
       <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
         <div
@@ -189,13 +191,13 @@ export default function MapComponent() {
 
               <ZoomControl
                 style={{
-                  right: 10,
+                  right: 90,
                   top: 10,
                 }}
                 buttonStyle={{
-                  width: "50px",
-                  height: "50px",
-                  fontSize: "24px",
+                  width: "40px",
+                  height: "40px",
+                  fontSize: "20px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -333,7 +335,7 @@ export default function MapComponent() {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
