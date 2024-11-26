@@ -40,11 +40,14 @@ export default function Sunwatch() {
           }
         >
           <div className={" text-white w-full text-center"}>
-            Sunwatch is a website designed to give visual ratings to sunrises
-            and sunsets around the world
+            Welcome to Sunwatch - your personal sunrise and sunset forecasting
+            companion. We help you predict and share the beauty of these daily
+            natural events.
           </div>
           <div className={"w-full border-b my-8 border-white/20"}></div>
-          <span className={"pl-6"}></span>It uses
+          <span className={"pl-6"}></span>Ever wondered if tomorrow's sunrise
+          will be worth waking up early for? That's exactly what Sunwatch helps
+          you figure out! We use
           <a
             href={"https://github.com/open-meteo/open-meteo"}
             className={
@@ -53,11 +56,12 @@ export default function Sunwatch() {
           >
             open meteo
           </a>{" "}
-          to gather weather data from whatever location you select, along with
-          up-to 12 locations in the direction of the sunrise or sunset.
+          to collect detailed weather information not just at your location, but
+          also at multiple points in the direction you'll be looking during
+          sunrise or sunset.
           <br />
           <br />
-          <span className={"pl-6"}></span>The
+          <span className={"pl-6"}></span>Our
           <a
             href={
               "https://github.com/jgray-dev/swv3/blob/main/app/.server/rating.ts"
@@ -66,21 +70,19 @@ export default function Sunwatch() {
               "relative no-underline font-semibold text-white after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white after:transition-transform hover:after:scale-x-100"
             }
           >
-            rating algorithm
+            special scoring system
           </a>{" "}
-          combines cloud data from three distinct zones to create a final score
-          between <span className="font-semibold text-yellow-200">0-100</span>.
-          The algorithm weighs different types of clouds (low, mid, and high)
-          differently in each zone, and applies various multipliers based on
-          conditions like visibility and freezing height. The final score is
-          calculated by combining the individual zone scores (
+          analyzes cloud patterns and weather conditions to give you a score
+          from <span className="font-semibold text-yellow-200">0-100</span>.
+          Think of it like a weather forecast specifically designed for
+          photographers and sky-watchers! We look at three different areas of
+          the sky (
           <span className="font-bold text-blue-200">
-            25% near, 50% horizon, 25% far
+            close to you, at the horizon, and far away
           </span>
-          ) and applying overall multipliers that can reduce the final rating
-          based on total cloud coverage.
+          ) to predict how spectacular the view will be.
           <div className={"w-full border-b my-8 border-white/20"}></div>
-          <span className="text-blue-300 pl-6">
+          <span className="text-blue-200 pl-6">
             The near zone (0-3 miles)
           </span>{" "}
           contributes up to <span className="font-bold">25 points</span> to the
@@ -102,7 +104,8 @@ export default function Sunwatch() {
           which can create dramatic colors, while penalizing low clouds. The
           algorithm also considers the relationship between cloud heights and
           the freezing level in this zone, as this can affect the likelihood of
-          colorful conditions.
+          colorful conditions due to the formation of ice crystals within the
+          clouds!
           <br />
           <br />
           <span className="text-blue-200 pl-6">
@@ -117,15 +120,20 @@ export default function Sunwatch() {
           amount of cloud coverage, with scores decreasing for both very clear
           and very cloudy conditions.
           <div className={"w-full border-b my-8 border-white/20"}></div>
-          Besides the technical aspect, user's are encouraged to upload images
-          of sunrises and sunsets using the "submit" feature at the bottom of
-          the page. When uploading an image, make sure the location you have
-          selected is correct, and the date is accurate with the image! You can
-          upload any sunrise or sunset picture taken in the last 2 years.
+          You're encouraged to be a part of the Sunwatch community! Upload
+          images of sunrises and sunsets using the "submit" feature at the
+          bottom of the page. When uploading an image, make sure the location
+          you have selected is correct, and the date is accurate with the image!
+          You can upload any sunrise or sunset picture taken in the last 2
+          years.
           <br />
           <br />
-          Each submission will be placed on the interactive map, with the
-          marker's color corresponding to the rating for that submission.
+          Every photo you share appears on our interactive map as a colored
+          marker - the color shows how our rating system scored that particular
+          event. The map is our canvas, and the sky is our paint.
+          <div className={"w-full border-b my-8 border-white/20"}></div>
+          Our goal is to enable sky watchers the ability to predict nature's
+          beauty.
         </div>
         <div className={"mt-20 text-lg"}>
           <a
@@ -134,7 +142,7 @@ export default function Sunwatch() {
               "relative no-underline font-semibold text-white after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white after:transition-transform hover:after:scale-x-100"
             }
           >
-            Go explore!
+            Start exploring!
           </a>
         </div>
       </div>
