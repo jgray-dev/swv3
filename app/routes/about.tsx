@@ -13,12 +13,6 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export const loader: LoaderFunction = async ({ request, context }) => {
-  return 0;
-};
-
-export const action: ActionFunction = async ({ request, context }) => {};
-
 export default function Sunwatch() {
   return (
     <div
