@@ -618,7 +618,9 @@ export default function Sunwatch() {
       <div className={"w-screen text-center mx-auto"}>
         <Link
           to={"/"}
-          className={"text-white/40 text-xs cursor-pointer"}
+          className={
+            "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/40 after:transition-transform hover:after:scale-x-100 text-white/40 text-xs"
+          }
           onMouseDown={() => {
             const colors = getBackgroundColors(null);
             const root = document.documentElement;
@@ -638,22 +640,6 @@ export default function Sunwatch() {
       <CloudCoverDisplay />
       <Map />
       <SubmitComponent />
-
-      <div
-        className={
-          "w-screen bg-transparent pt-16 text-sm text-white/75 text-center"
-        }
-      >
-        <a
-          href={"/about"}
-          target={""}
-          className={
-            "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/75 after:transition-transform hover:after:scale-x-100"
-          }
-        >
-          about sunwatch
-        </a>
-      </div>
       <Footer />
     </div>
   );
