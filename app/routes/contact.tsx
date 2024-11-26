@@ -22,7 +22,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   const requiredFields = [
     "name",
     "email",
-    "message"
+    "message",
   ];
   for (const field of requiredFields) {
     if (!body.get(field)) {
@@ -38,17 +38,23 @@ export const action: ActionFunction = async ({ request, context }) => {
   const name = body.get("name");
   const email = body.get("email");
   const message = body.get("message");
-  console.log(name)
-  console.log(email)
-  console.log(message)
-  const token = body.get("cf-turnstile-response");
-  const ip = request.headers.get("CF-Connecting-IP");
-  console.log(token, ip)
+  try {
+    const token = body.get("cf-turnstile-response")
+    console.log("TOKEN: ", token)
+  } catch (err) {
+    console.log("No turnstile response")
+  }
+  // const token = body.get("cf-turnstile-response");
+  // const ip = request.headers.get("CF-Connecting-IP");
+  // console.log(token, ip)
+  // console.log(name)
+  // console.log(email)
+  // console.log(message)
 
   // Validate the token by calling the
   // "/siteverify" API endpoint.
   // let formData = new FormData();
-  // formData.append("secret", SECRET_KEY);
+  // formData.append("secret", context.cloudflare.env.TURNSTILE_SECRET);
   // formData.append("response", token);
   // formData.append("remoteip", ip);
   //
