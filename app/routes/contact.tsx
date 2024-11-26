@@ -1,9 +1,8 @@
-import type {ActionFunction, MetaFunction} from "@remix-run/cloudflare";
+import type { ActionFunction, MetaFunction } from "@remix-run/cloudflare";
 import Footer from "~/components/Footer";
-import {Form, Link, useActionData} from "@remix-run/react";
+import { Form, Link, useActionData } from "@remix-run/react";
 import React, { useEffect, useState } from "react";
 import { json } from "@remix-run/router";
-
 
 export const meta: MetaFunction = () => {
   return [
@@ -222,7 +221,7 @@ export default function Contact() {
           </div>
         </Form>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 }
