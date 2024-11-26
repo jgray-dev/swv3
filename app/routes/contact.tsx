@@ -1,7 +1,7 @@
 import type { ActionFunction } from "@remix-run/cloudflare";
 import Footer from "~/components/Footer";
-import { Form } from "@remix-run/react";
-import React, {useEffect, useState} from "react";
+import { Form, useActionData } from "@remix-run/react";
+import React, { useEffect, useState } from "react";
 import { json } from "@remix-run/router";
 
 export const action: ActionFunction = async ({ request, context }) => {
@@ -11,7 +11,7 @@ export const action: ActionFunction = async ({ request, context }) => {
     if (!body.get(field)) {
       return json(
         {
-          error: `Missing required field: ${field}`,
+          message: `Missing required field: ${field}`,
           success: false,
         },
         { status: 400 }
@@ -24,10 +24,19 @@ export const action: ActionFunction = async ({ request, context }) => {
   const token = body.get("cf-turnstile-response");
   const ip = request.headers.get("CF-Connecting-IP");
 
-  if (!token || !ip) {
+  if (!token) {
     return json(
       {
-        error: `Token or ip null. ${token} ${ip}`,
+        message: `Null token`,
+        success: false,
+      },
+      { status: 400 }
+    );
+  }
+  if (!ip) {
+    return json(
+      {
+        message: `Null ip`,
         success: false,
       },
       { status: 400 }
@@ -43,13 +52,29 @@ export const action: ActionFunction = async ({ request, context }) => {
     body: formData,
     method: "POST",
   });
-  console.log(await result.json())
-
-  return 0;
+  const outcome = await result.json();
+  // @ts-ignore
+  if (outcome.success) {
+    console.log("Turnstile success");
+  } else {
+    console.log("Turnstile NOT success");
+  }
+  return json(
+    {
+      message: `done`,
+      success: true,
+    },
+    { status: 200 }
+  );
 };
 
-export default function Contact() {
+interface ActionData {
+  message: boolean;
+  success: string;
+}
 
+export default function Contact() {
+  const actionData = useActionData<ActionData>();
   useEffect(() => {
     // Load the Turnstile script
     const script = document.createElement("script");
@@ -63,7 +88,7 @@ export default function Contact() {
       document.head.removeChild(script);
     };
   }, []);
-  
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -91,9 +116,7 @@ export default function Contact() {
           method="post"
           className="space-y-6 bg-white/10 backdrop-blur-sm rounded-lg p-8"
         >
-          <h2 className="text-3xl font-bold text-white text-center">
-            Contact Us
-          </h2>
+          <h2 className="text-3xl font-bold text-white text-center">Contact</h2>
 
           <div>
             <label
@@ -147,7 +170,7 @@ export default function Contact() {
               onChange={handleInputChange}
               required
               rows={4}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 bg-white/20 text-white"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 bg-white/20 text-white p-1"
               aria-label="Your message"
             />
           </div>
@@ -156,6 +179,14 @@ export default function Contact() {
             className="cf-turnstile"
             data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
           ></div>
+          {/*@ts-ignore*/}
+          {actionData?.success==false && (
+            <div className={"w-full h-14 bg-red-400/30 rounded-lg p-4 text-cetner border border-red-500/50 flex justify-center text-center text-white"}>{actionData?.message}</div>
+          )}
+          {/*@ts-ignore*/}
+          {actionData?.success==true && (
+            <div className={"w-full h-14 bg-green-400/30 rounded-lg p-4 text-cetner border border-green-500/50 flex justify-center text-center text-white"}>{actionData?.message}</div>
+          )}
           <div>
             <button
               type="submit"
@@ -166,7 +197,7 @@ export default function Contact() {
           </div>
         </Form>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 }
