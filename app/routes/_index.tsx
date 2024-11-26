@@ -36,12 +36,13 @@ import LocationDisplay from "~/components/LocationDisplay";
 import Map from "~/components/Map";
 import RatingDisplay from "~/components/RatingDisplay";
 import SubmitComponent from "~/components/SubmitComponent";
+import Footer from "~/components/Footer";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "SWV3" },
+    { title: "Sunwatch" },
     {
-      name: "SWV3",
+      name: "Sunwatch",
       content:
         "Sunwatch. An app designed to show visual ratings for sunrises and sunsets around the world.",
     },
@@ -630,13 +631,30 @@ export default function Sunwatch() {
           SWV3
         </Link>
       </div>
-      <LocationComponent />
-      <Alert />
-      <LocationDisplay />
-      <RatingDisplay />
-      <CloudCoverDisplay />
-      <Map />
-      <SubmitComponent />
-    </div>
-  );
-}
+      <LocationComponent/>
+      <Alert/>
+      <LocationDisplay/>
+      <RatingDisplay/>
+      <CloudCoverDisplay/>
+      <Map/>
+      <SubmitComponent/>
+
+      <div
+        className={
+          "w-screen bg-transparent pt-16 text-sm text-white/75 text-center"
+        }
+      >
+        <a
+          href={"/about"}
+          target={""}
+          className={
+            "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/75 after:transition-transform hover:after:scale-x-100"
+          }
+        >
+          about sunwatch
+        </a>
+      </div>
+        <Footer/>
+      </div>
+      );
+      }
