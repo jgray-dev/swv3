@@ -5,12 +5,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: [
-          'Inter',
-          'InterFallback'
-        ],
+        sans: ["Inter", "InterFallback"],
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwind-scrollbar")],
 } satisfies Config;
