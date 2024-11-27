@@ -19,8 +19,12 @@ export default function LocationComponent() {
   const [gettingGeolocation, setGettingGeolocation] = useState<boolean>(false);
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
   const [input, setInput] = useState<string>(allData?.city ? allData.city : "");
+  const [lastGPSInput, setLastGPSInput] = useState<string>("");
   const fetcher = useFetcher();
-  const [useNextEvent, setUseNextEvent] = useState(allData?.useNext ?? true);
+  const [coordinates, setCoordinates] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<string>(
     allData?.eventDate ?? new Date().toISOString().split("T")[0]
@@ -28,10 +32,13 @@ export default function LocationComponent() {
   const [eventType, setEventType] = useState<"sunrise" | "sunset">(
     allData?.eventType ?? "sunrise"
   );
+
   const resetGPSStates = () => {
     setGeolocationError(false);
     setGotGeolocation(false);
     setGettingGeolocation(false);
+    setCoordinates(null);
+    setLastGPSInput("");
   };
 
   useEffect(() => {
@@ -40,26 +47,39 @@ export default function LocationComponent() {
         {
           locationData: JSON.stringify(locationData),
           element: "locationComponent",
-          date: useNextEvent ? "next" : selectedDate,
-          eventType: useNextEvent ? "next" : eventType,
+          date: selectedDate,
+          eventType: eventType,
         },
         { method: "post" }
       );
-
-      // Reset GPS states if location was submitted via manual input
-      if (locationData.type === "input") {
-        resetGPSStates();
-      }
     }
   }, [locationData]);
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLocationData({
-      type: "input",
-      data: input,
-    });
+
+    // If we have coordinates AND the input hasn't changed since getting GPS
+    if (coordinates && input === lastGPSInput) {
+      setLocationData({
+        type: "geolocation",
+        data: {
+          coords: {
+            latitude: coordinates.lat,
+            longitude: coordinates.lng,
+          },
+        } as GeolocationPosition,
+      });
+    } else {
+      // If input has changed or we don't have coordinates, use manual input
+      setLocationData({
+        type: "input",
+        data: input,
+      });
+      // Reset GPS states if we're using manual input
+      resetGPSStates();
+    }
   };
+
   function handleGeolocation() {
     if (!geolocationError) {
       setGettingGeolocation(true);
@@ -83,10 +103,11 @@ export default function LocationComponent() {
                 });
 
                 setGotGeolocation(true);
-                setLocationData({
-                  type: "geolocation",
-                  data: position,
+                setCoordinates({
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
                 });
+                setLastGPSInput(input); // Store the input value when GPS was acquired
                 setGettingGeolocation(false);
               } else {
                 console.error("Invalid position data:", {
@@ -202,11 +223,12 @@ export default function LocationComponent() {
                   id="location-input"
                   type="text"
                   required
-                  className="w-full px-4 py-2.5
-           bg-white/10 border border-white/20
-           rounded-lg text-slate-100 placeholder-slate-400
-           focus:outline-none focus:ring-2 focus:ring-blue-400/50
-           focus:bg-white/20 transition-all duration-200"
+                  className={`w-full px-4 py-2.5
+                      bg-white/10 border border-white/20
+                      rounded-lg text-slate-100 placeholder-slate-400
+                      focus:outline-none focus:ring-2 focus:ring-blue-400/50
+                      focus:bg-white/20 transition-all duration-200
+                      ${coordinates ? "border-green-500/30" : ""}`}
                   placeholder="Enter location manually"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -224,22 +246,20 @@ export default function LocationComponent() {
                 onClick={() => {
                   if (geolocationError) {
                     alert("Unable to use GPS. Did you deny the permission?");
-                  } else if (!gettingGeolocation && !gotGeolocation) {
+                  } else if (!gettingGeolocation) {
                     handleGeolocation();
                   }
                 }}
                 className={`min-w-12 h-11 rounded-lg transition-all duration-200
-             flex items-center justify-center
-             border ${
-               geolocationError
-                 ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
-                 : gotGeolocation
-                 ? "bg-green-500/20 border-green-500/30"
-                 : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10"
-             }`}
-                disabled={
-                  geolocationError || gettingGeolocation || gotGeolocation
-                }
+                    flex items-center justify-center
+                    border ${
+                      geolocationError
+                        ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
+                        : gotGeolocation
+                        ? "bg-green-500/20 border-green-500/30"
+                        : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10"
+                    }`}
+                disabled={geolocationError || gettingGeolocation}
                 aria-label={
                   geolocationError
                     ? "GPS location unavailable"
@@ -248,7 +268,7 @@ export default function LocationComponent() {
                     : "Use GPS location"
                 }
               >
-                {gettingGeolocation && !gotGeolocation ? (
+                {gettingGeolocation ? (
                   <div
                     className="h-5 w-5 rounded-full border-2 border-slate-100 border-t-transparent animate-spin"
                     role="status"
@@ -270,142 +290,111 @@ export default function LocationComponent() {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-start">
-              <label className="inline-flex items-center cursor-pointer">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={useNextEvent}
-                    onChange={(e) => setUseNextEvent(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-white/10 border border-white/20 peer-checked:bg-green-500/20 peer-checked:border-green-500/30 rounded-full duration-200 ease-in-out transition-all"></div>
-                  <div
-                    className="absolute left-[2px] top-[2px] bg-slate-100 w-5 h-5 rounded-full
-                    duration-200 ease-in-out
-                    peer-checked:translate-x-[20px]"
-                  ></div>
-                </div>
-                <span className="ml-3 text-sm font-medium text-slate-100">
-                  Use the next event
-                </span>
+            <div>
+              <label
+                htmlFor="imageDate"
+                className="block text-sm text-slate-100 mb-1"
+              >
+                Select date
               </label>
+              <input
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                type="date"
+                id="submissionDate"
+                min="2022-01-01"
+                max={
+                  new Date(Date.now() + 86400000).toISOString().split("T")[0]
+                }
+                name="submissionDate"
+                required
+                className="w-full p-2 rounded-md
+                    bg-white/10 border border-white/20
+                    focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20
+                    transition-all duration-200
+                    text-slate-100"
+              />
             </div>
 
-            {!useNextEvent && (
-              <div className="space-y-3">
-                <div>
-                  <label
-                    htmlFor="imageDate"
-                    className="block text-sm text-slate-100 mb-1"
-                  >
-                    Select date
-                  </label>
-                  <input
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    type="date"
-                    id="submissionDate"
-                    min="2022-01-01"
-                    max={
-                      new Date(Date.now() + 86400000)
-                        .toISOString()
-                        .split("T")[0]
-                    }
-                    name="submissionDate"
-                    required
-                    className="w-full p-2 rounded-md
-                bg-white/10 border border-white/20
-                focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20
-                transition-all duration-200
-                text-slate-100"
-                  />
-                </div>
+            <div>
+              <label
+                htmlFor="imageType"
+                className="block text-sm text-slate-100 mb-1"
+              >
+                Select type of event
+              </label>
+              <Menu as="div" className="relative inline-block w-full text-left">
+                <MenuButton
+                  className="inline-flex w-full justify-between items-center gap-x-1.5 rounded-md
+                    bg-white/10 px-3 py-2 text-sm text-slate-100
+                    border border-white/20
+                    hover:bg-white/20
+                    focus:outline-none focus:ring-2 focus:ring-white/50
+                    transition-all duration-200"
+                >
+                  <span className="flex items-center gap-2">
+                    {eventType === "sunrise" ? (
+                      <GiSunrise className="size-4" />
+                    ) : (
+                      <GiSunset className="size-4" />
+                    )}
+                    {eventType === "sunrise" ? "Sunrise" : "Sunset"}
+                  </span>
+                  <HiChevronDown className="size-5" aria-hidden="true" />
+                </MenuButton>
 
-                <div>
-                  <label
-                    htmlFor="imageType"
-                    className="block text-sm text-slate-100 mb-1"
-                  >
-                    Select type of event
-                  </label>
-                  <Menu
-                    as="div"
-                    className="relative inline-block w-full text-left"
-                  >
-                    <MenuButton
-                      className="inline-flex w-full justify-between items-center gap-x-1.5 rounded-md
-    bg-white/10 px-3 py-2 text-sm text-slate-100
-    border border-white/20
-    hover:bg-white/20
-    focus:outline-none focus:ring-2 focus:ring-white/50
-    transition-all duration-200"
-                    >
-                      <span className="flex items-center gap-2">
-                        {eventType === "sunrise" ? (
-                          <GiSunrise className="size-4" />
-                        ) : (
-                          <GiSunset className="size-4" />
-                        )}
-                        {eventType === "sunrise" ? "Sunrise" : "Sunset"}
-                      </span>
-                      <HiChevronDown className="size-5" aria-hidden="true" />
-                    </MenuButton>
-
-                    <MenuItems
-                      className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-md
-    bg-black/90 backdrop-blur-md
-    shadow-lg ring-1 ring-black/5 focus:outline-none"
-                    >
-                      <div className="px-1 py-1">
-                        <MenuItem>
-                          {({ focus }) => (
-                            <button
-                              onClick={() => setEventType("sunrise")}
-                              className={`${
-                                focus ? "bg-white/20" : ""
-                              } group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-100`}
-                            >
-                              <GiSunrise
-                                className="mr-2 size-4"
-                                aria-hidden="true"
-                              />
-                              Sunrise
-                            </button>
-                          )}
-                        </MenuItem>
-                        <MenuItem>
-                          {({ focus }) => (
-                            <button
-                              onClick={() => setEventType("sunset")}
-                              className={`${
-                                focus ? "bg-white/20" : ""
-                              } group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-100`}
-                            >
-                              <GiSunset
-                                className="mr-2 size-4"
-                                aria-hidden="true"
-                              />
-                              Sunset
-                            </button>
-                          )}
-                        </MenuItem>
-                      </div>
-                    </MenuItems>
-                  </Menu>
-                </div>
-              </div>
-            )}
+                <MenuItems
+                  className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-md
+                    bg-black/90 backdrop-blur-md
+                    shadow-lg ring-1 ring-black/5 focus:outline-none"
+                >
+                  <div className="px-1 py-1">
+                    <MenuItem>
+                      {({ active }) => (
+                        <button
+                          onClick={() => setEventType("sunrise")}
+                          className={`${
+                            active ? "bg-white/20" : ""
+                          } group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-100`}
+                        >
+                          <GiSunrise
+                            className="mr-2 size-4"
+                            aria-hidden="true"
+                          />
+                          Sunrise
+                        </button>
+                      )}
+                    </MenuItem>
+                    <MenuItem>
+                      {({ active }) => (
+                        <button
+                          onClick={() => setEventType("sunset")}
+                          className={`${
+                            active ? "bg-white/20" : ""
+                          } group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-100`}
+                        >
+                          <GiSunset
+                            className="mr-2 size-4"
+                            aria-hidden="true"
+                          />
+                          Sunset
+                        </button>
+                      )}
+                    </MenuItem>
+                  </div>
+                </MenuItems>
+              </Menu>
+            </div>
 
             <div className="flex-1 sm:flex-initial flex items-end">
               <button
                 type="submit"
                 className="w-full h-11 px-6
-                         bg-blue-500/20 border border-blue-500/30
-                         rounded-lg hover:bg-blue-500/30
-                         active:bg-blue-500/10
-                         transition-all duration-200
-                         text-slate-100 flex items-center justify-center gap-2"
+                    bg-blue-500/20 border border-blue-500/30
+                    rounded-lg hover:bg-blue-500/30
+                    active:bg-blue-500/10
+                    transition-all duration-200
+                    text-slate-100 flex items-center justify-center gap-2"
               >
                 <FaSearchLocation className="w-5 h-5" />
                 <span>Search</span>
