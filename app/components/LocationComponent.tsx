@@ -28,6 +28,12 @@ export default function LocationComponent() {
   const [eventType, setEventType] = useState<"sunrise" | "sunset">(
     allData?.eventType ?? "sunrise"
   );
+
+  const [useGpsLocation, setUseGpsLocation] = useState<boolean>(false);
+  const [gpsPosition, setGpsPosition] = useState<GeolocationPosition | null>(
+    null
+  );
+
   const resetGPSStates = () => {
     setGeolocationError(false);
     setGotGeolocation(false);
@@ -53,10 +59,20 @@ export default function LocationComponent() {
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLocationData({
-      type: "input",
-      data: input,
-    });
+
+    if (useGpsLocation && gpsPosition) {
+      // Submit with GPS coordinates
+      setLocationData({
+        type: "geolocation",
+        data: gpsPosition,
+      });
+    } else if (input.trim()) {
+      // Submit with manual input
+      setLocationData({
+        type: "input",
+        data: input,
+      });
+    }
   };
 
   interface GeolocationErrorDetails {
@@ -81,10 +97,8 @@ export default function LocationComponent() {
             (position: GeolocationPosition) => {
               if (position && position.coords) {
                 setGotGeolocation(true);
-                setLocationData({
-                  type: "geolocation",
-                  data: position,
-                });
+                setGpsPosition(position);
+                setUseGpsLocation(true);
                 setGettingGeolocation(false);
               } else {
                 console.error("Invalid position data received");
@@ -127,6 +141,14 @@ export default function LocationComponent() {
     }
   }
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+    // If user starts typing, disable GPS location
+    if (e.target.value.trim()) {
+      setUseGpsLocation(false);
+    }
+  };
+
   return (
     <div
       className="p-4 sm:p-6 md:p-8"
@@ -150,15 +172,18 @@ export default function LocationComponent() {
                 <input
                   id="location-input"
                   type="text"
-                  required
                   className="w-full px-4 py-2.5
-           bg-white/10 border border-white/20
-           rounded-lg text-slate-100 placeholder-slate-400
-           focus:outline-none focus:ring-2 focus:ring-blue-400/50
-           focus:bg-white/20 transition-all duration-200"
-                  placeholder="Enter location manually"
+                        bg-white/10 border border-white/20
+                        rounded-lg text-slate-100 placeholder-slate-400
+                        focus:outline-none focus:ring-2 focus:ring-blue-400/50
+                        focus:bg-white/20 transition-all duration-200"
+                  placeholder={
+                    useGpsLocation
+                      ? "Using GPS location"
+                      : "Enter location manually"
+                  }
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={handleInputChange}
                   onFocus={(e) => e.target.select()}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -166,6 +191,7 @@ export default function LocationComponent() {
                       handleManualSubmit(e);
                     }
                   }}
+                  // Remove required attribute since we can now submit with GPS
                 />
               </div>
               <button
