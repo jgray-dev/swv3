@@ -69,12 +69,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     Number(lat),
     Number(lon)
   );
-  const [coords, bearing] = generateCoordinateString(
-    Number(lat),
-    Number(lon),
-    eventType,
-    eventTime
-  );
   //Grab one day before and one day after of dates in YYYY-MM-DD format, for use in the open meteo api call
   let dayBefore, dayAfter;
   let historic = false;
@@ -94,6 +88,13 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   )
     .toISOString()
     .split("T")[0];
+  const [coords, bearing] = generateCoordinateString(
+    Number(lat),
+    Number(lon),
+    eventType,
+    new Date(dateUrl)
+  );
+
   const [mapData, meteoResponse, timezoneResponse] = await Promise.all([
     getSubmissions(context),
     fetch(
