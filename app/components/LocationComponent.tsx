@@ -28,6 +28,11 @@ export default function LocationComponent() {
   const [eventType, setEventType] = useState<"sunrise" | "sunset">(
     allData?.eventType ?? "sunrise"
   );
+  const resetGPSStates = () => {
+    setGeolocationError(false);
+    setGotGeolocation(false);
+    setGettingGeolocation(false);
+  };
 
   useEffect(() => {
     if (locationData) {
@@ -40,6 +45,11 @@ export default function LocationComponent() {
         },
         { method: "post" }
       );
+
+      // Reset GPS states if location was submitted via manual input
+      if (locationData.type === "input") {
+        resetGPSStates();
+      }
     }
   }, [locationData]);
 
