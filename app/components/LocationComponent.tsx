@@ -60,29 +60,121 @@ export default function LocationComponent() {
       data: input,
     });
   };
-
   function handleGeolocation() {
     if (!geolocationError) {
       setGettingGeolocation(true);
+
       if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            setGotGeolocation(true);
-            setLocationData({
-              type: "geolocation",
-              data: position,
-            });
-          },
-          (err) => {
-            setGettingGeolocation(false);
+        const options = {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        };
+
+        try {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              if (position && position.coords) {
+                console.log("Geolocation success:", {
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  accuracy: position.coords.accuracy,
+                  timestamp: new Date(position.timestamp).toISOString(),
+                });
+
+                setGotGeolocation(true);
+                setLocationData({
+                  type: "geolocation",
+                  data: position,
+                });
+                setGettingGeolocation(false);
+              } else {
+                console.error("Invalid position data:", {
+                  position: position,
+                  browserInfo: navigator.userAgent,
+                  timestamp: new Date().toISOString(),
+                });
+                throw new Error("Invalid position data received");
+              }
+            },
+            (err) => {
+              // Detailed error logging
+              const errorDetails = {
+                code: err.code,
+                message: err.message,
+                browserInfo: navigator.userAgent,
+                timestamp: new Date().toISOString(),
+              };
+
+              switch (err.code) {
+                case err.PERMISSION_DENIED:
+                  console.error("Location Permission Denied:", {
+                    ...errorDetails,
+                    type: "PERMISSION_DENIED",
+                    hint: "User denied the request for geolocation",
+                  });
+                  break;
+                case err.POSITION_UNAVAILABLE:
+                  console.error("Position Unavailable:", {
+                    ...errorDetails,
+                    type: "POSITION_UNAVAILABLE",
+                    hint: "Location information is unavailable. Device GPS might be disabled or hardware error",
+                  });
+                  break;
+                case err.TIMEOUT:
+                  console.error("Geolocation Timeout:", {
+                    ...errorDetails,
+                    type: "TIMEOUT",
+                    hint: "The request to get user location timed out. Check internet connection or try again",
+                  });
+                  break;
+                default:
+                  console.error("Unknown Geolocation Error:", {
+                    ...errorDetails,
+                    type: "UNKNOWN",
+                  });
+              }
+
+              // Only set error if it's a permanent failure
+              if (err.code === err.PERMISSION_DENIED) {
+                setGeolocationError(true);
+              }
+
+              setGettingGeolocation(false);
+            },
+            options
+          );
+        } catch (error) {
+          console.error("Geolocation System Error:", {
+            error: error,
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            browserInfo: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+            geolocationSupport: "geolocation" in navigator,
+            secureContext: window.isSecureContext,
+          });
+
+          setGettingGeolocation(false);
+          if (error.name === "PermissionDeniedError") {
             setGeolocationError(true);
-            console.error(err);
           }
-        );
+        }
       } else {
+        console.error("Geolocation Not Supported:", {
+          browserInfo: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+          window: {
+            isSecureContext: window.isSecureContext,
+            protocol: window.location.protocol,
+          },
+        });
         setGettingGeolocation(false);
         setGeolocationError(true);
       }
+    } else {
+      console.log("Geolocation already in error state, skipping request");
     }
   }
 
