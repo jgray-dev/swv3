@@ -8,15 +8,33 @@ import {
   WeatherLocation,
 } from "~/.server/interfaces";
 
+//Helper function to convert an azimuth in radians (from SunCalc) to the expected format of bearing (for GeoLib)
+function azimuthToBearing(azimuthRad: number): number {
+  let degrees = (azimuthRad * 180) / Math.PI;
+  let bearing = (degrees + 90) % 360;
+  if (bearing < 0) {
+    bearing += 360;
+  }
+  return bearing + 90;
+}
+
 //Helper function for crafting the URL to fetch from open-meteo
 export function generateCoordinateString(
   lat: number,
   lon: number,
-  eventType: "sunrise" | "sunset"
-): string {
+  eventType: "sunrise" | "sunset",
+  eventTime: number
+): [string, number] {
   if (lat < -90 || lat > 90) throw new Error("Invalid latitude");
   if (lon < -180 || lon > 180) throw new Error("Invalid longitude");
-  const bearing = eventType === "sunrise" ? 90 : 270;
+  const timeAndDate = new Date(eventTime * 1000);
+  const position = SunCalc.getPosition(timeAndDate, lat, lon);
+  let bearing = azimuthToBearing(position.azimuth);
+  if (Math.abs(position.altitude) > 10) {
+    console.log("ALTITUDE INDUCED ERROR POSSIBLE");
+    console.log(position.altitude);
+    bearing = eventType === "sunrise" ? 90 : 270;
+  }
   const latitudes: number[] = [];
   const longitudes: number[] = [];
   const distances = [0, 3, 5, 6.5, 8, 9.5, 11, 13, 15, 18, 21, 24];
@@ -30,7 +48,10 @@ export function generateCoordinateString(
     latitudes.push(Number(point.latitude.toFixed(6)));
     longitudes.push(Number(point.longitude.toFixed(6)));
   }
-  return `latitude=${latitudes.join(",")}&longitude=${longitudes.join(",")}`;
+  return [
+    `latitude=${latitudes.join(",")}&longitude=${longitudes.join(",")}`,
+    bearing,
+  ];
 }
 
 //Helper function for interpolating (below)
