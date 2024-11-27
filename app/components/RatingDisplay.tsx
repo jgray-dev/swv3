@@ -104,7 +104,7 @@ export default function RatingDisplay() {
               role="presentation"
             />
           </svg>
-          <div className="absolute flex items-center justify-center md:-translate-y-2 -translate-y-3">
+          <div className="absolute flex items-center justify-center md:-translate-y-2 -translate-y-5">
             <span
               className={`text-2xl sm:text-4xl md:-translate-y-3 font-bold ${
                 rating >= 95 ? "gradient-small default" : ""
