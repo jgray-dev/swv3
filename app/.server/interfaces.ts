@@ -30,6 +30,7 @@ export interface LoaderData {
   uploads: DbUpload[];
   eventDate: string;
   useNext: boolean;
+  bearing: number;
 }
 
 export interface AveragedValues {
