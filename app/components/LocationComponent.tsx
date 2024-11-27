@@ -166,7 +166,7 @@ export default function LocationComponent() {
               htmlFor="location-input"
               className="text-slate-300 text-sm font-medium"
             >
-              Location
+              Enter location
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -177,7 +177,7 @@ export default function LocationComponent() {
                         bg-white/10 border border-white/20
                         rounded-lg text-slate-100 placeholder-slate-400
                         focus:outline-none focus:ring-2 focus:ring-blue-400/50
-                        focus:bg-white/20 transition-all duration-200"
+                        focus:bg-white/20 transition-all duration-200 h-12"
                   placeholder={
                     useGpsLocation
                       ? "Using GPS location"
@@ -204,7 +204,7 @@ export default function LocationComponent() {
                     handleGeolocation();
                   }
                 }}
-                className={`min-w-12 h-11 rounded-lg transition-all duration-200
+                className={`min-w-12 h-12 rounded-lg transition-all duration-200
              flex items-center justify-center
              border ${
                geolocationError
@@ -384,7 +384,7 @@ export default function LocationComponent() {
                          text-slate-100 flex items-center justify-center gap-2"
               >
                 <FaSearchLocation className="w-5 h-5" />
-                <span>Search</span>
+                <span>Submit</span>
               </button>
             </div>
           </div>
