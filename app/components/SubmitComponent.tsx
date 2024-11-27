@@ -211,10 +211,12 @@ export default function SubmitComponent() {
           Submitting a <span className={"text-white"}>{allData.eventType}</span>{" "}
           rated <span className={"text-white"}>{allData.rating}</span> on{" "}
           <span className={"text-white"}>
-            {new Date(allData.eventTime * 1000).toLocaleDateString("en-US", {
+            {/* THE MISMTACH IS HERE: */}
+            {new Date(allData.eventTime * 1000).toLocaleString("en-US", {
               month: "long",
               day: "numeric",
               year: "numeric",
+              timeZone: "UTC",
             })}
           </span>{" "}
           at <span className={"text-white"}>{allData.city}</span>
