@@ -66,38 +66,51 @@ export const action: ActionFunction = async ({ request, context }) => {
   const outcome = await result.json();
   // @ts-ignore
   if (outcome.success) {
-
     try {
-      const resp = await fetch(`https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/email/routing/rules`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${context.cloudflare.env.CF_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: ['nohaxjutdoge@gmail.com'],
-          subject: 'New Contact Form Submission',
-          content: formData.toString(),
-        }),
-      });
-      console.log(await resp.json())
-      return json(
+      const resp = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/email/routing/rules`,
         {
-          message: `Message sent.`,
-          success: true,
-        },
-        { status: 200 }
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${context.cloudflare.env.CF_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            to: ["jackson@jgray.cc"],
+            subject: "New Contact Form Submission",
+            content: formData.toString(),
+          }),
+        }
       );
+      const result = await resp.json();
+      // @ts-ignore
+      if (result.success) {
+        return json(
+          {
+            message: `Message sent.`,
+            success: true,
+          },
+          { status: 200 }
+        );
+      } else {
+        return json(
+          {
+            // @ts-ignore
+            message: `Failed to send message. ${result.errors[0].message}`,
+            success: false,
+          },
+          { status: 500 }
+        );
+      }
     } catch (error) {
       return json(
         {
           message: `Failed to send form.`,
           success: false,
         },
-        { status: 50 }
+        { status: 500 }
       );
     }
-    
   } else {
     console.log("Turnstile NOT success");
     return json(
@@ -159,6 +172,9 @@ export default function Contact() {
           className="space-y-6 bg-white/10 backdrop-blur-sm rounded-lg p-8"
         >
           <h2 className="text-3xl font-bold text-white text-center">Contact</h2>
+          <p>
+            this is currently disabled. Email jackson@jgray.cc for feedback!
+          </p>
 
           <div>
             <label
