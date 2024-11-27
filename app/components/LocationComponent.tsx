@@ -98,6 +98,7 @@ export default function LocationComponent() {
               if (position && position.coords) {
                 setGotGeolocation(true);
                 setGpsPosition(position);
+                setInput("");
                 setUseGpsLocation(true);
                 setGettingGeolocation(false);
               } else {
