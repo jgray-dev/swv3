@@ -1,5 +1,6 @@
 import { useRouteLoaderData } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
+import { FaLongArrowAltUp } from "react-icons/fa";
 import { LoaderData } from "~/.server/interfaces";
 import StatItem from "~/components/StatItem";
 
@@ -103,9 +104,9 @@ export default function RatingDisplay() {
               role="presentation"
             />
           </svg>
-          <div className="absolute flex items-center justify-center">
+          <div className="absolute flex items-center justify-center md:-translate-y-2 -translate-y-3">
             <span
-              className={`text-2xl sm:text-4xl md:-translate-y-3 font-bold -translate-y-2 ${
+              className={`text-2xl sm:text-4xl md:-translate-y-3 font-bold ${
                 rating >= 95 ? "gradient-small default" : ""
               }`}
               aria-live="polite"
@@ -113,7 +114,7 @@ export default function RatingDisplay() {
               {Math.round(displayNumber)}
             </span>
           </div>
-          <span
+          <div
             className={`text-sm sm:text-base mt-1 relative rounded px-1 ${
               allData.relative === "current"
                 ? "gradient default font-bold"
@@ -125,7 +126,22 @@ export default function RatingDisplay() {
           >
             {allData.eventString.charAt(0).toUpperCase() +
               allData.eventString.slice(1)}
-          </span>
+          </div>
+          <div
+            className="text-sm flex align-center content-center text-white/40 -translate-x-2"
+            title={`${
+              allData.eventType.charAt(0).toUpperCase() +
+              allData.eventType.slice(1)
+            } direction ${Math.round(allData.bearing)}°`}
+          >
+            <FaLongArrowAltUp
+              className="h-5 w-5 duration-500"
+              style={{ transform: `rotate(${Math.round(allData.bearing)}deg)` }}
+            />
+            <span className="ml-2 animate-opacity">
+              {Math.round(allData.bearing)}°
+            </span>
+          </div>
         </div>
         <div
           className="flex-1 sm:basis-2/3 border-t sm:border-t-0 sm:border-l border-white/10 p-4 space-y-2"
