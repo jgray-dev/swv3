@@ -23,12 +23,11 @@ export function generateCoordinateString(
   lat: number,
   lon: number,
   eventType: "sunrise" | "sunset",
-  eventTime: number
+  date: Date
 ): [string, number] {
   if (lat < -90 || lat > 90) throw new Error("Invalid latitude");
   if (lon < -180 || lon > 180) throw new Error("Invalid longitude");
-  const timeAndDate = new Date(eventTime * 1000);
-  const position = SunCalc.getPosition(timeAndDate, lat, lon);
+  const position = SunCalc.getPosition(date, lat, lon);
   let bearing = azimuthToBearing(position.azimuth);
   if (Math.abs(position.altitude) > 10) {
     console.log("ALTITUDE INDUCED ERROR POSSIBLE");
@@ -558,4 +557,9 @@ export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
   }
 
   return locationParts.join(", ");
+}
+
+export function logServer(message: any, details?: any) {
+  console.log(message);
+  console.log(details);
 }
