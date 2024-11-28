@@ -58,7 +58,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     let mapData = await getSubmissions(context);
     return { ok: false, message: error, uploads: mapData };
   }
-
   const meteoApiKey = context.cloudflare.env.METEO_KEY;
 
   //Generate a coordinate string of locations looking in east/west (dep on eventType)
@@ -78,9 +77,10 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     };
   }
   if (!eventTime) {
+    const [time, type] = findNextSunEvent(Number(lat), Number(lon));
     return {
-      message: `No ${eventType} time found | Next event in approximately ${unixToApproximateString(
-        findNextSunEvent(Number(lat), Number(lon))
+      message: `No ${type} time found | Next event in approximately ${unixToApproximateString(
+        time
       )}`,
       ok: false,
       uploads: await getSubmissions(context),
