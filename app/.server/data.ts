@@ -9,7 +9,6 @@ import {
 } from "~/.server/interfaces";
 
 //Helper function to convert an azimuth in radians (from SunCalc) to the expected format of bearing (for GeoLib)
-
 function azimuthToBearing(azimuthRadians: number): number {
   // Convert to degrees and shift from South to North reference
   let degrees = (azimuthRadians * 180) / Math.PI + 180;
@@ -18,10 +17,14 @@ function azimuthToBearing(azimuthRadians: number): number {
   degrees = degrees % 360;
 
   // Handle negative values
-  if (degrees < 0) {
+  while (degrees < 0) {
     degrees += 360;
   }
-
+  
+  while (degrees > 360) {
+    degrees -=360
+  }
+  
   // Return rounded value
   return Math.round(degrees);
 }
@@ -400,7 +403,7 @@ export function purgeDuplicates(
   });
 }
 
-export function findNextSunEvent(latitude: number, longitude: number): number {
+export function findNextSunEvent(latitude: number, longitude: number): [number, string] {
   const NOW = Date.now();
   const DAY_MS = 86400000;
   const MAX_DAYS_TO_SEARCH = 186;
@@ -417,17 +420,23 @@ export function findNextSunEvent(latitude: number, longitude: number): number {
     }
   };
 
-  const getNextEvent = (timestamp: number): number | null => {
+  const getNextEvent = (timestamp: number): [number, string] | null => {
     try {
       const date = new Date(timestamp);
       const times = SunCalc.getTimes(date, latitude, longitude);
 
       const sunriseTime = times.sunrise.getTime();
       const sunsetTime = times.sunset.getTime();
-      const validTimes = [sunriseTime, sunsetTime].filter(
-        (time) => !isNaN(time) && time > NOW
-      );
-      return validTimes.length > 0 ? Math.min(...validTimes) : null;
+
+      const events: [number, string][] = [];
+      if (!isNaN(sunriseTime) && sunriseTime > NOW) {
+        events.push([sunriseTime, "sunrise"]);
+      }
+      if (!isNaN(sunsetTime) && sunsetTime > NOW) {
+        events.push([sunsetTime, "sunset"]);
+      }
+
+      return events.length > 0 ? events.reduce((a, b) => a[0] < b[0] ? a : b) : null;
     } catch {
       return null;
     }
@@ -454,7 +463,7 @@ export function findNextSunEvent(latitude: number, longitude: number): number {
   const event2 = getNextEvent(nextDay);
 
   if (event1 !== null && event2 !== null) {
-    return Math.min(event1, event2);
+    return event1[0] < event2[0] ? event1 : event2;
   } else if (event1 !== null) {
     return event1;
   } else if (event2 !== null) {
@@ -462,7 +471,6 @@ export function findNextSunEvent(latitude: number, longitude: number): number {
   }
   throw new Error("Failed to find next sunrise or sunset");
 }
-
 //Additional function for edge cases: takes unix time and returns string literal.
 export function unixToApproximateString(unixTimestamp: number): string {
   unixTimestamp = Math.round(unixTimestamp / 1000);
