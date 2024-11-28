@@ -60,13 +60,6 @@ export interface ClassificationResult {
   score: number;
 }
 
-export interface TimeZoneApiResponse {
-  dstOffset: number;
-  rawOffset: number;
-  status: string;
-  timeZoneId: string;
-  timeZoneName: string;
-}
 
 export interface WeatherLocation {
   distance: number;
