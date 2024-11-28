@@ -138,7 +138,10 @@ export default function RatingDisplay() {
               className="h-5 w-5 duration-500"
               style={{ transform: `rotate(${Math.round(allData.bearing)}deg)` }}
             />
-            <span className="ml-2 animate-opacity">
+            <span
+              key={allData.bearing}
+              className="ml-2 overflow-hidden transition-[width] duration-200 ease-in-out w-[3rem]"
+            >
               {Math.round(allData.bearing)}°
             </span>
           </div>
