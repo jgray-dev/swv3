@@ -10,10 +10,9 @@ import {
 
 //Helper function to convert an azimuth in radians (from SunCalc) to the expected format of bearing (for GeoLib)
 
-
 function azimuthToBearing(azimuthRadians: number): number {
   // Convert to degrees and shift from South to North reference
-  let degrees = (azimuthRadians * 180 / Math.PI) + 180;
+  let degrees = (azimuthRadians * 180) / Math.PI + 180;
 
   // Normalize to 0-359 range
   degrees = degrees % 360;
@@ -315,25 +314,33 @@ export function getRelevantSunEvent(lat: number, lon: number): SunEvent {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const sunrises = [yesterday, today, tomorrow].map(day => {
+  const sunrises = [yesterday, today, tomorrow].map((day) => {
     const times = SunCalc.getTimes(day, lat, lon);
     return {
       date: times.sunrise,
-      time: Math.round(times.sunrise.getTime() / 1000)
+      time: Math.round(times.sunrise.getTime() / 1000),
     };
   });
 
-  const sunsets = [yesterday, today, tomorrow].map(day => {
+  const sunsets = [yesterday, today, tomorrow].map((day) => {
     const times = SunCalc.getTimes(day, lat, lon);
     return {
       date: times.sunset,
-      time: Math.round(times.sunset.getTime() / 1000)
+      time: Math.round(times.sunset.getTime() / 1000),
     };
   });
 
   const allEvents: SunEvent[] = [
-    ...sunrises.map(({ date, time }) => ({ type: "sunrise" as const, time, date })),
-    ...sunsets.map(({ date, time }) => ({ type: "sunset" as const, time, date })),
+    ...sunrises.map(({ date, time }) => ({
+      type: "sunrise" as const,
+      time,
+      date,
+    })),
+    ...sunsets.map(({ date, time }) => ({
+      type: "sunset" as const,
+      time,
+      date,
+    })),
   ];
   allEvents.sort((a, b) => a.time - b.time);
 
@@ -358,7 +365,6 @@ export function getRelevantSunEvent(lat: number, lon: number): SunEvent {
 
   return allEvents[allEvents.length - 1];
 }
-
 
 export function purgeDuplicates(
   coordinates: WeatherLocation[],
