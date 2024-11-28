@@ -561,4 +561,3 @@ export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
 
   return locationParts.join(", ");
 }
-
