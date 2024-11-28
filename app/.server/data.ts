@@ -562,7 +562,3 @@ export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
   return locationParts.join(", ");
 }
 
-export function logServer(message: any, details?: any) {
-  console.log(message);
-  console.log(details);
-}
