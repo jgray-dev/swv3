@@ -303,6 +303,7 @@ export const action: ActionFunction = async ({ request, context }) => {
           );
         }
       } catch (error) {
+        console.error(error);
         return json(
           {
             error: "Failed to check image safety",
