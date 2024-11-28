@@ -56,7 +56,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   let dateUrl = url.searchParams.get("date");
   if (!lat || !lon || !city) {
     let mapData = await getSubmissions(context);
-    return { ok: false, message: error ?? "Error", uploads: mapData };
+    return { ok: false, message: error, uploads: mapData };
   }
 
   const meteoApiKey = context.cloudflare.env.METEO_KEY;
