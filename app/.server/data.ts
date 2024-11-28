@@ -9,13 +9,22 @@ import {
 } from "~/.server/interfaces";
 
 //Helper function to convert an azimuth in radians (from SunCalc) to the expected format of bearing (for GeoLib)
-function azimuthToBearing(azimuthRad: number): number {
-  let degrees = (azimuthRad * 180) / Math.PI;
-  let bearing = (degrees + 90) % 360;
-  if (bearing < 0) {
-    bearing += 360;
+
+
+function azimuthToBearing(azimuthRadians: number): number {
+  // Convert to degrees and shift from South to North reference
+  let degrees = (azimuthRadians * 180 / Math.PI) + 180;
+
+  // Normalize to 0-359 range
+  degrees = degrees % 360;
+
+  // Handle negative values
+  if (degrees < 0) {
+    degrees += 360;
   }
-  return bearing + 90;
+
+  // Return rounded value
+  return Math.round(degrees);
 }
 
 //Helper function for crafting the URL to fetch from open-meteo
@@ -29,7 +38,7 @@ export function generateCoordinateString(
   if (lon < -180 || lon > 180) throw new Error("Invalid longitude");
   const position = SunCalc.getPosition(date, lat, lon);
   let bearing = azimuthToBearing(position.azimuth);
-  if (Math.abs(position.altitude) > 10) {
+  if (Math.abs(position.altitude) > 1) {
     console.log("ALTITUDE INDUCED ERROR POSSIBLE");
     console.log(position.altitude);
     bearing = eventType === "sunrise" ? 90 : 270;
@@ -294,6 +303,7 @@ export function getRelative(now: number, time: number): string {
 interface SunEvent {
   type: "sunrise" | "sunset";
   time: number;
+  date: Date;
 }
 
 // Normal function used to find the eventType and eventTime at a location
@@ -305,21 +315,25 @@ export function getRelevantSunEvent(lat: number, lon: number): SunEvent {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const sunrises = [
-    Math.round(SunCalc.getTimes(yesterday, lat, lon).sunrise.getTime() / 1000),
-    Math.round(SunCalc.getTimes(today, lat, lon).sunrise.getTime() / 1000),
-    Math.round(SunCalc.getTimes(tomorrow, lat, lon).sunrise.getTime() / 1000),
-  ];
+  const sunrises = [yesterday, today, tomorrow].map(day => {
+    const times = SunCalc.getTimes(day, lat, lon);
+    return {
+      date: times.sunrise,
+      time: Math.round(times.sunrise.getTime() / 1000)
+    };
+  });
 
-  const sunsets = [
-    Math.round(SunCalc.getTimes(yesterday, lat, lon).sunset.getTime() / 1000),
-    Math.round(SunCalc.getTimes(today, lat, lon).sunset.getTime() / 1000),
-    Math.round(SunCalc.getTimes(tomorrow, lat, lon).sunset.getTime() / 1000),
-  ];
+  const sunsets = [yesterday, today, tomorrow].map(day => {
+    const times = SunCalc.getTimes(day, lat, lon);
+    return {
+      date: times.sunset,
+      time: Math.round(times.sunset.getTime() / 1000)
+    };
+  });
 
   const allEvents: SunEvent[] = [
-    ...sunrises.map((time) => ({ type: "sunrise" as const, time })),
-    ...sunsets.map((time) => ({ type: "sunset" as const, time })),
+    ...sunrises.map(({ date, time }) => ({ type: "sunrise" as const, time, date })),
+    ...sunsets.map(({ date, time }) => ({ type: "sunset" as const, time, date })),
   ];
   allEvents.sort((a, b) => a.time - b.time);
 
@@ -344,6 +358,8 @@ export function getRelevantSunEvent(lat: number, lon: number): SunEvent {
 
   return allEvents[allEvents.length - 1];
 }
+
+
 export function purgeDuplicates(
   coordinates: WeatherLocation[],
   eventType: "sunrise" | "sunset"
@@ -489,25 +505,6 @@ export async function checkImage(context: any, image: File): Promise<Boolean> {
   return normalScore >= 0.6;
 }
 
-export function createNoonDate(dateStr: string, timezone: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    throw new Error("Invalid date format. Use YYYY-MM-DD");
-  }
-
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-
-  // Create a date string with the timezone
-  const dateInTz = new Date(
-    date.toLocaleString("en-US", { timeZone: timezone })
-  );
-
-  // Calculate the timezone offset
-  const offset = dateInTz.getTime() - date.getTime();
-
-  // Adjust the time to ensure noon in the target timezone
-  return new Date(date.getTime() - offset);
-}
 export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
   if (
     !response.results ||
