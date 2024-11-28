@@ -60,7 +60,6 @@ export interface ClassificationResult {
   score: number;
 }
 
-
 export interface WeatherLocation {
   distance: number;
   zone: "near" | "horizon" | "far";
