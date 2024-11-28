@@ -1,6 +1,5 @@
 export default [
   {
-    ignorePatterns: [""], // The ! means "don't ignore"
     rules: {
       "no-unused-expressions": 0,
       "no-unread-variable": 0,
