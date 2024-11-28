@@ -508,7 +508,7 @@ export async function checkImage(context: any, image: File): Promise<Boolean> {
   const result = (await response.json()) as ClassificationResult[];
   const normalScore =
     result.find((item) => item.label === "normal")?.score ?? 0;
-  return normalScore >= 0.6;
+  return normalScore >= 0.7;
 }
 
 export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
