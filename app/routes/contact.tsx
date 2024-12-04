@@ -72,7 +72,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       await resend.emails.send({
         //This email (feedback@sunwat.ch) is NOT monitored. do NOT send emails here, they go straight to the void.
         from: "Sunwatch <feedback@sunwat.ch>",
-        to: ["jackson@jgray.cc"],
+        to: [`${context.cloudflare.env.MONITORED_EMAIL}`],
         subject: "Feedback submitted",
         html: `<strong>From ${name}</strong><br/><strong>Email: ${email}</strong><br/><strong>Sent from IP: ${ip}</strong><br/><hr/><br/>${message}`,
       });
