@@ -20,11 +20,11 @@ function azimuthToBearing(azimuthRadians: number): number {
   while (degrees < 0) {
     degrees += 360;
   }
-  
+
   while (degrees > 360) {
-    degrees -=360
+    degrees -= 360;
   }
-  
+
   // Return rounded value
   return Math.round(degrees);
 }
@@ -403,7 +403,10 @@ export function purgeDuplicates(
   });
 }
 
-export function findNextSunEvent(latitude: number, longitude: number): [number, string] {
+export function findNextSunEvent(
+  latitude: number,
+  longitude: number
+): [number, string] {
   const NOW = Date.now();
   const DAY_MS = 86400000;
   const MAX_DAYS_TO_SEARCH = 186;
@@ -436,7 +439,9 @@ export function findNextSunEvent(latitude: number, longitude: number): [number, 
         events.push([sunsetTime, "sunset"]);
       }
 
-      return events.length > 0 ? events.reduce((a, b) => a[0] < b[0] ? a : b) : null;
+      return events.length > 0
+        ? events.reduce((a, b) => (a[0] < b[0] ? a : b))
+        : null;
     } catch {
       return null;
     }
