@@ -128,11 +128,11 @@ export default function RatingDisplay() {
               allData.eventString.slice(1)}
           </div>
           <div
-            className="text-sm flex align-center content-center text-white/40 -translate-x-2"
+            className="text-sm flex align-center content-center text-white/40 "
             title={`${
               allData.eventType.charAt(0).toUpperCase() +
               allData.eventType.slice(1)
-            } direction ${Math.round(allData.bearing)}°`}
+            } direction ${Math.round(allData.bearing)}° (${degreesToCompass(Math.round(allData.bearing))})`}
           >
             <FaLongArrowAltUp
               className="h-5 w-5 duration-500"
@@ -173,4 +173,26 @@ export default function RatingDisplay() {
       </div>
     </main>
   );
+}
+
+
+function degreesToCompass(degrees: number): string {
+  degrees = ((degrees % 360) + 360) % 360;
+  const directions: [string, number][] = [
+    ["N", 348.75],
+    ["NE", 33.75],
+    ["E", 78.75],
+    ["SE", 123.75],
+    ["S", 168.75],
+    ["SW", 213.75],
+    ["W", 258.75],
+    ["NW", 303.75],
+    ["N", 348.75]
+  ];
+  for (let i = 0; i < directions.length - 1; i++) {
+    if (degrees >= directions[i][1] && degrees < directions[i + 1][1]) {
+      return directions[i][0];
+    }
+  }
+  return "N";
 }
