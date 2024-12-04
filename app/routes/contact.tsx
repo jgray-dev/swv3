@@ -3,6 +3,7 @@ import Footer from "~/components/Footer";
 import { Form, Link, useActionData } from "@remix-run/react";
 import React, { useEffect, useState } from "react";
 import { json } from "@remix-run/router";
+import {Resend} from "resend";
 
 export const meta: MetaFunction = () => {
   return [
@@ -67,49 +68,18 @@ export const action: ActionFunction = async ({ request, context }) => {
   // @ts-ignore
   if (outcome.success) {
     try {
-      const resp = await fetch(
-        `https://api.cloudflare.com/client/v4/accounts/${context.cloudflare.env.CF_ACCOUNT_ID}/email/routing/rules`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${context.cloudflare.env.CF_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            to: ["jackson@jgray.cc"],
-            subject: "New Contact Form Submission",
-            content: formData.toString(),
-          }),
-        }
-      );
-      const result = await resp.json();
-      // @ts-ignore
-      if (result.success) {
-        return json(
-          {
-            message: `Message sent.`,
-            success: true,
-          },
-          { status: 200 }
-        );
-      } else {
-        return json(
-          {
-            // @ts-ignore
-            message: `Failed to send message. ${result.errors[0].message}`,
-            success: false,
-          },
-          { status: 500 }
-        );
-      }
-    } catch (error) {
-      return json(
-        {
-          message: `Failed to send form.`,
-          success: false,
-        },
-        { status: 500 }
-      );
+      const resend = new Resend(context.cloudflare.env.RESEND_API_KEY);
+      const data = await resend.emails.send({
+        from: 'Sunwatch <feedback@sunwat.ch>',
+        to: ['jackson@jgray.cc'],
+        subject: 'Feedback submitted',
+        html: '<strong>It works!</strong>',
+      });
+      console.log(data)
+      return json(data, 200);
+    }
+    catch (error) {
+      return json({ error }, 400);
     }
   } else {
     console.log("Turnstile NOT success");
@@ -159,7 +129,7 @@ export default function Contact() {
       [name]: value,
     }));
   };
-
+  console.log(actionData)
   return (
     <div
       className={
