@@ -1,26 +1,35 @@
-import {Link} from "@remix-run/react";
+import { Link } from "@remix-run/react";
 import React from "react";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 
 export const loader = () => {
   return Response.json("Page not found", { status: 404 });
 };
 
 export default function StarryPage() {
-  const [stars, setStars] = useState<Array<{
-    id: number;
-    size: number;
-    top: string;
-    left: string;
-    opacity: number;
-    animationDelay: string;
-  }>>([]);
+  const [stars, setStars] = useState<
+    Array<{
+      id: number;
+      size: number;
+      top: string;
+      left: string;
+      opacity: number;
+      animationDelay: string;
+    }>
+  >([]);
   const [isVisible, setIsVisible] = useState(false);
 
   const generateStars = (count: number) => {
     return Array.from({ length: count }, (_, i) => ({
       id: i,
-      size: Math.random() < 0.2 ? 2 : Math.random() < 0.5 ? 1.5 : Math.random() < 0.8 ? 1 : 0.5,
+      size:
+        Math.random() < 0.2
+          ? 2
+          : Math.random() < 0.5
+          ? 1.5
+          : Math.random() < 0.8
+          ? 1
+          : 0.5,
       top: `${Math.random() * 100}%`,
       left: `${Math.random() * 100}%`,
       opacity: 0.2 + Math.random() * 0.8,
@@ -49,20 +58,24 @@ export default function StarryPage() {
         <div
           key={star.id}
           className={`absolute bg-white rounded-full transition-opacity ${
-            isVisible ? 'opacity-100' : 'opacity-0'
+            isVisible ? "opacity-100" : "opacity-0"
           }`}
           style={{
             height: `${star.size}px`,
             width: `${star.size}px`,
             top: star.top,
             left: star.left,
-            animation: 'twinkle 4s infinite',
+            animation: "twinkle 4s infinite",
             animationDelay: star.animationDelay,
           }}
         />
       ))}
       <div className={"h-screen w-screen flex justify-center z-10 fixed"}>
-        <div className={"h-fit rounded-lg w-fit bg-black px-4 py-2 my-auto flex flex-col items-center justify-center"}>
+        <div
+          className={
+            "h-fit rounded-lg w-fit bg-black px-4 py-2 my-auto flex flex-col items-center justify-center"
+          }
+        >
           <div className={"font-bold text-[2.5rem]"}>you're lost</div>
 
           <Link
