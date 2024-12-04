@@ -3,7 +3,7 @@ import Footer from "~/components/Footer";
 import { Form, Link, useActionData } from "@remix-run/react";
 import React, { useEffect, useState } from "react";
 import { json } from "@remix-run/router";
-import {Resend} from "resend";
+import { Resend } from "resend";
 
 export const meta: MetaFunction = () => {
   return [
@@ -70,10 +70,10 @@ export const action: ActionFunction = async ({ request, context }) => {
       const message = body.get("message");
       const resend = new Resend(context.cloudflare.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: 'Sunwatch <feedback@sunwat.ch>',
-        to: ['jackson@jgray.cc'],
-        subject: 'Feedback submitted',
-        html: `<strong>${name} | ${email}</strong><hr/>${message}`,
+        from: "Sunwatch <feedback@sunwat.ch>",
+        to: ["jackson@jgray.cc"],
+        subject: "Feedback submitted",
+        html: `<strong>From ${name}</strong><br/><strong>Email: ${email}</strong><br/><hr/><br/>${message}`,
       });
       return json(
         {
@@ -82,8 +82,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         },
         { status: 200 }
       );
-    }
-    catch (error) {
+    } catch (error) {
       return json(
         {
           // @ts-ignore
@@ -141,7 +140,7 @@ export default function Contact() {
       [name]: value,
     }));
   };
-  
+
   return (
     <div
       className={
