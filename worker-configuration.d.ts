@@ -9,7 +9,8 @@ interface Env {
 	r2_acess_id: string;
 	CF_ACCOUNT_ID: string;
 	CF_TOKEN: string;
+	HF_TOKEN: string;
+	RESEND_API_KEY: string;
 	swv3: R2Bucket;
 	swv3_d1: D1Database;
-	AI: Ai;
 }
