@@ -11,6 +11,7 @@ interface Env {
 	CF_TOKEN: string;
 	HF_TOKEN: string;
 	RESEND_API_KEY: string;
+	MONITORED_EMAIL: string;
 	swv3: R2Bucket;
 	swv3_d1: D1Database;
 }
