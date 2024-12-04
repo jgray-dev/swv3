@@ -172,7 +172,7 @@ export default function Contact() {
           className="space-y-6 bg-white/10 backdrop-blur-sm rounded-lg p-8"
         >
           <h2 className="text-3xl font-bold text-white text-center">Contact</h2>
-          <p>
+          <p className={"text-cl font-bold"}>
             this is currently disabled. Email jackson@jgray.cc for feedback!
           </p>
 
