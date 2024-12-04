@@ -69,16 +69,15 @@ export const action: ActionFunction = async ({ request, context }) => {
       const email = body.get("email");
       const message = body.get("message");
       const resend = new Resend(context.cloudflare.env.RESEND_API_KEY);
-      const data = await resend.emails.send({
+      await resend.emails.send({
         from: 'Sunwatch <feedback@sunwat.ch>',
         to: ['jackson@jgray.cc'],
         subject: 'Feedback submitted',
         html: `<strong>${name} | ${email}</strong><hr/>${message}`,
       });
-      console.log(data)
       return json(
         {
-          message: `Form submitted.`,
+          message: `Form submitted. We'll be in touch if required.`,
           success: true,
         },
         { status: 200 }
@@ -142,7 +141,7 @@ export default function Contact() {
       [name]: value,
     }));
   };
-  console.log(actionData)
+  
   return (
     <div
       className={
