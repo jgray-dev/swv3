@@ -1,6 +1,11 @@
 import { Link } from "@remix-run/react";
 import React from "react";
 import { useEffect, useState } from "react";
+import type { MetaFunction } from "@remix-run/cloudflare";
+
+export const meta: MetaFunction = () => {
+  return [{ title: "404 Not found" }];
+};
 
 export const loader = () => {
   return Response.json("Page not found", { status: 404 });
@@ -17,7 +22,6 @@ export default function StarryPage() {
       animationDelay: string;
     }>
   >([]);
-  const [isVisible, setIsVisible] = useState(false);
 
   const generateStars = (count: number) => {
     return Array.from({ length: count }, (_, i) => ({
@@ -26,10 +30,10 @@ export default function StarryPage() {
         Math.random() < 0.2
           ? 2
           : Math.random() < 0.5
-          ? 1.5
-          : Math.random() < 0.8
-          ? 1
-          : 0.5,
+            ? 1.5
+            : Math.random() < 0.8
+              ? 1
+              : 0.5,
       top: `${Math.random() * 100}%`,
       left: `${Math.random() * 100}%`,
       opacity: 0.2 + Math.random() * 0.8,
@@ -38,8 +42,7 @@ export default function StarryPage() {
   };
 
   useEffect(() => {
-    setStars(generateStars(200));
-    setTimeout(() => setIsVisible(true), 50);
+    setStars(generateStars(150));
   }, []);
 
   return (
@@ -47,25 +50,30 @@ export default function StarryPage() {
       <style>
         {`
           @keyframes twinkle {
-            0% { opacity: 1; }
-            33% { opacity: 0.2; }
+            0% { opacity: 0.2; }
+            33% { opacity: 1; }
             66% { opacity: 0.6; }
             100% { opacity: 0.2; }
+          }
+          .star {
+            opacity: 0;
+            animation: appear 0.5s ease forwards, twinkle 4s infinite;
+          }
+          @keyframes appear {
+            from { opacity: 0; }
+            to { opacity: 1; }
           }
         `}
       </style>
       {stars.map((star) => (
         <div
           key={star.id}
-          className={`absolute bg-white rounded-full transition-opacity ${
-            isVisible ? "opacity-100" : "opacity-0"
-          }`}
+          className="absolute bg-white rounded-full star"
           style={{
             height: `${star.size}px`,
             width: `${star.size}px`,
             top: star.top,
             left: star.left,
-            animation: "twinkle 4s infinite",
             animationDelay: star.animationDelay,
           }}
         />
@@ -77,7 +85,6 @@ export default function StarryPage() {
           }
         >
           <div className={"font-bold text-[2.5rem]"}>you're lost</div>
-
           <Link
             to={"/"}
             target={""}
