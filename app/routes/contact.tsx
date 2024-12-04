@@ -23,7 +23,7 @@ export const action: ActionFunction = async ({ request, context }) => {
     if (!body.get(field)) {
       return json(
         {
-          message: `Missing required field: ${field}`,
+          message: `Missing required field ${field}`,
           success: false,
         },
         { status: 400 }
@@ -73,7 +73,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         from: "Sunwatch <feedback@sunwat.ch>",
         to: ["jackson@jgray.cc"],
         subject: "Feedback submitted",
-        html: `<strong>From ${name}</strong><br/><strong>Email: ${email}</strong><br/><hr/><br/>${message}`,
+        html: `<strong>From ${name}</strong><br/><strong>Email: ${email}</strong><br/><strong>Sent from IP: ${ip}</strong><br/><hr/><br/>${message}`,
       });
       return json(
         {
@@ -93,7 +93,6 @@ export const action: ActionFunction = async ({ request, context }) => {
       );
     }
   } else {
-    console.log("Turnstile NOT success");
     return json(
       {
         message: `Verification failed. Please refresh the page and try again!`,
