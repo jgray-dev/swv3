@@ -30,9 +30,6 @@ export const action: ActionFunction = async ({ request, context }) => {
       );
     }
   }
-  const name = body.get("name");
-  const email = body.get("email");
-  const message = body.get("message");
   const token = body.get("cf-turnstile-response");
   const ip = request.headers.get("CF-Connecting-IP");
 
@@ -68,12 +65,15 @@ export const action: ActionFunction = async ({ request, context }) => {
   // @ts-ignore
   if (outcome.success) {
     try {
+      const name = body.get("name");
+      const email = body.get("email");
+      const message = body.get("message");
       const resend = new Resend(context.cloudflare.env.RESEND_API_KEY);
       const data = await resend.emails.send({
         from: 'Sunwatch <feedback@sunwat.ch>',
         to: ['jackson@jgray.cc'],
         subject: 'Feedback submitted',
-        html: '<strong>It works!</strong>',
+        html: `<strong>${name} | ${email}</strong><hr/>${message}`,
       });
       console.log(data)
       return json(
