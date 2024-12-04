@@ -70,6 +70,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       const message = body.get("message");
       const resend = new Resend(context.cloudflare.env.RESEND_API_KEY);
       await resend.emails.send({
+        //This email (feedback@sunwat.ch) is NOT monitored. do NOT send emails here, they go straight to the void.
         from: "Sunwatch <feedback@sunwat.ch>",
         to: ["jackson@jgray.cc"],
         subject: "Feedback submitted",
