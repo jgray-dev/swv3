@@ -1,11 +1,22 @@
 import {Link} from "@remix-run/react";
 import React from "react";
+import {useEffect, useState} from "react";
 
 export const loader = () => {
   return Response.json("Page not found", { status: 404 });
 };
 
 export default function StarryPage() {
+  const [stars, setStars] = useState<Array<{
+    id: number;
+    size: number;
+    top: string;
+    left: string;
+    opacity: number;
+    animationDelay: string;
+  }>>([]);
+  const [isVisible, setIsVisible] = useState(false);
+
   const generateStars = (count: number) => {
     return Array.from({ length: count }, (_, i) => ({
       id: i,
@@ -13,27 +24,45 @@ export default function StarryPage() {
       top: `${Math.random() * 100}%`,
       left: `${Math.random() * 100}%`,
       opacity: 0.2 + Math.random() * 0.8,
+      animationDelay: `${Math.random() * 4}s`,
     }));
   };
-  const stars = generateStars(200);
+
+  useEffect(() => {
+    setStars(generateStars(200));
+    setTimeout(() => setIsVisible(true), 50);
+  }, []);
 
   return (
     <div className="h-screen w-screen bg-black relative overflow-hidden select-none">
+      <style>
+        {`
+          @keyframes twinkle {
+            0% { opacity: 1; }
+            33% { opacity: 0.2; }
+            66% { opacity: 0.6; }
+            100% { opacity: 0.2; }
+          }
+        `}
+      </style>
       {stars.map((star) => (
         <div
           key={star.id}
-          className="absolute bg-white rounded-full"
+          className={`absolute bg-white rounded-full transition-opacity ${
+            isVisible ? 'opacity-100' : 'opacity-0'
+          }`}
           style={{
             height: `${star.size}px`,
             width: `${star.size}px`,
             top: star.top,
             left: star.left,
-            opacity: star.opacity,
+            animation: 'twinkle 4s infinite',
+            animationDelay: star.animationDelay,
           }}
         />
       ))}
       <div className={"h-screen w-screen flex justify-center z-10 fixed"}>
-        <div className={"h-32 rounded-lg w-72 bg-black/95 my-auto flex flex-col items-center justify-center"}>
+        <div className={"h-fit rounded-lg w-fit bg-black px-4 py-2 my-auto flex flex-col items-center justify-center"}>
           <div className={"font-bold text-[2.5rem]"}>you're lost</div>
 
           <Link
