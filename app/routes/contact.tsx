@@ -76,10 +76,23 @@ export const action: ActionFunction = async ({ request, context }) => {
         html: '<strong>It works!</strong>',
       });
       console.log(data)
-      return json(data, 200);
+      return json(
+        {
+          message: `Form submitted.`,
+          success: true,
+        },
+        { status: 200 }
+      );
     }
     catch (error) {
-      return json({ error }, 400);
+      return json(
+        {
+          // @ts-ignore
+          message: error.message,
+          success: false,
+        },
+        { status: 400 }
+      );
     }
   } else {
     console.log("Turnstile NOT success");
