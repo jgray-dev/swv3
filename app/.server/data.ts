@@ -100,6 +100,7 @@ function calculateInterpolationWeight(
 }
 function lerp(a: number, b: number, weight: number): number {
   if (isNaN(a) || isNaN(b)) {
+    console.error("Invalid number in interpolation");
     throw new Error("Invalid number in interpolation");
   }
   return a + (b - a) * weight;
@@ -111,10 +112,12 @@ export function interpolateWeatherData(
   targetTime: number
 ): InterpolatedWeather[] {
   if (!Array.isArray(apiResponse) || !apiResponse.length) {
+    console.error("Invalid API Response (interpolateWeatherData)");
     throw new Error("Invalid API response");
   }
   return apiResponse.map((location) => {
     if (!location.hourly?.time?.length) {
+      console.error("Invalid location data structure (interpolateWeatherData)");
       throw new Error("Invalid location data structure");
     }
     const { time } = location.hourly;
@@ -181,6 +184,8 @@ export function interpolateWeatherData(
         distance: location.distance,
       };
     } catch (error) {
+      // @ts-ignore
+      console.error(`Error interpolating values (interpolateWeatherData) (${error.message})`);
       // @ts-ignore
       throw new Error(`Error interpolating values: ${error.message}`);
     }
@@ -459,6 +464,7 @@ export function findNextSunEvent(
   }
 
   if (left >= MAX_DAYS_TO_SEARCH) {
+    console.error(`No sunrise or sunset found within the search period`);
     throw new Error("No sunrise or sunset found within search period");
   }
 
@@ -474,6 +480,7 @@ export function findNextSunEvent(
   } else if (event2 !== null) {
     return event2;
   }
+  console.error(`Failed to find next sunrise or sunset`);
   throw new Error("Failed to find next sunrise or sunset");
 }
 //Additional function for edge cases: takes unix time and returns string literal.
