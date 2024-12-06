@@ -37,17 +37,21 @@ export function generateCoordinateString(
   date: Date
 ): [string, number] {
   if (lat < -90 || lat > 90) {
-    console.error("Invalid latitude (generateCoordinateString)")
+    console.error("Invalid latitude (generateCoordinateString)");
     throw new Error("Invalid latitude");
   }
   if (lon < -180 || lon > 180) {
-    console.error("Invalid logitude (generateCoordinateString)")
+    console.error("Invalid logitude (generateCoordinateString)");
     throw new Error("Invalid longitude");
   }
   const position = SunCalc.getPosition(date, lat, lon);
   let bearing = azimuthToBearing(position.azimuth);
   if (Math.abs(position.altitude) > 1) {
-    console.error(`ALTITUDE INDUCED ERROR POSSIBLE. REVERTING TO ${eventType === "sunrise" ? 90 : 270}`);
+    console.error(
+      `ALTITUDE INDUCED ERROR POSSIBLE. REVERTING TO ${
+        eventType === "sunrise" ? 90 : 270
+      }`
+    );
     console.error(position.altitude);
     bearing = eventType === "sunrise" ? 90 : 270;
   }
@@ -191,7 +195,9 @@ export function interpolateWeatherData(
       };
     } catch (error) {
       // @ts-ignore
-      console.error(`Error interpolating values (interpolateWeatherData) (${error.message})`);
+      console.error(
+        `Error interpolating values (interpolateWeatherData) (${error.message})`
+      );
       // @ts-ignore
       throw new Error(`Error interpolating values: ${error.message}`);
     }
