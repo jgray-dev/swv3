@@ -84,10 +84,10 @@ export default function MapComponent() {
         className={`${allData?.ok ? "hidden" : "visible min-h-[10vh]"}`}
       ></div>
       <div className="w-full min-h-[20vh] mt-24 text-center font-bold">
-        <span className={"select-none"}>
+        <div className={"select-none translate-y-6"}>
           {" "}
-          User submissions near {allData.city ?? "New York City"}
-        </span>
+          Showing {allData.uploads.length} user submitted photos
+        </div>
         {/* start */}
         <div className="flex gap-4 py-8 transition-transform duration-150 ease-in-out w-full px-4 overflow-x-scroll min-h-[234px] scrollbar scrollbar-thumb-white/10">
           {[...allData.uploads]
@@ -104,6 +104,7 @@ export default function MapComponent() {
                 }}
               >
                 <img
+                  loading={"lazy"}
                   src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/mid`}
                   alt="Featured submission"
                   className="w-full h-full object-cover"
