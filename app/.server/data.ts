@@ -36,13 +36,19 @@ export function generateCoordinateString(
   eventType: "sunrise" | "sunset",
   date: Date
 ): [string, number] {
-  if (lat < -90 || lat > 90) throw new Error("Invalid latitude");
-  if (lon < -180 || lon > 180) throw new Error("Invalid longitude");
+  if (lat < -90 || lat > 90) {
+    console.error("Invalid latitude (generateCoordinateString)")
+    throw new Error("Invalid latitude");
+  }
+  if (lon < -180 || lon > 180) {
+    console.error("Invalid logitude (generateCoordinateString)")
+    throw new Error("Invalid longitude");
+  }
   const position = SunCalc.getPosition(date, lat, lon);
   let bearing = azimuthToBearing(position.azimuth);
   if (Math.abs(position.altitude) > 1) {
-    console.log("ALTITUDE INDUCED ERROR POSSIBLE");
-    console.log(position.altitude);
+    console.error(`ALTITUDE INDUCED ERROR POSSIBLE. REVERTING TO ${eventType === "sunrise" ? 90 : 270}`);
+    console.error(position.altitude);
     bearing = eventType === "sunrise" ? 90 : 270;
   }
   const latitudes: number[] = [];
