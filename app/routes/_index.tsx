@@ -419,15 +419,15 @@ export const action: ActionFunction = async ({ request, context }) => {
       const date = formData.get("date");
       const locationDataString = formData.get("locationData");
       if (!locationDataString || typeof locationDataString !== "string") {
-        console.log("Error: Invalid location data, 400")
+        console.log("Error: Invalid location data, 400");
         return json({ error: "Invalid location data" }, { status: 400 });
       }
       if (!eventType || typeof eventType !== "string") {
-        console.log("Error: Invalid eventType, 400")
+        console.log("Error: Invalid eventType, 400");
         return json({ error: "Invalid eventType" }, { status: 400 });
       }
       if (!date || typeof date !== "string") {
-        console.log("Error: Invalid date, 400")
+        console.log("Error: Invalid date, 400");
         return json({ error: "Invalid date" }, { status: 400 });
       }
 
