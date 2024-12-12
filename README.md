@@ -28,3 +28,8 @@ This is the third iteration of my passion project, Sunwatch. It's a rating calcu
 
 ### Modal view of a selected submission:
 ![Modal View](https://raw.githubusercontent.com/jgray-dev/swv3/refs/heads/main/%7B1AE27F16-B0B6-4F43-88DC-3BFD66DACE6E%7D.png)
+
+
+####
+
+This is a publicly available website, and you can view it at [sunwat.ch](https://sunwat.ch/). User image submissions are very much welcome. :) If you find any issues, report them [here](https://sunwat.ch/contact) or open a github issue or PR fixing it
