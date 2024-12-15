@@ -194,8 +194,8 @@ export function interpolateWeatherData(
         distance: location.distance,
       };
     } catch (error) {
-      // @ts-ignore
       console.error(
+        // @ts-ignore
         `Error interpolating values (interpolateWeatherData) (${error.message})`
       );
       // @ts-ignore
