@@ -306,7 +306,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         console.error(error);
         return json(
           {
-            error: "Failed to check image safety",
+            error: "Failed to check image safety. Please try again",
             details: error instanceof Error ? error.message : "Unknown error",
             success: false,
           },
