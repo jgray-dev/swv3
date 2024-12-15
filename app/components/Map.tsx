@@ -5,16 +5,10 @@ import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
 import StatItem from "~/components/StatItem";
 import { useScrollLock } from "~/hooks/useScrollLock";
 
-export interface Bounds {
-  ne: [number, number];
-  sw: [number, number];
-}
-
 export default function MapComponent() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
 
   const [currentZoom, setCurrentZoom] = useState<number>(8);
-  const [currentBounds, setCurrentBounds] = useState<Bounds | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<DbUpload | null>(
     null
   );
@@ -127,15 +121,12 @@ export default function MapComponent() {
               animate={true}
               minZoom={2}
               maxZoom={16}
-              onBoundsChanged={({ zoom, bounds, center }) => {
+              onBoundsChanged={({ zoom, center }) => {
                 if (zoom !== currentZoom) {
                   setCurrentZoom(zoom);
                 }
                 setCurrentCenter(center);
                 if (center !== currentCenter || zoom !== currentZoom) {
-                }
-                if (bounds !== currentBounds) {
-                  setCurrentBounds(bounds);
                 }
               }}
             >
