@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { and, between, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { DbUpload } from "~/.server/interfaces";
 import { uploads } from "~/db/schema";
@@ -28,12 +28,46 @@ export async function createUpload(
 ) {
   try {
     const db = drizzle(context.cloudflare.env.swv3_d1);
+    const MAX_ATTEMPTS = 15;
+    const SPREAD_DISTANCE = 0.0004;
+    const searchAngle = Math.random() * 2 * Math.PI;
+
+    let attempts = 0;
+    let newLat = lat;
+    let newLon = lon;
+    let foundValidPosition = false;
+
+    while (!foundValidPosition && attempts < MAX_ATTEMPTS) {
+      const currentDistance = SPREAD_DISTANCE * (attempts + 1);
+      newLat = lat + Math.sin(searchAngle) * currentDistance;
+      newLon = lon + Math.cos(searchAngle) * currentDistance;
+      const nearby = await db
+        .select()
+        .from(uploads)
+        .where(
+          and(
+            between(
+              uploads.lat,
+              newLat - SPREAD_DISTANCE,
+              newLat + SPREAD_DISTANCE
+            ),
+            between(
+              uploads.lon,
+              newLon - SPREAD_DISTANCE,
+              newLon + SPREAD_DISTANCE
+            )
+          )
+        );
+
+      foundValidPosition = nearby.length === 0;
+      attempts++;
+    }
 
     const result = await db
       .insert(uploads)
       .values({
-        lat: lat + Math.random() * 0.001 - 0.0005,
-        lon: lon + Math.random() * 0.001 - 0.0005,
+        lat: foundValidPosition ? newLat : lat,
+        lon: foundValidPosition ? newLon : lon,
         rating: rating,
         image_id: image_id,
         time: time,
