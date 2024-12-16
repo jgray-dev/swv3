@@ -30,8 +30,8 @@ export default function MapComponent() {
 
   const mapRef = useRef<MapRef>(null);
   const [viewState, setViewState] = useState<ViewState>({
-    longitude: -73.935242,
-    latitude: 40.73061,
+    longitude: allData?.lon ? allData.lon : -73.935242,
+    latitude: allData?.lat ? allData.lat : 40.73061,
     zoom: 5,
     bearing: 0,
     pitch: 0,
@@ -45,16 +45,17 @@ export default function MapComponent() {
   // const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     setIsMounted(true);
-    // const mediaQuery = window.matchMedia('(min-width: 768px)');
-    // setIsMobile(mediaQuery.matches);
-    //
-    // const handleResize = (event: MediaQueryListEvent) => {
-    //   setIsMobile(event.matches);
-    // };
-    //
-    // mediaQuery.addEventListener('change', handleResize);
-    // return () => mediaQuery.removeEventListener('change', handleResize);
-  }, []);
+    mapRef.current?.flyTo({
+      center: [
+        allData?.lon ? allData.lon : -73.935242,
+        allData?.lat ? allData.lat : 40.73061,
+      ],
+      zoom: Math.max(viewState.zoom + 3, 16),
+      duration: 1500,
+      essential: false,
+    });
+  }, [allData?.uploads]);
+
   const points: GeoJSON.Feature<GeoJSON.Point, ClusterProperties>[] =
     allData?.uploads
       ? allData.uploads.map((sub: DbUpload) => ({
@@ -125,7 +126,7 @@ export default function MapComponent() {
                   sub.rating
                 )} border`}
                 onClick={() => {
-                  handleMarkerClick(sub.lon, sub.lat, sub)
+                  handleMarkerClick(sub.lon, sub.lat, sub);
                 }}
               >
                 <img
