@@ -23,7 +23,7 @@ export default function LocationDisplay() {
     <>
       <div
         className={
-          "text-center text-2xl md:text-3xl min-h-fit w-screen mx-auto h-16 text-white flex items-center justify-center gap-2 group cursor-pointer relative"
+          "text-center text-2xl md:text-3xl min-h-fit w-screen mx-auto h-16 text-white flex items-center -translate-y-2 justify-center gap-2 group cursor-pointer relative"
         }
         role="heading"
         aria-label={`Current city: ${allData.city}`}
