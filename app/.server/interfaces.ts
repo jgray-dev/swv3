@@ -13,6 +13,7 @@ export interface InterpolatedWeather {
 }
 
 export interface LoaderData {
+  trackingLink: string;
   lat: number;
   lon: number;
   city: string;
