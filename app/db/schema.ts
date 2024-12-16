@@ -12,12 +12,11 @@ export const uploads = sqliteTable("uploads", {
   type: text("type").notNull(),
 });
 
-
 export const analytics = sqliteTable("analytics", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   time: integer("time").default(Date.now()),
   ip_address: text("ip_address").notNull(),
   ray_id: text("ray_id").notNull(),
   location: text("location").notNull(),
-  cumulative_clicks: integer("cumulative_clicks").notNull().default(0)
+  cumulative_clicks: integer("cumulative_clicks").notNull().default(0),
 });
