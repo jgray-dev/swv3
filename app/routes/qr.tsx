@@ -9,6 +9,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const url = new URL(request.url);
   const searchParams = url.searchParams;
   const redirectUrl = `/?${searchParams.toString()}`;
+  const ip = request.headers.get("CF-Connecting-IP");
+  const ray = request.headers.get("CF-Ray");
 
   if (!url) {
     console.error({ error: "Missing required parameters" });
@@ -25,15 +27,11 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       .limit(1);
     const newClickCount =
       currentClicks.length > 0 ? currentClicks[0].clicks + 1 : 1;
-    // @ts-ignore
-    console.log(request.headers['CF-Connecting-IP'])
-    // @ts-ignore
-    console.log(request.headers['CF-ray'])
+    console.log("ip", ip);
+    console.log("ray", ray);
     await db.insert(analytics).values({
-      // @ts-ignore
-      ip_address: request.headers['CF-Connecting-IP']?request.headers['CF-Connecting-IP']:"Unknown IP",
-      // @ts-ignore
-      ray_id: request.headers['CF-ray']?request.headers['CF-ray']:"Unknown ray",
+      ip_address: ip ? ip : "Unknown IP",
+      ray_id: ray ? ray : "Unknown ray",
       location: location ? location : "Undefined location",
       cumulative_clicks: newClickCount,
     });
