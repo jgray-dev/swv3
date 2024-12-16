@@ -7,10 +7,10 @@ import { eq } from "drizzle-orm";
 
 export const loader: LoaderFunction = async ({ request, context }) => {
   const url = new URL(request.url);
-  const targetUrl = url.searchParams.get("url");
-  const qrId = url.searchParams.get("id");
+  const searchParams = url.searchParams;
+  const redirectUrl = `/?${searchParams.toString()}`;
 
-  if (!targetUrl || !qrId) {
+  if (!url) {
     console.error({ error: "Missing required parameters" });
     return redirect("/");
   }
@@ -38,10 +38,10 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     console.log("(analytics) logged click");
 
     console.log(`(analytics) logged click ${result}`);
-    return redirect(targetUrl);
+    return redirect(redirectUrl);
   } catch (error) {
     console.error("Error logging QR scan:", error);
     // Still redirect even if logging fails
-    return redirect(targetUrl);
+    return redirect(redirectUrl);
   }
 };
