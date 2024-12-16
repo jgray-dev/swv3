@@ -2,7 +2,7 @@ import { LoaderFunction } from "@remix-run/cloudflare";
 import { redirect } from "@remix-run/react";
 import { drizzle } from "drizzle-orm/d1";
 import { analytics } from "~/db/schema";
-import {eq, sql} from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export const loader: LoaderFunction = async ({ request, context }) => {
   const url = new URL(request.url);
@@ -11,7 +11,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const ip = request.headers.get("CF-Connecting-IP");
   const ray = request.headers.get("CF-Ray");
   const location = url.searchParams.get("city");
-  console.log(request.headers)
+  console.log(request.headers);
   if (!url || !ip || !ray || !location) {
     console.error("Missing required parameters for analytical logging");
     return redirect(redirectUrl);
