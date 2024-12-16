@@ -28,7 +28,6 @@ export default function MapComponent() {
     DbUpload | undefined
   >(undefined);
 
-  const [isMobile, setIsMobile] = useState(false);
   const mapRef = useRef<MapRef>(null);
   const [viewState, setViewState] = useState<ViewState>({
     longitude: -73.935242,
@@ -43,17 +42,18 @@ export default function MapComponent() {
   const [imgModal, setImgModal] = useState<string | null>(null);
   useScrollLock(!!imgModal);
 
+  // const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     setIsMounted(true);
-    const mediaQuery = window.matchMedia('(min-width: 768px)');
-    setIsMobile(mediaQuery.matches);
-
-    const handleResize = (event: MediaQueryListEvent) => {
-      setIsMobile(event.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleResize);
-    return () => mediaQuery.removeEventListener('change', handleResize);
+    // const mediaQuery = window.matchMedia('(min-width: 768px)');
+    // setIsMobile(mediaQuery.matches);
+    //
+    // const handleResize = (event: MediaQueryListEvent) => {
+    //   setIsMobile(event.matches);
+    // };
+    //
+    // mediaQuery.addEventListener('change', handleResize);
+    // return () => mediaQuery.removeEventListener('change', handleResize);
   }, []);
   const points: GeoJSON.Feature<GeoJSON.Point, ClusterProperties>[] =
     allData?.uploads
@@ -99,6 +99,7 @@ export default function MapComponent() {
   ) => {
     setSelectedSubmission(submission);
     mapRef.current?.flyTo({
+      // center: [longitude + (isMobile?0.0:0), latitude],
       center: [longitude + (isMobile?0.0:0), latitude],
       zoom: 16,
       duration: 800,
