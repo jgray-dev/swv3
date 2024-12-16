@@ -14,7 +14,7 @@ export const uploads = sqliteTable("uploads", {
 
 export const analytics = sqliteTable("analytics", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  time: integer("time").default(Date.now()),
+  time: integer("time").notNull(),
   ip_address: text("ip_address").notNull(),
   ray_id: text("ray_id").notNull(),
   location: text("location").notNull(),
