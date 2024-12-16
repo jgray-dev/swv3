@@ -49,6 +49,7 @@ export const meta: MetaFunction = () => {
 
 export const loader: LoaderFunction = async ({ request, context }) => {
   const url = new URL(request.url);
+  const searchParams = url.searchParams;
   const lat = url.searchParams.get("lat");
   const lon = url.searchParams.get("lon");
   const city = url.searchParams.get("city");
@@ -179,6 +180,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   if ((!eventTime || !eventType) && !error)
     error = "No sunrise or sunset found";
   return {
+    trackingLink: `${url.origin}/qr?${searchParams.toString()}`,
     allData: parsedAllWeatherData,
     lat: parseFloat(lat),
     lon: parseFloat(lon),
