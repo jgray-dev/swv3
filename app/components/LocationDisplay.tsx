@@ -12,7 +12,7 @@ export default function LocationDisplay() {
     if (showNotification) {
       timer = setTimeout(() => {
         setShowNotification(false);
-      }, 2000);
+      }, 2500);
     }
     return () => clearTimeout(timer);
   }, [showNotification]);
