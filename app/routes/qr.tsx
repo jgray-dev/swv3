@@ -25,11 +25,15 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       .limit(1);
     const newClickCount =
       currentClicks.length > 0 ? currentClicks[0].clicks + 1 : 1;
-    console.log(request.headers)
-    console.log(request.body)
+    // @ts-ignore
+    console.log(request.headers['CF-Connecting-IP'])
+    // @ts-ignore
+    console.log(request.headers['CF-ray'])
     await db.insert(analytics).values({
-      ip_address: "asd",
-      ray_id: "asd",
+      // @ts-ignore
+      ip_address: request.headers['CF-Connecting-IP']?request.headers['CF-Connecting-IP']:"Unknown IP",
+      // @ts-ignore
+      ray_id: request.headers['CF-ray']?request.headers['CF-ray']:"Unknown ray",
       location: location ? location : "Undefined location",
       cumulative_clicks: newClickCount,
     });
