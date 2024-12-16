@@ -115,8 +115,7 @@ export default function MapComponent() {
                   sub.rating
                 )} border`}
                 onClick={() => {
-                  setSelectedSubmission(sub);
-                  //TODO: animate zoom to this marker
+                  handleMarkerClick(sub.lon, sub.lat, sub)
                 }}
               >
                 <img
