@@ -12,3 +12,5 @@ wrangler.toml
 .idea/
 
 /drizzle
+
+app/.server/rating.ts
