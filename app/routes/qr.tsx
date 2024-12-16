@@ -19,30 +19,22 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   }
 
   const redirectResponse = redirect(redirectUrl);
-
   context.cloudflare.ctx.waitUntil(
     (async () => {
       try {
         const db = drizzle(context.cloudflare.env.swv3_d1);
-
-        // First get the last click count
         const [lastClick] = await db
           .select({ clicks: analytics.cumulative_clicks })
           .from(analytics)
           .where(eq(analytics.location, location))
           .orderBy(desc(analytics.time))
           .limit(1);
-
-        // Then insert the new record
         await db.insert(analytics).values({
           ip_address: ip,
           ray_id: ray,
           location: location,
           cumulative_clicks: (lastClick?.clicks ?? 0) + 1,
         });
-
-        console.log("ip", ip);
-        console.log("ray", ray);
       } catch (error) {
         console.error("Error logging QR scan:", error);
       }
