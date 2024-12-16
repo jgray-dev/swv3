@@ -25,7 +25,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       .limit(1);
     const newClickCount =
       currentClicks.length > 0 ? currentClicks[0].clicks + 1 : 1;
-    db.insert(analytics).values({
+    await db.insert(analytics).values({
       ip_address: "asd",
       ray_id: "asd",
       location: location ? location : "Undefined location",
