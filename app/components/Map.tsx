@@ -149,9 +149,14 @@ export default function MapComponent() {
               style={{ width: "100%", height: "100%" }}
               mapStyle="mapbox://styles/mapbox/dark-v11"
               maxZoom={16}
-              minZoom={2}
+              minZoom={1}
               dragRotate={false}
+              touchZoomRotate={true}
               pitchWithRotate={false}
+              bearing={0}
+              touchPitch={false}
+              keyboard={false}
+              cooperativeGestures={true}
             >
               {supercluster
                 .getClusters(
@@ -160,23 +165,9 @@ export default function MapComponent() {
                 )
                 .map((cluster) => {
                   const [longitude, latitude] = cluster.geometry.coordinates;
-                  const { cluster: isCluster, point_count } =
-                    cluster.properties;
+                  const { cluster: isCluster } = cluster.properties;
 
-                  if (isCluster) {
-                    return (
-                      <Marker
-                        key={`cluster-${cluster.id}`}
-                        latitude={latitude}
-                        longitude={longitude}
-                        onClick={() => handleClusterClick(longitude, latitude)}
-                      >
-                        <div className="cluster-marker backdrop-blur-xs z-50">
-                          {point_count}
-                        </div>
-                      </Marker>
-                    );
-                  }
+                  if (isCluster) return null;
 
                   const submission = allData.uploads.find(
                     (sub) => sub.id === cluster.properties.submissionId
@@ -191,8 +182,34 @@ export default function MapComponent() {
                       onClick={() =>
                         handleMarkerClick(longitude, latitude, submission)
                       }
-                      style={{ zIndex: 2 }}
                     />
+                  );
+                })}
+
+              {/* Then render all clusters on top */}
+              {supercluster
+                .getClusters(
+                  [-180, -85, 180, 85] as BBox,
+                  Math.floor(viewState.zoom)
+                )
+                .map((cluster) => {
+                  const [longitude, latitude] = cluster.geometry.coordinates;
+                  const { cluster: isCluster, point_count } =
+                    cluster.properties;
+
+                  if (!isCluster) return null;
+
+                  return (
+                    <Marker
+                      key={`cluster-${cluster.id}`}
+                      latitude={latitude}
+                      longitude={longitude}
+                      onClick={() => handleClusterClick(longitude, latitude)}
+                    >
+                      <div className="cluster-marker backdrop-blur-xs">
+                        {point_count}
+                      </div>
+                    </Marker>
                   );
                 })}
             </Map>
@@ -305,7 +322,7 @@ export default function MapComponent() {
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            className={`absolute -top-4 -right-4 h-8 w-8 bg-red-600 hover:bg-red-700 rounded-full text-white font-bold transition-colors duration-200 ${
+            className={`absolute -top-4 -left-4 h-8 w-8 bg-red-600 hover:bg-red-700 rounded-full text-white font-bold transition-colors duration-200 ${
               imgModal ? "visible" : "hidden"
             }`}
             onClick={() => setImgModal(null)}
