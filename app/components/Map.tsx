@@ -100,7 +100,7 @@ export default function MapComponent() {
     setSelectedSubmission(submission);
     mapRef.current?.flyTo({
       // center: [longitude + (isMobile?0.0:0), latitude],
-      center: [longitude + (isMobile?0.0:0), latitude],
+      center: [longitude, latitude],
       zoom: 16,
       duration: 800,
       essential: false,
