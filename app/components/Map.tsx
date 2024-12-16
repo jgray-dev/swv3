@@ -65,7 +65,7 @@ export default function MapComponent() {
   const supercluster = useMemo(() => {
     const cluster = new Supercluster<ClusterProperties>({
       radius: 25,
-      maxZoom: 15,
+      maxZoom: 14,
     });
     cluster.load(points);
     return cluster;
