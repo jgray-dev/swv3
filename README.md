@@ -14,7 +14,7 @@ This is the third iteration of my passion project, Sunwatch. It's a rating calcu
 
 - [Open Meteo](https://github.com/open-meteo/open-meteo) (Weather API)
 - [Google Cloud](https://console.cloud.google.com) (Geocoding API)
-- [Pigeon maps](https://pigeon-maps.js.org/) (User submission map)
+- [Map box](https://www.mapbox.com/) (User submission map)
 
 ####
 
