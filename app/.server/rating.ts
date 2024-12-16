@@ -1,8 +1,6 @@
 import { averageData } from "~/.server/data";
 import { AveragedValues, InterpolatedWeather } from "~/.server/interfaces";
 
-// This is the only version of the rating algorithm that will be public. Future versions will be based on this, unless noted in the readme.
-
 function farDramaClouds(input: number): number {
   input = Math.max(0, Math.min(100, input));
   const points: [number, number][] = [
