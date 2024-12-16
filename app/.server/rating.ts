@@ -1,10 +1,7 @@
 import { averageData } from "~/.server/data";
 import { AveragedValues, InterpolatedWeather } from "~/.server/interfaces";
 
-// 25 for near data
-// 50 for horizon data
-// 25 for far data
-// multi's affect the FINAL rating, so if the near multi is 0, the final rating will be 0, even if horizon and far are perfect scores
+// This is the only version of the rating algorithm that will be public. Future versions will be based on this, unless noted in the readme.
 
 function farDramaClouds(input: number): number {
   input = Math.max(0, Math.min(100, input));
