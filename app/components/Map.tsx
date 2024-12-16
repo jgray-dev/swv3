@@ -1,76 +1,101 @@
 import { useRouteLoaderData } from "@remix-run/react";
-import { Map, Marker, ZoomControl } from "pigeon-maps";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
 import StatItem from "~/components/StatItem";
 import { useScrollLock } from "~/hooks/useScrollLock";
 
+import Map, { MapRef, Marker, ViewState } from "react-map-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import Supercluster from "supercluster";
+// @ts-ignore
+import type { GeoJSON } from "supercluster";
+
+type BBox =
+  | [number, number, number, number]
+  | [number, number, number, number, number, number];
+
+interface ClusterProperties {
+  cluster: boolean;
+  submissionId: string;
+  rating: number;
+  point_count?: number;
+  cluster_id?: number;
+}
+
 export default function MapComponent() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
+  const [selectedSubmission, setSelectedSubmission] = useState<
+    DbUpload | undefined
+  >(undefined);
 
-  const [currentZoom, setCurrentZoom] = useState<number>(8);
-  const [selectedSubmission, setSelectedSubmission] = useState<DbUpload | null>(
-    null
-  );
+  const mapRef = useRef<MapRef>(null);
+  const [viewState, setViewState] = useState<ViewState>({
+    longitude: -73.935242,
+    latitude: 40.73061,
+    zoom: 5,
+    bearing: 0,
+    pitch: 0,
+    padding: { top: 0, bottom: 0, left: 0, right: 0 },
+  });
 
   const [isMounted, setIsMounted] = useState(false);
-  const [currentCenter, setCurrentCenter] = useState<[number, number]>(
-    allData?.lat && allData?.lon
-      ? [allData.lat, allData.lon]
-      : [40.7128, -74.006]
-  );
   const [imgModal, setImgModal] = useState<string | null>(null);
   useScrollLock(!!imgModal);
 
   useEffect(() => {
     setIsMounted(true);
-    setCurrentCenter(
-      allData?.lat && allData?.lon
-        ? [allData.lat, allData.lon]
-        : [40.7128, -74.006]
-    );
-  }, [allData]);
+  }, []);
+
+  const points: GeoJSON.Feature<GeoJSON.Point, ClusterProperties>[] =
+    allData?.uploads
+      ? allData.uploads.map((sub: DbUpload) => ({
+          type: "Feature",
+          properties: {
+            cluster: false,
+            submissionId: sub.id,
+            rating: sub.rating,
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [sub.lon, sub.lat],
+          },
+        }))
+      : [];
+
+  const supercluster = useMemo(() => {
+    const cluster = new Supercluster<ClusterProperties>({
+      radius: 25,
+      maxZoom: 15,
+    });
+    cluster.load(points);
+    return cluster;
+  }, [points]);
 
   if (!allData?.uploads) return null;
 
-  function animateZoom(
-    targetLat: number,
-    targetLon: number,
-    targetZoom: number = 16
-  ) {
-    const startZoom = currentZoom;
-    const [startLat, startLon] = currentCenter;
-    const totalDuration = 600;
-    const stageDuration = 450;
-    const stageDelay = 225;
-    const startTime = performance.now();
-    const smoothstep = (x: number): number => {
-      return x * x * x * (x * (x * 6 - 15) + 10);
-    };
-    const customEaseInOut = (t: number): number => {
-      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    };
-    const animateFrame = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const positionProgress = Math.min(elapsed / stageDuration, 1);
-      const zoomProgress = Math.min((elapsed - stageDelay) / stageDuration, 1);
-      if (positionProgress < 1) {
-        const positionEased = smoothstep(positionProgress);
-        const newLat = startLat + (targetLat - startLat) * positionEased;
-        const newLon = startLon + (targetLon - startLon) * positionEased;
-        setCurrentCenter([newLat, newLon]);
-      }
-      if (elapsed >= stageDelay && zoomProgress < 1) {
-        const zoomEased = customEaseInOut(zoomProgress);
-        const newZoom = startZoom + (targetZoom - startZoom) * zoomEased;
-        setCurrentZoom(newZoom);
-      }
-      if (elapsed < totalDuration) {
-        requestAnimationFrame(animateFrame);
-      }
-    };
-    requestAnimationFrame(animateFrame);
-  }
+  const handleClusterClick = (longitude: number, latitude: number) => {
+    const newZoom = Math.min(viewState.zoom + 3, 16);
+    mapRef.current?.flyTo({
+      center: [longitude, latitude],
+      zoom: newZoom,
+      duration: 800,
+      essential: false,
+    });
+  };
+
+  const handleMarkerClick = (
+    longitude: number,
+    latitude: number,
+    submission: any
+  ) => {
+    setSelectedSubmission(submission);
+    mapRef.current?.flyTo({
+      center: [longitude, latitude],
+      zoom: 16,
+      duration: 800,
+      essential: false,
+    });
+  };
 
   return (
     <div className={"w-screen"}>
@@ -91,7 +116,7 @@ export default function MapComponent() {
                 )} border`}
                 onClick={() => {
                   setSelectedSubmission(sub);
-                  animateZoom(sub.lat, sub.lon, Math.min(16, currentZoom + 4));
+                  //TODO: animate zoom to this marker
                 }}
               >
                 <img
@@ -114,58 +139,59 @@ export default function MapComponent() {
           aria-label="Interactive location map"
         >
           {isMounted && (
+            //TODO: add back map lol
             <Map
-              center={currentCenter}
-              zoom={currentZoom}
-              attribution={false}
-              animate={true}
-              minZoom={2}
+              ref={mapRef}
+              {...viewState}
+              onMove={(evt) => setViewState(evt.viewState)}
+              attributionControl={false}
+              mapboxAccessToken="pk.eyJ1IjoiamdyYXktZGV2IiwiYSI6ImNtNHE3NWg1bTEweTAyaW9xcGhmcmhpanoifQ.LXRvGvmVC2BZPpYvzZQnYA"
+              style={{ width: "100%", height: "100%" }}
+              mapStyle="mapbox://styles/mapbox/dark-v11"
               maxZoom={16}
-              onBoundsChanged={({ zoom, center }) => {
-                if (zoom !== currentZoom) {
-                  setCurrentZoom(zoom);
-                }
-                setCurrentCenter(center);
-                if (center !== currentCenter || zoom !== currentZoom) {
-                }
-              }}
+              minZoom={2}
+              dragRotate={false}
+              pitchWithRotate={false}
             >
-              {allData.uploads.map((sub: any) => (
-                <Marker
-                  color={getHsl(sub.rating)}
-                  anchor={[sub.lat, sub.lon]}
-                  key={sub.time}
-                  onClick={() => {
-                    setSelectedSubmission(sub);
-                    animateZoom(
-                      sub.lat,
-                      sub.lon,
-                      Math.min(16, currentZoom + 4)
-                    );
-                  }}
-                />
-              ))}
+              {supercluster
+                .getClusters(
+                  [-180, -85, 180, 85] as BBox,
+                  Math.floor(viewState.zoom)
+                )
+                .map((cluster) => {
+                  const [longitude, latitude] = cluster.geometry.coordinates;
+                  const { cluster: isCluster, point_count } =
+                    cluster.properties;
 
-              <ZoomControl
-                style={{
-                  right: 90,
-                  top: 10,
-                }}
-                buttonStyle={{
-                  width: "40px",
-                  height: "40px",
-                  fontSize: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: "5px",
-                  cursor: "pointer",
-                  backgroundColor: "white",
-                  border: "2px solid rgba(0,0,0,0.2)",
-                  borderRadius: "4px",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
-                }}
-              />
+                  if (isCluster) {
+                    return (
+                      <Marker
+                        key={`cluster-${cluster.id}`}
+                        latitude={latitude}
+                        longitude={longitude}
+                        onClick={() => handleClusterClick(longitude, latitude)}
+                      >
+                        <div className="cluster-marker">{point_count}</div>
+                      </Marker>
+                    );
+                  }
+
+                  const submission = allData.uploads.find(
+                    (sub) => sub.id === cluster.properties.submissionId
+                  );
+
+                  return (
+                    <Marker
+                      key={cluster.properties.submissionId}
+                      latitude={latitude}
+                      longitude={longitude}
+                      color={getHex(submission!.rating)}
+                      onClick={() =>
+                        handleMarkerClick(longitude, latitude, submission)
+                      }
+                    />
+                  );
+                })}
             </Map>
           )}
         </div>
@@ -200,7 +226,7 @@ export default function MapComponent() {
                   className={
                     "absolute top-2 left-2 h-8 w-8 bg-red-600 rounded-full hover:bg-red-700 duration-200 text-center"
                   }
-                  onMouseDown={() => setSelectedSubmission(null)}
+                  onMouseDown={() => setSelectedSubmission(undefined)}
                 >
                   x
                 </button>
@@ -322,17 +348,17 @@ function getDateString(eventTime: number): string {
   return "just now";
 }
 
-function getHsl(rating: number): string {
-  if (rating <= 10) return "hsl(0, 74%, 42%)";
-  if (rating <= 20) return "hsl(0, 72%, 51%)";
-  if (rating <= 30) return "hsl(0, 84%, 60%)";
-  if (rating <= 45) return "hsl(24, 95%, 53%)";
-  if (rating <= 60) return "hsl(27, 96%, 61%)";
-  if (rating <= 70) return "hsl(48, 96%, 53%)";
-  if (rating <= 80) return "hsl(84, 81%, 44%)";
-  if (rating <= 85) return "hsl(142, 76%, 36%)";
-  if (rating <= 95) return "hsl(142, 72%, 29%)";
-  return "hsl(153, 73%, 25%)";
+function getHex(rating: number): string {
+  if (rating <= 10) return "#b91c1c";
+  if (rating <= 20) return "#dc2626";
+  if (rating <= 30) return "#ef4444";
+  if (rating <= 45) return "#f97316";
+  if (rating <= 60) return "#fb923c";
+  if (rating <= 70) return "#eab308";
+  if (rating <= 80) return "#84cc16";
+  if (rating <= 85) return "#22c55e";
+  if (rating <= 95) return "#16a34a";
+  return "#047857";
 }
 
 function getBorderColor(rating: number): string {
