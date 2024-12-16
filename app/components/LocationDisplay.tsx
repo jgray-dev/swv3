@@ -13,7 +13,13 @@ export default function LocationDisplay() {
       role="heading"
       aria-label={`Current city: ${allData.city}`}
       aria-level={1}
-      onClick={() => navigator.clipboard.writeText(allData.trackingLink)}
+      onClick={() => {
+        try {
+          void navigator.clipboard.writeText(allData.trackingLink);
+        } catch {
+          console.log(allData.trackingLink);
+        }
+      }}
     >
       {allData.city}
     </div>
