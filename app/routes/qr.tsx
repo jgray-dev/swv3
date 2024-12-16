@@ -11,10 +11,10 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const ip = request.headers.get("CF-Connecting-IP");
   const ray = request.headers.get("CF-Ray");
   const location = url.searchParams.get("city");
-
+  console.log(request.headers)
   if (!url || !ip || !ray || !location) {
     console.error("Missing required parameters for analytical logging");
-    return redirect("/");
+    return redirect(redirectUrl);
   }
 
   const redirectResponse = redirect(redirectUrl);
@@ -28,6 +28,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
           .where(eq(analytics.location, location));
 
         await db.insert(analytics).values({
+          time: Math.floor(Date.now() / 1000),
           ip_address: ip,
           ray_id: ray,
           location: location,
