@@ -64,7 +64,7 @@ export default function MapComponent() {
 
   const supercluster = useMemo(() => {
     const cluster = new Supercluster<ClusterProperties>({
-      radius: 25,
+      radius: 30,
       maxZoom: 14,
     });
     cluster.load(points);
@@ -171,7 +171,9 @@ export default function MapComponent() {
                         longitude={longitude}
                         onClick={() => handleClusterClick(longitude, latitude)}
                       >
-                        <div className="cluster-marker">{point_count}</div>
+                        <div className="cluster-marker backdrop-blur-xs z-50">
+                          {point_count}
+                        </div>
                       </Marker>
                     );
                   }
@@ -189,6 +191,7 @@ export default function MapComponent() {
                       onClick={() =>
                         handleMarkerClick(longitude, latitude, submission)
                       }
+                      style={{ zIndex: 2 }}
                     />
                   );
                 })}
