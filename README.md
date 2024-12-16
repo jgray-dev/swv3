@@ -1,6 +1,6 @@
 # Sunwatch
 
-This is the third iteration of my passion project, Sunwatch. It's a rating calculator for the visual quality of sunrises and sunsets. I one shotted [the algorithm](https://github.com/jgray-dev/swv3/blob/main/app/.server/rating.ts) for this one night, and it's held up very well. This algorithm *will* change as i collect more data, view more sunsets, and get more feedback - but the initial version will remain publicly available.
+This is the third iteration of my passion project, Sunwatch. It's a rating calculator for the visual quality of sunrises and sunsets. I one shotted [the algorithm](https://github.com/jgray-dev/swv3/blob/main/app/.server/rating.ts) for this one night, and it's held up very well. This algorithm *will* change as i collect more data, view more sunsets, and get more feedback.
 
 #### Technology stack:
 
