@@ -14,7 +14,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const location = url.searchParams.get("city");
 
   if (!url || !ip || !ray || !location) {
-    console.error("(error): Missing required parameters");
+    console.error("Missing required parameters for analytical logging");
     return redirect("/");
   }
 
