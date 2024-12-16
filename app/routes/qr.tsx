@@ -17,31 +17,23 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   try {
     const db = drizzle(context.cloudflare.env.swv3_d1);
     const location = url.searchParams.get("city");
-
     const currentClicks = await db
       .select({ clicks: analytics.cumulative_clicks })
       .from(analytics)
       .where(eq(analytics.location, location ? location : "Undefined location"))
       .orderBy(desc(analytics.time))
       .limit(1);
-
     const newClickCount =
       currentClicks.length > 0 ? currentClicks[0].clicks + 1 : 1;
-
-    const result = await db.insert(analytics).values({
+    db.insert(analytics).values({
       ip_address: "asd",
       ray_id: "asd",
       location: location ? location : "Undefined location",
       cumulative_clicks: newClickCount,
     });
-
-    console.log("(analytics) logged click");
-
-    console.log(`(analytics) logged click ${result}`);
     return redirect(redirectUrl);
   } catch (error) {
     console.error("Error logging QR scan:", error);
-    // Still redirect even if logging fails
     return redirect(redirectUrl);
   }
 };
