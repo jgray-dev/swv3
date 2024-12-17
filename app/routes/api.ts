@@ -147,5 +147,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       eventType
     ),
     eventDate: dateUrl,
+    ok: true,
   });
 };
