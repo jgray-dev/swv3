@@ -3,7 +3,6 @@ import {
   averageData,
   findNextSunEvent,
   generateCoordinateString,
-  getRelative,
   getRelevantSunEvent,
   getStringLiteral,
   interpolateWeatherData,
@@ -20,14 +19,13 @@ import { skyRating } from "~/.server/rating";
 
 export const loader: LoaderFunction = async ({ request, context }) => {
   const url = new URL(request.url);
-  const searchParams = url.searchParams;
   const lat = url.searchParams.get("lat");
   const lon = url.searchParams.get("lon");
   const city = url.searchParams.get("city");
   let error = url.searchParams.get("error");
   let dateUrl = url.searchParams.get("date");
   if (!lat || !lon || !city) {
-    return { ok: false, message: error };
+    return Response.json({ ok: false, message: error });
   }
   const meteoApiKey = context.cloudflare.env.METEO_KEY;
 
@@ -41,26 +39,24 @@ export const loader: LoaderFunction = async ({ request, context }) => {
 
   //@ts-ignore
   if (!eventType) {
-    return {
+    return Response.json({
       message: "No sunrise or sunsets found in the next 48 hours.",
       ok: false,
-    };
+    });
   }
   if (!eventTime) {
     const [time, type] = findNextSunEvent(Number(lat), Number(lon));
-    return {
+    return Response.json({
       message: `No ${type} time found | Next event in approximately ${unixToApproximateString(
         time
       )}`,
       ok: false,
-    };
+    });
   }
 
   //Grab one day before and one day after of dates in YYYY-MM-DD format, for use in the open meteo api call
   let dayBefore, dayAfter;
-  let historic = false;
   if (dateUrl === "next" || !dateUrl) {
-    historic = true;
     const date = new Date();
     dateUrl = date.toISOString().split("T")[0];
   }
@@ -104,7 +100,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     }
   }
 
-  const [coords, bearing] = generateCoordinateString(
+  const [coords, _] = generateCoordinateString(
     Number(lat),
     Number(lon),
     eventType,
@@ -119,11 +115,12 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   let parsedAllWeatherData = await meteoResponse.json();
   // @ts-ignore
   if (parsedAllWeatherData?.error) {
-    return {
+    console.log(parsedAllWeatherData);
+    return Response.json({
       // @ts-ignore
       message: `Error fetching weather API. ${parsedAllWeatherData?.reason}`,
       ok: false,
-    };
+    });
   }
 
   // Purge the duplicate locations and interpolate the weather data based on the eventTime
@@ -137,31 +134,18 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   let { rating, debugData } = skyRating(interpData as InterpolatedWeather[]);
   if (isNaN(rating)) rating = 0;
   const stats = averageData(interpData);
-  if ((!eventTime || !eventType) && !error)
-    error = "No sunrise or sunset found";
   return Response.json({
-    trackingLink: `${url.origin}/qr?${searchParams.toString()}`,
-    allData: parsedAllWeatherData,
     lat: parseFloat(lat),
     lon: parseFloat(lon),
     city: String(city),
     eventType: eventType,
-    eventTime: eventTime,
-    now: Math.round(Date.now() / 1000),
     rating: rating,
-    weatherData: interpData,
     stats: stats as AveragedValues,
-    message: error,
-    bearing: bearing,
-    ratingDebug: debugData,
     eventString: getStringLiteral(
       Math.round(Date.now() / 1000),
       eventTime,
       eventType
     ),
-    relative: getRelative(Math.round(Date.now() / 1000), eventTime),
-    ok: true,
     eventDate: dateUrl,
-    useNext: historic,
   });
 };
