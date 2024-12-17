@@ -50,7 +50,7 @@ export default function MapComponent() {
         allData?.lon ? allData.lon : -73.935242,
         allData?.lat ? allData.lat : 40.73061,
       ],
-      zoom: Math.max(viewState.zoom + 3, 16),
+      zoom: Math.max(viewState.zoom, 16),
       duration: 1500,
       essential: false,
     });
