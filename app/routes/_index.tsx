@@ -3,6 +3,7 @@ import { Link, redirect, useRouteLoaderData } from "@remix-run/react";
 import { json, LoaderFunction } from "@remix-run/router";
 import React, { Suspense, useEffect } from "react";
 import SunCalc from "suncalc";
+import jwt from "@tsndr/cloudflare-worker-jwt";
 import {
   averageData,
   checkImage,
@@ -53,6 +54,17 @@ export const meta: MetaFunction = () => {
 
 export const loader: LoaderFunction = async ({ request, context }) => {
   try {
+    let authorized = false;
+    const cookie = request.headers.get("Cookie");
+    if (cookie) {
+      try {
+        const token = cookie.split("auth=")[1].split(";")[0];
+        await jwt.verify(token, context.cloudflare.env.JWT_SECRET);
+        authorized = true;
+      } catch {
+        authorized = false;
+      }
+    }
     const url = new URL(request.url);
     const searchParams = url.searchParams;
     const lat = url.searchParams.get("lat");
@@ -61,8 +73,13 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     let error = url.searchParams.get("error");
     let dateUrl = url.searchParams.get("date");
     if (!lat || !lon || !city) {
-      let mapData = await getSubmissions(context);
-      return { ok: false, message: error, uploads: mapData };
+      console.log("returning here", authorized);
+      return {
+        ok: false,
+        message: error,
+        uploads: await getSubmissions(context),
+        authorized: authorized,
+      };
     }
     const meteoApiKey = context.cloudflare.env.METEO_KEY;
 
@@ -80,6 +97,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
         message: "No sunrise or sunsets found in the next 48 hours.",
         ok: false,
         uploads: await getSubmissions(context),
+        authorized: authorized,
       };
     }
     if (!eventTime) {
@@ -90,6 +108,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
         )}`,
         ok: false,
         uploads: await getSubmissions(context),
+        authorized: authorized,
       };
     }
 
@@ -196,7 +215,11 @@ export const loader: LoaderFunction = async ({ request, context }) => {
 
     // Return error for failure to fetch database
     if (!mapData)
-      return { ok: false, message: error ?? "Error fetching database" };
+      return {
+        ok: false,
+        message: error ?? "Error fetching database",
+        authorized: authorized,
+      };
 
     // Parse our weather data as json.
     let parsedAllWeatherData;
@@ -208,6 +231,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
         message: `Error fetching weather API. Try again later [0]`,
         ok: false,
         uploads: await getSubmissions(context),
+        authorized: authorized,
       };
     }
     // @ts-ignore
@@ -216,6 +240,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
         message: `Error fetching weather API. Try again later [1]`,
         ok: false,
         uploads: await getSubmissions(context),
+        authorized: authorized,
       };
     }
 
@@ -234,7 +259,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     if ((!eventTime || !eventType) && !error)
       error = "No sunrise or sunset found";
     return {
-      authorized: false,
+      authorized: authorized,
       permaLink: `${url.origin}/share?${permaLink}`,
       allData: parsedAllWeatherData,
       lat: parseFloat(lat),
@@ -267,6 +292,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       message: `Unknown application error. Try again later [E]`,
       ok: false,
       uploads: await getSubmissions(context),
+      authorized: false,
     };
   }
 };
@@ -291,32 +317,48 @@ export const action: ActionFunction = async ({ request, context }) => {
   }
   switch (element) {
     case "authorizeRequest": {
+      let verified = false;
       const input = formData.get("password");
-      console.log("authorize request");
-      console.log(input);
 
       const token = formData.get("cf-turnstile-response");
       const ip = request.headers.get("CF-Connecting-IP");
+      const redirectUrl = new URL(url.origin);
+      redirectUrl.searchParams.delete("error");
       if (!token || !ip) {
-        return redirect(appendErrorToUrl(url.search, `Incorrect (0)`));
+        if (!Boolean(context.cloudflare.env.LOCAL))
+          return redirect(appendErrorToUrl(url.search, `Incorrect (0)`));
       }
       //Verify turnstile for password attempt
-      let turnstileForm = new FormData();
-      turnstileForm.append("secret", context.cloudflare.env.TURNSTILE_SECRET);
-      turnstileForm.append("response", token);
-      turnstileForm.append("remoteip", ip);
+      if (!Boolean(context.cloudflare.env.LOCAL) && token && ip) {
+        let turnstileForm = new FormData();
+        turnstileForm.append("secret", context.cloudflare.env.TURNSTILE_SECRET);
+        turnstileForm.append("response", token);
+        turnstileForm.append("remoteip", ip);
 
-      const turnstileUrl =
-        "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-      const result = await fetch(turnstileUrl, {
-        body: turnstileForm,
-        method: "POST",
-      });
-      const outcome = await result.json();
-      const redirectUrl = new URL(url.origin);
-      // @ts-ignore
-      if (outcome.success) {
-        console.log("ok good start");
+        const turnstileUrl =
+          "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+        const result = await fetch(turnstileUrl, {
+          body: turnstileForm,
+          method: "POST",
+        });
+        const outcome = await result.json();
+        // @ts-ignore
+        verified = outcome.success;
+      }
+      if (Boolean(context.cloudflare.env.LOCAL)) verified = true;
+      if (verified) {
+        if (input === context.cloudflare.env.AUTHORIZEPASSWORD) {
+          const token = await jwt.sign(
+            { authorized: true },
+            context.cloudflare.env.JWT_SECRET
+          );
+          const headers = new Headers();
+          headers.append("Set-Cookie", `auth=${token}; Path=/; HttpOnly`);
+          return redirect("/", { headers });
+        } else {
+          redirectUrl.searchParams.set("error", `incorrect`);
+          return redirect(`${redirectUrl}`);
+        }
       } else {
         redirectUrl.searchParams.set("error", `incorrect`);
         return redirect(`${redirectUrl}`);
