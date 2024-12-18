@@ -33,7 +33,9 @@ export default function LocationDisplay() {
           onClick={() => {
             try {
               if (!showNotification) {
-                void navigator.clipboard.writeText(`${allData.permaLink}&method=copy`);
+                void navigator.clipboard.writeText(
+                  `${allData.permaLink}&method=copy`
+                );
               } else if (navigator.share) {
                 void navigator.share({
                   title: `Check out this ${allData.eventType} in ${allData.city}`,
