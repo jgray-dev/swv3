@@ -619,3 +619,22 @@ export function unixToDateString(
   const day = parts.find((part) => part.type === "day")?.value;
   return `${year}-${month}-${day}`;
 }
+
+//Helper function for JWT. input '2h' or '15m' to get a JWT compatable number
+export function getExpirationTime(literal: string): number {
+  const value = parseInt(literal);
+  const unit = literal.slice(-1).toLowerCase();
+
+  const now = Math.floor(Date.now() / 1000);
+
+  switch(unit) {
+    case 'h':
+      return now + (value * 60 * 60);
+    case 'm':
+      return now + (value * 60);
+    case 's':
+      return now + value;
+    default:
+      throw new Error('Invalid time format. Use format like "2h", "15m", or "30s"');
+  }
+}
