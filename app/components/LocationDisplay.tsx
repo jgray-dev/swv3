@@ -32,19 +32,24 @@ export default function LocationDisplay() {
         <div
           className="flex items-center gap-2 group cursor-pointer"
           onClick={() => {
-            try {
-              if (!showNotification) {
+            if (!showNotification) {
+              try {
                 void navigator.clipboard.writeText(allData.trackingLink);
                 setShowNotification(true);
-              } else {
-                void navigator.share({
-                  title: "test title",
-                  url: "https://google.com",
-                });
+              } catch (e) {
+                console.log(`Failed to copy. ${e}`);
+                setShowNotification(true);
               }
-            } catch {
-              console.log(allData.trackingLink);
-              setShowNotification(true);
+            } else {
+              try {
+                void navigator.share({
+                  title: "Check this out!",
+                  url: allData.trackingLink,
+                });
+              } catch (e) {
+                console.log(`Failed to share. ${e}`);
+                setShowNotification(true);
+              }
             }
           }}
         >
