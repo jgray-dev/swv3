@@ -34,11 +34,11 @@ export default function LocationDisplay() {
           onClick={() => {
             try {
               if (!showNotification) {
-                void navigator.clipboard.writeText(allData.trackingLink);
+                void navigator.clipboard.writeText(`${allData.permaLink}?method=copy-link`);
               } else if (navigator.share) {
                 void navigator.share({
                   title: "Check this out!",
-                  url: allData.permaLink,
+                  url: `${allData.permaLink}?method=perma-link`,
                 });
               }
               setShowNotification(true);

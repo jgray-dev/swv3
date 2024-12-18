@@ -6,11 +6,19 @@ import { eq, sql } from "drizzle-orm";
 
 export const loader: LoaderFunction = async ({ request, context }) => {
   const url = new URL(request.url);
-  const searchParams = url.searchParams;
+  const searchParams = new URLSearchParams(url.searchParams);
+
+  // Get the method parameter
+  const method = searchParams.get("method");
+
+  // Remove the method parameter for the redirect URL
+  searchParams.delete("method");
+
   const redirectUrl = `/?${searchParams.toString()}`;
   const ip = request.headers.get("CF-Connecting-IP");
   const ray = request.headers.get("CF-Ray");
   const location = url.searchParams.get("city");
+
   if (!url || !ip || !ray || !location) {
     console.error("Missing required parameters for analytical logging");
     return redirect(redirectUrl);
@@ -31,6 +39,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
           ip_address: ip,
           ray_id: ray,
           location: location,
+          method: method || 'unknown', // Add the method to the analytics
           cumulative_clicks: Number(clickCount?.count ?? 0) + 1,
         });
       } catch (error) {
