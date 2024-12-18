@@ -11,6 +11,7 @@ import {
   generateCoordinateString,
   generatePermaLink,
   getCityFromGeocodeResponse,
+  getExpirationTime,
   getRelative,
   getRelevantSunEvent,
   getStringLiteral,
@@ -404,7 +405,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       if (verified) {
         if (input === context.cloudflare.env.AUTHORIZEPASSWORD) {
           const token = await jwt.sign(
-            { authorized: true },
+            { authorized: true, exp: getExpirationTime("1m") },
             context.cloudflare.env.JWT_SECRET
           );
           const headers = new Headers();
