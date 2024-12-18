@@ -30,8 +30,8 @@ export default function MapComponent() {
 
   const mapRef = useRef<MapRef>(null);
   const [viewState, setViewState] = useState<ViewState>({
-    longitude: allData?.lon ? allData.lon : -73.935242,
-    latitude: allData?.lat ? allData.lat : 40.73061,
+    longitude: allData?.lon ? allData.lon : -74.0140283,
+    latitude: allData?.lat ? allData.lat : 40.7053386,
     zoom: 5,
     bearing: 0,
     pitch: 0,
@@ -47,10 +47,10 @@ export default function MapComponent() {
     setIsMounted(true);
     mapRef.current?.flyTo({
       center: [
-        allData?.lon ? allData.lon : -73.935242,
-        allData?.lat ? allData.lat : 40.73061,
+        allData?.lon ? allData.lon : -74.0140283,
+        allData?.lat ? allData.lat : 40.7053386,
       ],
-      zoom: Math.max(viewState.zoom, 16),
+      zoom: Math.min(viewState.zoom, 16),
       duration: 1500,
       essential: false,
     });
