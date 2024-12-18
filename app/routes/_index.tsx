@@ -60,8 +60,15 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     if (cookie) {
       try {
         const token = cookie.split("auth=")[1].split(";")[0];
-        await jwt.verify(token, context.cloudflare.env.JWT_SECRET);
-        authorized = true;
+        const verifiedToken = await jwt.verify(
+          token,
+          context.cloudflare.env.JWT_SECRET
+        );
+        if (verifiedToken) {
+          const { payload } = verifiedToken;
+          //@ts-ignore
+          authorized = payload.authorized;
+        }
       } catch {
         authorized = false;
       }
@@ -322,8 +329,15 @@ export const action: ActionFunction = async ({ request, context }) => {
       if (cookie) {
         try {
           const token = cookie.split("auth=")[1].split(";")[0];
-          await jwt.verify(token, context.cloudflare.env.JWT_SECRET);
-          authorized = true;
+          const verifiedToken = await jwt.verify(
+            token,
+            context.cloudflare.env.JWT_SECRET
+          );
+          if (verifiedToken) {
+            const { payload } = verifiedToken;
+            //@ts-ignore
+            authorized = payload.authorized;
+          }
         } catch {
           authorized = false;
         }
@@ -405,7 +419,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       if (verified) {
         if (input === context.cloudflare.env.AUTHORIZEPASSWORD) {
           const token = await jwt.sign(
-            { authorized: true, exp: getExpirationTime("1m") },
+            { authorized: true, exp: getExpirationTime("15m") },
             context.cloudflare.env.JWT_SECRET
           );
           const headers = new Headers();
