@@ -1,7 +1,18 @@
-import { and, between, sql } from "drizzle-orm";
+import { and, between, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { DbUpload } from "~/.server/interfaces";
 import { uploads } from "~/db/schema";
+
+export async function deleteUpload(context: any, id: number): Promise<boolean> {
+  const db = drizzle(context.cloudflare.env.swv3_d1);
+  const deleted = await db
+    .delete(uploads)
+    .where(eq(uploads.id, id))
+    .returning()
+    .execute();
+
+  return deleted.length > 0;
+}
 
 // Database interaction function
 export async function createUpload(
