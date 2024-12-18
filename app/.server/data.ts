@@ -627,14 +627,16 @@ export function getExpirationTime(literal: string): number {
 
   const now = Math.floor(Date.now() / 1000);
 
-  switch(unit) {
-    case 'h':
-      return now + (value * 60 * 60);
-    case 'm':
-      return now + (value * 60);
-    case 's':
+  switch (unit) {
+    case "h":
+      return now + value * 60 * 60;
+    case "m":
+      return now + value * 60;
+    case "s":
       return now + value;
     default:
-      throw new Error('Invalid time format. Use format like "2h", "15m", or "30s"');
+      throw new Error(
+        'Invalid time format. Use format like "2h", "15m", or "30s"'
+      );
   }
 }
