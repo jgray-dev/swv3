@@ -84,16 +84,16 @@ export default function RatingDisplay() {
                 <stop offset="0%" stopColor="#23d526">
                   <animate
                     attributeName="stop-color"
-                    values="#23d526;#ee7752;#e73c7e;#f98e1d;#23a6d5;#23d5ab;#23d526"
-                    dur="15s"
+                    values="#23d526;#2ecc71;#27ae60;#1abc9c;#16a085;#52c234;#23d526"
+                    dur="5s"
                     repeatCount="indefinite"
                   />
                 </stop>
-                <stop offset="100%" stopColor="#ee7752">
+                <stop offset="100%" stopColor="#2ecc71">
                   <animate
                     attributeName="stop-color"
-                    values="#ee7752;#e73c7e;#f98e1d;#23a6d5;#23d5ab;#23d526;#ee7752"
-                    dur="15s"
+                    values="#2ecc71;#27ae60;#1abc9c;#16a085;#52c234;#23d526;#2ecc71"
+                    dur="5s"
                     repeatCount="indefinite"
                   />
                 </stop>
