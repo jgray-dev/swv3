@@ -13,6 +13,7 @@ export interface InterpolatedWeather {
 }
 
 export interface LoaderData {
+  authorized: boolean;
   trackingLink: string;
   permaLink: string;
   lat: number;
