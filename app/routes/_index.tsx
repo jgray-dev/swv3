@@ -73,7 +73,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     let error = url.searchParams.get("error");
     let dateUrl = url.searchParams.get("date");
     if (!lat || !lon || !city) {
-      console.log("returning here", authorized);
       return {
         ok: false,
         message: error,
