@@ -32,7 +32,7 @@ export default function MapComponent() {
   const [viewState, setViewState] = useState<ViewState>({
     longitude: allData?.lon ? allData.lon : -74.0140283,
     latitude: allData?.lat ? allData.lat : 40.7053386,
-    zoom: 5,
+    zoom: 7,
     bearing: 0,
     pitch: 0,
     padding: { top: 0, bottom: 0, left: 0, right: 0 },
@@ -50,7 +50,7 @@ export default function MapComponent() {
         allData?.lon ? allData.lon : -74.0140283,
         allData?.lat ? allData.lat : 40.7053386,
       ],
-      zoom: Math.min(viewState.zoom, 16),
+      zoom: 7,
       duration: 1500,
       essential: false,
     });
