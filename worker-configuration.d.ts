@@ -12,6 +12,8 @@ interface Env {
 	HF_TOKEN: string;
 	RESEND_API_KEY: string;
 	MONITORED_EMAIL: string;
-	swv3: R2Bucket;
+	JWT_SECRET: string;
+	AUTHORIZEPASSWORD: string;
+	LOCAL: string;
 	swv3_d1: D1Database;
 }
