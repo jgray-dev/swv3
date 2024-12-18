@@ -5,12 +5,7 @@ import { CiLocationArrow1 } from "react-icons/ci";
 import { FaSearchLocation } from "react-icons/fa";
 import { GiSunrise, GiSunset } from "react-icons/gi";
 import { HiChevronDown } from "react-icons/hi";
-import { LoaderData } from "~/.server/interfaces";
-
-export interface LocationData {
-  type: "geolocation" | "input";
-  data: GeolocationPosition | string;
-}
+import { LoaderData, LocationData } from "~/.server/interfaces";
 
 export default function LocationComponent() {
   const [geolocationError, setGeolocationError] = useState<boolean>(false);
