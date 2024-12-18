@@ -31,24 +31,28 @@ export default function LocationDisplay() {
       >
         <div
           className="flex items-center gap-2 group cursor-pointer"
-          onClick={() => {
+          onClick={async () => {
             if (!showNotification) {
               try {
-                void navigator.clipboard.writeText(allData.trackingLink);
+                await navigator.clipboard.writeText(allData.trackingLink);
                 setShowNotification(true);
               } catch (e) {
                 console.log(`Failed to copy. ${e}`);
                 setShowNotification(true);
               }
             } else {
-              try {
-                void navigator.share({
-                  title: "Check this out!",
-                  url: allData.trackingLink,
-                });
-              } catch (e) {
-                console.log(`Failed to share. ${e}`);
-                setShowNotification(true);
+              if (navigator.share) {
+                try {
+                  await navigator.share({
+                    title: "Check this out!",
+                    url: allData.trackingLink,
+                  });
+                } catch (e) {
+                  console.log(`Failed to share. ${e}`);
+                  setShowNotification(true);
+                }
+              } else {
+                console.log('Web Share API not supported');
               }
             }
           }}
