@@ -26,21 +26,34 @@ import {
   GeocodeResponse,
   InterpolatedWeather,
   LoaderData,
+  LocationData,
   TimeZoneApiResponse,
   WeatherLocation,
 } from "~/.server/interfaces";
 import { skyRating } from "~/.server/rating";
+
 import Alert from "~/components/Alert";
-import CloudCoverDisplay from "~/components/CloudCoverDisplay";
-import LocationComponent, {
-  LocationData,
-} from "~/components/LocationComponent";
+import LocationComponent from "~/components/LocationComponent";
+
 import LocationDisplay from "~/components/LocationDisplay";
-import Map from "~/components/Map";
 import RatingDisplay from "~/components/RatingDisplay";
-import SubmitComponent from "~/components/SubmitComponent";
-import Footer from "~/components/Footer";
-import MapSuspense from "~/components/MapSustense";
+
+const CloudCoverDisplay = React.lazy(
+  () => import("~/components/CloudCoverDisplay")
+);
+// import CloudCoverDisplay from "~/components/CloudCoverDisplay";
+
+import MapSuspense from "~/components/MapSuspense";
+const Map = React.lazy(() => import("~/components/Map"));
+// import Map from "~/components/Map";
+
+const SubmitComponent = React.lazy(
+  () => import("~/components/SubmitComponent")
+);
+// import SubmitComponent from "~/components/SubmitComponent";
+
+const Footer = React.lazy(() => import("~/components/Footer"));
+// import Footer from "~/components/Footer";
 
 export const meta: MetaFunction = () => {
   return [
