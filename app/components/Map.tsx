@@ -130,7 +130,6 @@ export default function MapComponent() {
                 }}
               >
                 <img
-                  loading={"lazy"}
                   src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/mid`}
                   alt={`User submission from ${sub.city}`}
                   className="w-full h-full object-cover"
