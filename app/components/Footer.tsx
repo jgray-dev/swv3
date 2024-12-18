@@ -1,22 +1,11 @@
 import { Form, Link, useRouteLoaderData } from "@remix-run/react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { LoaderData } from "~/.server/interfaces";
 import { useScrollLock } from "~/hooks/useScrollLock";
 
 export default function Footer() {
   let allData = useRouteLoaderData<LoaderData>("routes/_index");
   const [showAuthorize, setShowAuthorize] = useState<boolean>(false);
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-
-    return () => {
-      document.head.removeChild(script);
-    };
-  }, []);
   if (!allData) return <></>;
   useScrollLock(showAuthorize);
   console.log(allData.authorized);
