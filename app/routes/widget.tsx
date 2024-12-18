@@ -16,7 +16,10 @@
 // }
 //
 //
-// export default function WidgetRoute() {
-//   const data = useLoaderData() as WeatherEvent
-//   return <Widget data={data} />
-// }
+export default function WidgetRoute() {
+  return (
+    <div
+      className={"w-screen background-colors high-rating min-h-screen"}
+    ></div>
+  );
+}
