@@ -11,7 +11,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
   const ip = request.headers.get("CF-Connecting-IP");
   const ray = request.headers.get("CF-Ray");
   const location = url.searchParams.get("city");
-  console.log(request.headers);
   if (!url || !ip || !ray || !location) {
     console.error("Missing required parameters for analytical logging");
     return redirect(redirectUrl);
