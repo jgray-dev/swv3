@@ -8,6 +8,7 @@ import {
   checkImage,
   findNextSunEvent,
   generateCoordinateString,
+  generatePermaLink,
   getCityFromGeocodeResponse,
   getRelative,
   getRelevantSunEvent,
@@ -15,6 +16,7 @@ import {
   interpolateWeatherData,
   purgeDuplicates,
   unixToApproximateString,
+  unixToDateString,
 } from "~/.server/data";
 import { createUpload, getSubmissions } from "~/.server/database";
 import {
@@ -22,6 +24,7 @@ import {
   GeocodeResponse,
   InterpolatedWeather,
   LoaderData,
+  TimeZoneApiResponse,
   WeatherLocation,
 } from "~/.server/interfaces";
 import { skyRating } from "~/.server/rating";
@@ -145,13 +148,52 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       eventDate
     );
 
-    const [mapData, meteoResponse] = await Promise.all([
-      getSubmissions(context),
-      fetch(
+    const googleApiKey = context.cloudflare.env.GOOGLE_MAPS_API_KEY;
+    const currentUnixTime = Math.floor(Date.now() / 1000);
+    const basePromises = [
+      await getSubmissions(context),
+      await fetch(
         `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${coords}&start_date=${dayBefore}&end_date=${dayAfter}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${meteoApiKey}`
       ),
-    ]);
-    // console.log(`https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${coords}&start_date=${dayBefore}&end_date=${dayAfter}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${meteoApiKey}`)
+    ] as const;
+
+    const responses = historic
+      ? await Promise.all([
+          ...basePromises,
+          fetch(
+            `https://maps.googleapis.com/maps/api/timezone/json?location=${encodeURIComponent(
+              lat
+            )}%2C${encodeURIComponent(lon)}&timestamp=${encodeURIComponent(
+              currentUnixTime
+            )}&key=${googleApiKey}`
+          ),
+        ])
+      : await Promise.all(basePromises);
+
+    const [mapData, meteoResponse] = responses;
+    const permaLink = historic
+      ? await (async () => {
+          const timezoneResponse = responses[2];
+          const parsedTimezoneResponse =
+            (await timezoneResponse?.json()) as TimeZoneApiResponse;
+
+          if (parsedTimezoneResponse.status !== "OK") {
+            redirect(
+              appendErrorToUrl(
+                url.search,
+                `Error fetching TimeZone API [${parsedTimezoneResponse.status}]`
+              )
+            );
+          }
+
+          return generatePermaLink(
+            unixToDateString(eventTime, parsedTimezoneResponse.timeZoneId),
+            searchParams.toString(),
+            eventType
+          );
+        })()
+      : generatePermaLink(dateUrl, searchParams.toString(), eventType);
+
     // Return error for failure to fetch database
     if (!mapData)
       return { ok: false, message: error ?? "Error fetching database" };
@@ -162,7 +204,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     try {
       parsedAllWeatherData = await meteoResponse.json();
     } catch (e) {
-      console.log(e);
       return {
         message: `Error fetching weather API. Try again later [0]`,
         ok: false,
@@ -194,6 +235,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       error = "No sunrise or sunset found";
     return {
       trackingLink: `${url.origin}/qr?${searchParams.toString()}`,
+      permaLink: `${url.origin}/qr?${permaLink}`,
       allData: parsedAllWeatherData,
       lat: parseFloat(lat),
       lon: parseFloat(lon),
