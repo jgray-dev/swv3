@@ -10,7 +10,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
 
   // Get the method parameter
   const method = searchParams.get("method");
-  console.log(`tracking link found. method ${method}`)
+  console.log(`tracking link found. method ${method}`);
   // Remove the method parameter for the redirect URL
   searchParams.delete("method");
 
@@ -39,7 +39,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
           ip_address: ip,
           ray_id: ray,
           location: location,
-          method: method || 'unknown', // Add the method to the analytics
+          method: method || "unknown", // Add the method to the analytics
           cumulative_clicks: Number(clickCount?.count ?? 0) + 1,
         });
       } catch (error) {
