@@ -121,7 +121,7 @@ export default function Footer() {
           <div>
             <Form method={"post"} onSubmit={() => setShowAuthorize(false)}>
               <div
-                className="cf-turnstile mt-4"
+                className="cf-turnstile mt-4 min-h-[140px]"
                 data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
                 data-size="compact"
               ></div>
