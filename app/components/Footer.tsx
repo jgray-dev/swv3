@@ -71,13 +71,16 @@ export default function Footer() {
           </Link>
           <span className={"text-white/15"}>{" | "}</span>
           {allData.authorized ? (
-            <span
-              className={
-                "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/75 after:transition-transform hover:after:scale-x-100"
-              }
-            >
+            <Form method={"post"}>
+              <input type="hidden" name="element" value="deauthorizeRequest"/>
+              <button
+                type={"submit"}
+                className={
+                  "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/75 after:transition-transform hover:after:scale-x-100"
+                }
+              >
               authorized
-            </span>
+            </button></Form>
           ) : (
             <button
               className={
@@ -123,7 +126,7 @@ export default function Footer() {
                 className="cf-turnstile mt-4 min-h-[150px]"
                 data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
                 data-size="compact"
-              ></div>
+              >what happens here</div>
               <input
                 type="password"
                 name="password"
