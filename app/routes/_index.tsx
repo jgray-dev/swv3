@@ -19,7 +19,7 @@ import {
   unixToApproximateString,
   unixToDateString,
 } from "~/.server/data";
-import { createUpload, getSubmissions } from "~/.server/database";
+import { createUpload, deleteUpload, getSubmissions } from "~/.server/database";
 import {
   AveragedValues,
   GeocodeResponse,
@@ -315,6 +315,57 @@ export const action: ActionFunction = async ({ request, context }) => {
     return json({ error: "Missing form identifier" }, { status: 500 });
   }
   switch (element) {
+    case "deleteRequest": {
+      let authorized = false;
+      const cookie = request.headers.get("Cookie");
+      if (cookie) {
+        try {
+          const token = cookie.split("auth=")[1].split(";")[0];
+          await jwt.verify(token, context.cloudflare.env.JWT_SECRET);
+          authorized = true;
+        } catch {
+          authorized = false;
+        }
+      }
+      if (!authorized)
+        return redirect(appendErrorToUrl(url.search, `Unauthorized action`));
+      try {
+        const submission = JSON.parse(`${formData.get("submission")}`);
+        console.log("Delete request recieved");
+        console.log(submission);
+        const API_URL = `https://api.cloudflare.com/client/v4/accounts/${
+          context.cloudflare.env.CF_ACCOUNT_ID
+        }/images/v1/${encodeURIComponent(submission.image_id)}`;
+        const imageResp = await fetch(API_URL, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${context.cloudflare.env.CF_TOKEN}`,
+          },
+        });
+        const imageResponse = await imageResp.json();
+        if (
+          //@ts-ignore
+          imageResponse.success ||
+          //@ts-ignore
+          imageResponse.errors[0].message == "Image not found"
+        ) {
+          //@ts-ignore
+          if (await deleteUpload(context, submission.id)) {
+            return redirect("/");
+          } else {
+            return redirect(
+              appendErrorToUrl(url.search, `Failed to delete submission`)
+            );
+          }
+        } else {
+          return redirect(
+            appendErrorToUrl(url.search, `Failed to delete image`)
+          );
+        }
+      } catch (e) {
+        return redirect(appendErrorToUrl(url.search, `Failed to parse JSON`));
+      }
+    }
     case "deauthorizeRequest": {
       const headers = new Headers();
       headers.append("Set-Cookie", "auth=; Path=/; HttpOnly; Max-Age=0");
@@ -367,7 +418,6 @@ export const action: ActionFunction = async ({ request, context }) => {
         redirectUrl.searchParams.set("error", `incorrect`);
         return redirect(`${redirectUrl}`);
       }
-      return 0;
     }
     case "userSubmission": {
       // Check if all required fields are present
@@ -769,7 +819,9 @@ export default function Sunwatch() {
         <Link
           to={"/"}
           className={`relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0  after:transition-transform hover:after:scale-x-100 ${
-            allData?.authorized ? "text-green-600/40 after:bg-green-600/40" : "text-white/40 after:bg-white/40"
+            allData?.authorized
+              ? "text-green-600/40 after:bg-green-600/40"
+              : "text-white/40 after:bg-white/40"
           } text-xs`}
           onClick={() => {
             const colors = getBackgroundColors(null);
