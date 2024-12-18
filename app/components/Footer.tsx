@@ -22,7 +22,6 @@ export default function Footer() {
 
   if (!allData) return <></>;
   useScrollLock(showAuthorize);
-  console.log(allData.authorized);
   return (
     <>
       <div>
@@ -121,7 +120,7 @@ export default function Footer() {
           <div>
             <Form method={"post"} onSubmit={() => setShowAuthorize(false)}>
               <div
-                className="cf-turnstile mt-4 min-h-[140px]"
+                className="cf-turnstile mt-4 min-h-[150px]"
                 data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
                 data-size="compact"
               ></div>
