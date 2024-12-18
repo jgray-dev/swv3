@@ -22,7 +22,7 @@ export default function Footer() {
 
   if (!allData) return <></>;
   useScrollLock(showAuthorize);
-  console.log(allData.authorized)
+  console.log(allData.authorized);
   return (
     <>
       <div>
@@ -71,21 +71,24 @@ export default function Footer() {
             github
           </Link>
           <span className={"text-white/15"}>{" | "}</span>
-          {allData.authorized ? <span
-            className={
-              "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/75 after:transition-transform hover:after:scale-x-100"
-            }
-          >
-            authorized
-          </span> : <button
-            className={
-              "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/75 after:transition-transform hover:after:scale-x-100"
-            }
-            onClick={() => setShowAuthorize(true)}
-          >
-            authorize
-          </button>}
-
+          {allData.authorized ? (
+            <span
+              className={
+                "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/75 after:transition-transform hover:after:scale-x-100"
+              }
+            >
+              authorized
+            </span>
+          ) : (
+            <button
+              className={
+                "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/75 after:transition-transform hover:after:scale-x-100"
+              }
+              onClick={() => setShowAuthorize(true)}
+            >
+              authorize
+            </button>
+          )}
         </div>
         <div
           className={
