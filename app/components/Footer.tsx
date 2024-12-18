@@ -8,7 +8,6 @@ export default function Footer() {
   const [showAuthorize, setShowAuthorize] = useState<boolean>(false);
   useEffect(() => {
     if (showAuthorize) {
-      // Load the Turnstile script
       const script = document.createElement("script");
       script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
       script.async = true;
@@ -16,16 +15,14 @@ export default function Footer() {
       document.head.appendChild(script);
 
       return () => {
-        // Cleanup on unmount
         document.head.removeChild(script);
       };
     }
   }, [showAuthorize]);
 
   if (!allData) return <></>;
-
   useScrollLock(showAuthorize);
-  console.log(allData.authorized);
+  console.log(allData.authorized)
   return (
     <>
       <div>
@@ -74,14 +71,21 @@ export default function Footer() {
             github
           </Link>
           <span className={"text-white/15"}>{" | "}</span>
-          <button
+          {allData.authorized ? <span
+            className={
+              "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/75 after:transition-transform hover:after:scale-x-100"
+            }
+          >
+            authorized
+          </span> : <button
             className={
               "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/75 after:transition-transform hover:after:scale-x-100"
             }
             onClick={() => setShowAuthorize(true)}
           >
             authorize
-          </button>
+          </button>}
+
         </div>
         <div
           className={
@@ -113,25 +117,24 @@ export default function Footer() {
         >
           <div>
             <Form method={"post"} onSubmit={() => setShowAuthorize(false)}>
+              <div
+                className="cf-turnstile mt-4"
+                data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
+                data-size="compact"
+              ></div>
               <input
                 type="password"
                 name="password"
                 className={
-                  "w-32 h-8 rounded-lg bg-black/50 backdrop-blur-lg focus-none outline-none p-1 text-xs placeholder-white/15 text-center text-white/25"
+                  "w-[150px] h-8 rounded-lg bg-black/50 backdrop-blur-lg focus-none outline-none p-1 text-xs placeholder-white/15 text-center text-white/25"
                 }
                 placeholder={"password"}
               />
-
-              <div
-                className="cf-turnstile"
-                data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
-              ></div>
               <input type="hidden" name="element" value="authorizeRequest" />
             </Form>
           </div>
         </div>
       )}
-      )
     </>
   );
 }
