@@ -593,3 +593,29 @@ export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
 
   return locationParts.join(", ");
 }
+
+export function generatePermaLink(
+  eventDate: string,
+  params: string,
+  type: string
+): string {
+  return params.split("&date")[0] + `&date=${eventDate}&type=${type}`;
+}
+
+export function unixToDateString(
+  unixTimestamp: number,
+  timezone: string
+): string {
+  const date = new Date(unixTimestamp * 1000);
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: timezone,
+  });
+  const parts = formatter.formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+  return `${year}-${month}-${day}`;
+}
