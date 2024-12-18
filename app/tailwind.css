@@ -67,8 +67,7 @@ body {
     hsla(172, 72%, 36%, 0.3),
     hsla(121, 71%, 36%, 0.3)
   );
-  background-size: 150% 150%;
-  animation: gradient 15s ease infinite;
+  background-size: 100% 130%;
 }
 
 .default-gradient {
