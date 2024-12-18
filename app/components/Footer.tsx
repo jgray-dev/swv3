@@ -104,11 +104,6 @@ export default function Footer() {
                 }
                 placeholder={"password"}
               />
-              <div
-                className="cf-turnstile"
-                data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
-                data-callback="setTurnstileStatus(false)"
-              ></div>
               <input type="hidden" name="element" value="authorizeRequest" />
             </Form>
           </div>
