@@ -36,8 +36,8 @@ export default function LocationDisplay() {
                 void navigator.clipboard.writeText(`${allData.permaLink}&method=copy`);
               } else if (navigator.share) {
                 void navigator.share({
-                  title: "Check this out!",
-                  url: `${allData.permaLink}&method=copy`,
+                  title: `Check out this ${allData.eventType} in ${allData.city}`,
+                  url: `${allData.permaLink}&method=share`,
                 });
               }
               setShowNotification(true);
