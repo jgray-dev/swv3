@@ -234,6 +234,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     if ((!eventTime || !eventType) && !error)
       error = "No sunrise or sunset found";
     return {
+      authorized: false,
       permaLink: `${url.origin}/share?${permaLink}`,
       allData: parsedAllWeatherData,
       lat: parseFloat(lat),
@@ -289,6 +290,43 @@ export const action: ActionFunction = async ({ request, context }) => {
     return json({ error: "Missing form identifier" }, { status: 500 });
   }
   switch (element) {
+    case "authorizeRequest": {
+      const input = formData.get("password");
+      console.log("authorize request");
+      console.log(input);
+
+      const token = formData.get("cf-turnstile-response");
+      const ip = request.headers.get("CF-Connecting-IP");
+      if (!token || !ip) {
+        return redirect(
+          appendErrorToUrl(
+            url.search,
+            `Incorrect (0)`
+          )
+        );
+      }
+      //Verify turnstile for password attempt
+      let turnstileForm = new FormData();
+      turnstileForm.append("secret", context.cloudflare.env.TURNSTILE_SECRET);
+      turnstileForm.append("response", token);
+      turnstileForm.append("remoteip", ip);
+
+      const turnstileUrl = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+      const result = await fetch(turnstileUrl, {
+        body: turnstileForm,
+        method: "POST",
+      });
+      const outcome = await result.json();
+      const redirectUrl = new URL(url.origin)
+      // @ts-ignore
+      if (outcome.success) {
+        console.log("ok good start")
+      } else {
+        redirectUrl.searchParams.set("error", `incorrect`);
+        return redirect(`${redirectUrl}`)
+      }
+      return 0;
+    }
     case "userSubmission": {
       // Check if all required fields are present
       const requiredFields = [
