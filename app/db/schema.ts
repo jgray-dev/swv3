@@ -19,4 +19,5 @@ export const analytics = sqliteTable("analytics", {
   ray_id: text("ray_id").notNull(),
   location: text("location").notNull(),
   cumulative_clicks: integer("cumulative_clicks").notNull().default(0),
+  method: text("method").notNull(),
 });
