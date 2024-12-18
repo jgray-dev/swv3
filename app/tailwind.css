@@ -60,16 +60,15 @@ body {
   background: linear-gradient(
     -45deg,
     hsla(121, 71%, 36%, 0.3),
-    /* Reduced opacity green */ hsla(15, 47%, 47%, 0.3),
-    /* Reduced opacity rust */ hsla(342, 57%, 43%, 0.3),
-    /* Reduced opacity pink */ hsla(28, 78%, 41%, 0.3),
-    /* Reduced opacity orange */ hsla(197, 72%, 36%, 0.3),
-    /* Reduced opacity blue */ hsla(172, 72%, 36%, 0.3),
-    /* Reduced opacity teal */ hsla(121, 71%, 36%, 0.3)
-      /* Reduced opacity green */
+    hsla(15, 47%, 47%, 0.3),
+    hsla(342, 57%, 43%, 0.3),
+    hsla(28, 78%, 41%, 0.3),
+    hsla(197, 72%, 36%, 0.3),
+    hsla(172, 72%, 36%, 0.3),
+    hsla(121, 71%, 36%, 0.3)
   );
   background-size: 400% 400%;
-  animation: gradient 45s ease infinite; /* Slowed down animation */
+  animation: gradient 45s ease infinite;
 }
 
 .default-gradient {
