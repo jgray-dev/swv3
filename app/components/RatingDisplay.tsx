@@ -53,7 +53,7 @@ export default function RatingDisplay() {
     if (rating <= 80) return "stroke-lime-500";
     if (rating <= 85) return "stroke-green-500";
     if (rating <= 95) return "stroke-green-600";
-    return "stroke-emerald-700";
+    return "stroke-[url(#circleGradient)]";
   };
 
   return (
@@ -76,6 +76,29 @@ export default function RatingDisplay() {
               displayNumber
             )}%`}
           >
+            <defs>
+              <linearGradient
+                id="circleGradient"
+                gradientTransform="rotate(90)"
+              >
+                <stop offset="0%" stopColor="#23d526">
+                  <animate
+                    attributeName="stop-color"
+                    values="#23d526;#ee7752;#e73c7e;#f98e1d;#23a6d5;#23d5ab;#23d526"
+                    dur="15s"
+                    repeatCount="indefinite"
+                  />
+                </stop>
+                <stop offset="100%" stopColor="#ee7752">
+                  <animate
+                    attributeName="stop-color"
+                    values="#ee7752;#e73c7e;#f98e1d;#23a6d5;#23d5ab;#23d526;#ee7752"
+                    dur="15s"
+                    repeatCount="indefinite"
+                  />
+                </stop>
+              </linearGradient>
+            </defs>
             {rating < 100 && (
               <circle
                 cx="50"
@@ -107,7 +130,7 @@ export default function RatingDisplay() {
           <div className="absolute flex items-center justify-center md:-translate-y-2 -translate-y-5">
             <span
               className={`text-2xl sm:text-4xl md:-translate-y-3 font-bold ${
-                rating >= 95 ? "gradient-small default" : ""
+                rating >= 95 ? "gradient-quick default-gradient" : ""
               }`}
               aria-live="polite"
             >
@@ -117,7 +140,7 @@ export default function RatingDisplay() {
           <div
             className={`text-sm sm:text-base mt-1 relative rounded px-1 ${
               allData.relative === "current"
-                ? "gradient default font-bold"
+                ? "gradient default-gradient font-bold"
                 : allData.relative === "future"
                 ? "text-green-400"
                 : "text-red-400"
