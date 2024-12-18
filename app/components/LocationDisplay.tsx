@@ -18,7 +18,6 @@ export default function LocationDisplay() {
   }, [showNotification]);
 
   if (!allData?.ok) return null;
-  console.log(allData.permaLink);
   return (
     <>
       <div
@@ -34,16 +33,16 @@ export default function LocationDisplay() {
           onClick={() => {
             try {
               if (!showNotification) {
-                void navigator.clipboard.writeText(`${allData.permaLink}?method=copy-link`);
+                void navigator.clipboard.writeText(`${allData.permaLink}&method=copy`);
               } else if (navigator.share) {
                 void navigator.share({
                   title: "Check this out!",
-                  url: `${allData.permaLink}?method=perma-link`,
+                  url: `${allData.permaLink}&method=copy`,
                 });
               }
               setShowNotification(true);
             } catch (err) {
-              console.log("Failed to copy or share:", err);
+              console.log(`${allData.permaLink}&method=console`);
               setShowNotification(true);
             }
           }}
