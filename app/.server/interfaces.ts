@@ -14,6 +14,7 @@ export interface InterpolatedWeather {
 
 export interface LoaderData {
   trackingLink: string;
+  permaLink: string;
   lat: number;
   lon: number;
   city: string;
@@ -115,4 +116,12 @@ interface AddressComponent {
   long_name: string;
   short_name: string;
   types: string[];
+}
+
+export interface TimeZoneApiResponse {
+  dstOffset: number;
+  rawOffset: number;
+  status: string;
+  timeZoneId: string;
+  timeZoneName: string;
 }
