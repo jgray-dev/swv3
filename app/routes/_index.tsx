@@ -1,7 +1,7 @@
 import type { ActionFunction, MetaFunction } from "@remix-run/cloudflare";
 import { Link, redirect, useRouteLoaderData } from "@remix-run/react";
 import { json, LoaderFunction } from "@remix-run/router";
-import { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import SunCalc from "suncalc";
 import {
   averageData,
@@ -298,12 +298,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       const token = formData.get("cf-turnstile-response");
       const ip = request.headers.get("CF-Connecting-IP");
       if (!token || !ip) {
-        return redirect(
-          appendErrorToUrl(
-            url.search,
-            `Incorrect (0)`
-          )
-        );
+        return redirect(appendErrorToUrl(url.search, `Incorrect (0)`));
       }
       //Verify turnstile for password attempt
       let turnstileForm = new FormData();
@@ -311,19 +306,20 @@ export const action: ActionFunction = async ({ request, context }) => {
       turnstileForm.append("response", token);
       turnstileForm.append("remoteip", ip);
 
-      const turnstileUrl = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+      const turnstileUrl =
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify";
       const result = await fetch(turnstileUrl, {
         body: turnstileForm,
         method: "POST",
       });
       const outcome = await result.json();
-      const redirectUrl = new URL(url.origin)
+      const redirectUrl = new URL(url.origin);
       // @ts-ignore
       if (outcome.success) {
-        console.log("ok good start")
+        console.log("ok good start");
       } else {
         redirectUrl.searchParams.set("error", `incorrect`);
-        return redirect(`${redirectUrl}`)
+        return redirect(`${redirectUrl}`);
       }
       return 0;
     }
@@ -695,7 +691,19 @@ const getBackgroundColors = (rating: number | null) => {
 
 export default function Sunwatch() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
+  useEffect(() => {
+    // Load the Turnstile script
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
 
+    return () => {
+      // Cleanup on unmount
+      document.head.removeChild(script);
+    };
+  }, []);
   useEffect(() => {
     if (allData?.rating) {
       const colors = getBackgroundColors(
@@ -752,6 +760,10 @@ export default function Sunwatch() {
       </Suspense>
       <SubmitComponent />
       <Footer />
+      <div
+        className="cf-turnstile"
+        data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
+      ></div>
     </div>
   );
 }
