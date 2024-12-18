@@ -315,6 +315,11 @@ export const action: ActionFunction = async ({ request, context }) => {
     return json({ error: "Missing form identifier" }, { status: 500 });
   }
   switch (element) {
+    case "deauthorizeRequest": {
+      const headers = new Headers();
+      headers.append("Set-Cookie", "auth=; Path=/; HttpOnly; Max-Age=0");
+      return redirect("/", { headers });
+    }
     case "authorizeRequest": {
       let verified = false;
       const input = formData.get("password");
@@ -763,9 +768,9 @@ export default function Sunwatch() {
       <div className={"w-screen text-center mx-auto"}>
         <Link
           to={"/"}
-          className={
-            "relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0 after:bg-white/40 after:transition-transform hover:after:scale-x-100 text-white/40 text-xs"
-          }
+          className={`relative no-underline after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-left after:scale-x-0  after:transition-transform hover:after:scale-x-100 ${
+            allData?.authorized ? "text-green-600/40 after:bg-green-600/40" : "text-white/40 after:bg-white/40"
+          } text-xs`}
           onClick={() => {
             const colors = getBackgroundColors(null);
             const root = document.documentElement;
