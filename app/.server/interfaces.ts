@@ -127,7 +127,6 @@ export interface TimeZoneApiResponse {
   timeZoneName: string;
 }
 
-
 export interface LocationData {
   type: "geolocation" | "input";
   data: GeolocationPosition | string;
