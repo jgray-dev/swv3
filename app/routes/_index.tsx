@@ -1,7 +1,7 @@
 import type { ActionFunction, MetaFunction } from "@remix-run/cloudflare";
 import { Link, redirect, useRouteLoaderData } from "@remix-run/react";
 import { json, LoaderFunction } from "@remix-run/router";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import SunCalc from "suncalc";
 import {
   averageData,
@@ -35,6 +35,7 @@ import Map from "~/components/Map";
 import RatingDisplay from "~/components/RatingDisplay";
 import SubmitComponent from "~/components/SubmitComponent";
 import Footer from "~/components/Footer";
+import MapSuspense from "~/components/MapSustense";
 
 export const meta: MetaFunction = () => {
   return [
@@ -633,7 +634,9 @@ export default function Sunwatch() {
       <LocationDisplay />
       <RatingDisplay />
       <CloudCoverDisplay />
-      <Map />
+      <Suspense fallback={<MapSuspense />}>
+        <Map />
+      </Suspense>
       <SubmitComponent />
       <Footer />
     </div>
