@@ -124,12 +124,10 @@ export default function Footer() {
           <div>
             <Form method={"post"} onSubmit={() => setShowAuthorize(false)}>
               <div
-                className="cf-turnstile mt-4 min-h-[150px]"
+                className="cf-turnstile mb-4 min-h-[150px] h-[150px]"
                 data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
                 data-size="compact"
-              >
-                what happens here
-              </div>
+              />
               <input
                 type="password"
                 name="password"
