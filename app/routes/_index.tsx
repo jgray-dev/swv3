@@ -234,8 +234,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     if ((!eventTime || !eventType) && !error)
       error = "No sunrise or sunset found";
     return {
-      trackingLink: `${url.origin}/qr?${searchParams.toString()}`,
-      permaLink: `${url.origin}/qr?${permaLink}`,
+      permaLink: `${url.origin}/share?${permaLink}`,
       allData: parsedAllWeatherData,
       lat: parseFloat(lat),
       lon: parseFloat(lon),
