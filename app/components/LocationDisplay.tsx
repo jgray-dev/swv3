@@ -18,7 +18,7 @@ export default function LocationDisplay() {
   }, [showNotification]);
 
   if (!allData?.ok) return null;
-
+  console.log(allData.permaLink);
   return (
     <>
       <div
@@ -31,29 +31,20 @@ export default function LocationDisplay() {
       >
         <div
           className="flex items-center gap-2 group cursor-pointer"
-          onClick={async () => {
-            if (!showNotification) {
-              try {
-                await navigator.clipboard.writeText(allData.trackingLink);
-                setShowNotification(true);
-              } catch (e) {
-                console.log(`Failed to copy. ${e}`);
-                setShowNotification(true);
+          onClick={() => {
+            try {
+              if (!showNotification) {
+                void navigator.clipboard.writeText(allData.trackingLink);
+              } else if (navigator.share) {
+                void navigator.share({
+                  title: "Check this out!",
+                  url: allData.permaLink,
+                });
               }
-            } else {
-              if (navigator.share) {
-                try {
-                  await navigator.share({
-                    title: "Check this out!",
-                    url: allData.trackingLink,
-                  });
-                } catch (e) {
-                  console.log(`Failed to share. ${e}`);
-                  setShowNotification(true);
-                }
-              } else {
-                console.log('Web Share API not supported');
-              }
+              setShowNotification(true);
+            } catch (err) {
+              console.log("Failed to copy or share:", err);
+              setShowNotification(true);
             }
           }}
         >
