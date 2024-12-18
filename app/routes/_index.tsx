@@ -692,19 +692,6 @@ const getBackgroundColors = (rating: number | null) => {
 export default function Sunwatch() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
   useEffect(() => {
-    // Load the Turnstile script
-    const script = document.createElement("script");
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-
-    return () => {
-      // Cleanup on unmount
-      document.head.removeChild(script);
-    };
-  }, []);
-  useEffect(() => {
     if (allData?.rating) {
       const colors = getBackgroundColors(
         !allData.lat && !allData.lon ? null : allData.rating
@@ -760,10 +747,6 @@ export default function Sunwatch() {
       </Suspense>
       <SubmitComponent />
       <Footer />
-      <div
-        className="cf-turnstile"
-        data-sitekey="0x4AAAAAAAx9XpnBsPXGv7Q0"
-      ></div>
     </div>
   );
 }
