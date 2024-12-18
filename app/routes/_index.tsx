@@ -549,9 +549,9 @@ function appendErrorToUrl(baseUrlSearch: string, error?: string) {
 const getBackgroundColors = (rating: number | null) => {
   if (rating === null)
     return {
-      base: "hsl(220, 48%, 6%)",
-      gradient1: "hsla(225, 69%, 20%, 0.75)",
-      gradient2: "hsla(262, 68%, 19%, 0.45)",
+      base: "hsl(280, 35%, 7%)",
+      gradient1: "hsla(315, 60%, 25%, 0.6)",
+      gradient2: "hsla(290, 55%, 25%, 0.4)",
     };
   if (rating <= 10)
     return {
@@ -561,56 +561,56 @@ const getBackgroundColors = (rating: number | null) => {
     };
   if (rating <= 20)
     return {
-      base: "hsl(4, 45%, 9%)",
-      gradient1: "hsla(4, 55%, 35%, 0.35)",
-      gradient2: "hsla(4, 55%, 25%, 0.25)",
+      base: "hsl(6, 45%, 9%)",
+      gradient1: "hsla(6, 55%, 35%, 0.35)",
+      gradient2: "hsla(6, 55%, 25%, 0.25)",
     };
   if (rating <= 30)
     return {
-      base: "hsl(8, 45%, 10%)",
-      gradient1: "hsla(8, 55%, 38%, 0.35)",
-      gradient2: "hsla(8, 55%, 28%, 0.25)",
+      base: "hsl(12, 45%, 10%)",
+      gradient1: "hsla(12, 55%, 38%, 0.35)",
+      gradient2: "hsla(12, 55%, 28%, 0.25)",
     };
   if (rating <= 45)
     return {
-      base: "hsl(24, 45%, 10%)",
-      gradient1: "hsla(24, 55%, 38%, 0.35)",
-      gradient2: "hsla(24, 55%, 28%, 0.25)",
+      base: "hsl(20, 45%, 10%)",
+      gradient1: "hsla(20, 55%, 38%, 0.35)",
+      gradient2: "hsla(20, 55%, 28%, 0.25)",
     };
   if (rating <= 60)
     return {
-      base: "hsl(36, 45%, 10%)",
-      gradient1: "hsla(36, 55%, 38%, 0.35)",
-      gradient2: "hsla(36, 55%, 28%, 0.25)",
+      base: "hsl(32, 45%, 10%)",
+      gradient1: "hsla(32, 55%, 38%, 0.35)",
+      gradient2: "hsla(32, 55%, 28%, 0.25)",
     };
   if (rating <= 70)
     return {
-      base: "hsl(48, 45%, 10%)",
-      gradient1: "hsla(48, 55%, 38%, 0.35)",
-      gradient2: "hsla(48, 55%, 28%, 0.25)",
+      base: "hsl(45, 45%, 10%)",
+      gradient1: "hsla(45, 55%, 38%, 0.35)",
+      gradient2: "hsla(45, 55%, 28%, 0.25)",
     };
   if (rating <= 80)
     return {
-      base: "hsl(84, 45%, 10%)",
-      gradient1: "hsla(84, 55%, 38%, 0.35)",
-      gradient2: "hsla(84, 55%, 28%, 0.25)",
+      base: "hsl(75, 45%, 10%)",
+      gradient1: "hsla(75, 55%, 38%, 0.35)",
+      gradient2: "hsla(75, 55%, 28%, 0.25)",
     };
   if (rating <= 85)
     return {
-      base: "hsl(142, 45%, 10%)",
-      gradient1: "hsla(142, 55%, 38%, 0.35)",
-      gradient2: "hsla(142, 55%, 28%, 0.25)",
+      base: "hsl(120, 45%, 10%)",
+      gradient1: "hsla(120, 55%, 38%, 0.35)",
+      gradient2: "hsla(120, 55%, 28%, 0.25)",
     };
   if (rating <= 95)
     return {
-      base: "hsl(152, 45%, 11%)",
-      gradient1: "hsla(152, 55%, 40%, 0.35)",
-      gradient2: "hsla(152, 55%, 30%, 0.25)",
+      base: "hsl(140, 45%, 11%)",
+      gradient1: "hsla(140, 55%, 40%, 0.35)",
+      gradient2: "hsla(140, 55%, 30%, 0.25)",
     };
   return {
-    base: "hsl(160, 45%, 11%)",
-    gradient1: "hsla(160, 55%, 40%, 0.35)",
-    gradient2: "hsla(160, 55%, 30%, 0.25)",
+    base: "hsl(142,48%,14%)",
+    gradient1: "hsla(140,60%,39%,0.35)",
+    gradient2: "hsla(140,64%,27%,0.25)",
   };
 };
 
@@ -627,11 +627,24 @@ export default function Sunwatch() {
       root.style.setProperty("--bg-base-color", colors.base);
       root.style.setProperty("--gradient-1-color", colors.gradient1);
       root.style.setProperty("--gradient-2-color", colors.gradient2);
+
+      const backgroundElement = document.querySelector(".background-colors");
+      if (backgroundElement) {
+        if (allData.rating > 95) {
+          backgroundElement.classList.add("high-rating");
+        } else {
+          backgroundElement.classList.remove("high-rating");
+        }
+      }
     }
   }, [allData?.rating, allData?.lat, allData?.lon]);
 
   return (
-    <div className={"w-screen min-h-screen blob overflow-x-hidden"}>
+    <div
+      className={`w-screen min-h-screen background-colors overflow-x-hidden ${
+        allData?.rating && allData?.rating > 95 ? "high-rating" : ""
+      }`}
+    >
       <div className={"w-screen text-center mx-auto"}>
         <Link
           to={"/"}
