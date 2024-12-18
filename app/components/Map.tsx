@@ -1,4 +1,4 @@
-import { useRouteLoaderData } from "@remix-run/react";
+import { Form, useRouteLoaderData } from "@remix-run/react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AveragedValues, DbUpload, LoaderData } from "~/.server/interfaces";
 import StatItem from "~/components/StatItem";
@@ -9,6 +9,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import Supercluster from "supercluster";
 // @ts-ignore
 import type { GeoJSON } from "supercluster";
+import { FaTrash } from "react-icons/fa";
 
 type BBox =
   | [number, number, number, number]
@@ -122,20 +123,44 @@ export default function MapComponent() {
             .map((sub) => (
               <div
                 key={sub.image_id}
-                className={`flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-md cursor-pointer ${getBorderColor(
-                  sub.rating
-                )} border`}
-                onClick={() => {
-                  handleMarkerClick(sub.lon, sub.lat, sub);
-                }}
+                className="relative flex-shrink-0 w-[250px] h-[170px] overflow-hidden rounded-md cursor-pointer"
               >
-                <img
-                  src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/mid`}
-                  alt={`User submission from ${sub.city}`}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
+                {allData.authorized && (
+                  <Form
+                    method="post"
+                    className="absolute top-2 left-2 z-10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="hidden"
+                      name="submission"
+                      value={JSON.stringify(sub)}
+                    />
+                    <input type="hidden" name="element" value="deleteRequest" />
+                    <button
+                      type="submit"
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <FaTrash size={16} />
+                    </button>
+                  </Form>
+                )}
+                <div
+                  className={`w-full h-full ${getBorderColor(
+                    sub.rating
+                  )} border`}
+                  onClick={() => {
+                    handleMarkerClick(sub.lon, sub.lat, sub);
+                  }}
+                >
+                  <img
+                    src={`https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${sub.image_id}/mid`}
+                    alt={`User submission from ${sub.city}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
               </div>
             ))}
         </div>
