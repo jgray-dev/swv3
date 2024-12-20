@@ -359,8 +359,6 @@ export const action: ActionFunction = async ({ request, context }) => {
         return redirect(appendErrorToUrl(url.search, `Unauthorized action`));
       try {
         const submission = JSON.parse(`${formData.get("submission")}`);
-        console.log("Delete request recieved");
-        console.log(submission);
         const API_URL = `https://api.cloudflare.com/client/v4/accounts/${
           context.cloudflare.env.CF_ACCOUNT_ID
         }/images/v1/${encodeURIComponent(submission.image_id)}`;
