@@ -166,6 +166,13 @@ export default function MapComponent() {
         </div>
         {/* end */}
       </div>
+      <div
+        className={
+          "w-screen mx-auto text-center text-sm text-gray-400 translate-y-4"
+        }
+      >
+        View user submissions from around the world!
+      </div>
       <div className="max-w-screen min-h-screen p-4 flex md:flex-row flex-col gap-4">
         <div
           className={`transition-all duration-400 ease-in-out w-full md:w-3/4 transform select-none ${
