@@ -8,6 +8,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { IoIosWarning } from "react-icons/io";
 import { PiWarningCircle } from "react-icons/pi";
 import { LoaderData } from "~/.server/interfaces";
+import { IoInformationCircleOutline } from "react-icons/io5";
+import { useScrollLock } from "~/hooks/useScrollLock";
 
 interface ActionData {
   success: boolean;
@@ -52,13 +54,87 @@ export default function SubmitComponent() {
     }
   }, [actionData]);
 
+  const [showInfo, setShowInfo] = useState(false);
+  useScrollLock(showInfo);
   if (!allData?.ok) return null;
   return (
     <div className="w-full max-w-lg mx-auto px-4 py-6">
-      <h2 className="text-xl font-medium text-slate-100 mb-6 text-center">
-        Submit your own picture!
-      </h2>
-
+      <div className="flex justify-center items-center gap-2 mb-6">
+        <h2 className="text-xl font-medium text-slate-100">
+          Submit a picture of this {allData.eventType}!
+        </h2>
+        <IoInformationCircleOutline
+          className="h-7 w-7 text-gray-500 cursor-pointer fill-gray-500 hover:fill-white hover:text-white duration-150 translate-y-[1px]"
+          onClick={() => setShowInfo(true)}
+        />
+      </div>
+      {showInfo && (
+        <div
+          className={
+            "w-screen h-screen fixed top-0 z-10 left-0 bg-black/50 backdrop-blur-md flex justify-center items-center"
+          }
+          onClick={() => setShowInfo(false)}
+        >
+          <div
+            className={
+              "relative w-3/4 md:w-1/2 h-fit bg-white/5 rounded-lg text-md px-6 py-4"
+            }
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className={
+                "absolute -top-3 -left-3 w-6 h-6 bg-red-600 rounded-full text-white font-bold hover:bg-red-700 flex items-center justify-center duration-150"
+              }
+              onClick={() => setShowInfo(false)}
+            >
+              ×
+            </button>
+            {allData.relative === "future" ? (
+              <>
+                Planning to watch the {allData.eventType} in{" "}
+                {allData.city.split(",")[0]}? When you capture this{" "}
+                {allData.eventType} (
+                {allData.eventString.split(" ").slice(1).join(" ")}), we'd love
+                to see your photo. Your submission will appear on our world map,
+                allowing other users to compare our predicted rating of{" "}
+                {allData.rating}/100 with what you actually see. Whether you're
+                using a professional camera or just a quick smartphone snap, all
+                photos are welcome - just make sure they show the sky during the{" "}
+                {allData.eventType}. Your shared image will help other sky
+                enthusiasts discover beautiful viewing spots and helps us
+                improve our predictions.
+              </>
+            ) : allData.relative === "current" ? (
+              <>
+                Watching the {allData.eventType} in {allData.city.split(",")[0]}{" "}
+                right now? We'd love to see your photo! Your submission will
+                appear on our world map, allowing other users to compare our
+                predicted rating of {allData.rating}/100 with what you're
+                seeing. Whether you're using a professional camera or just a
+                quick smartphone snap, all photos are welcome - just make sure
+                they show the sky during the {allData.eventType}. Your shared
+                image helps other sky enthusiasts discover beautiful viewing
+                spots and helps us improve our predictions.
+              </>
+            ) : (
+              <>
+                Share your {allData.eventType} experience from{" "}
+                {allData.city.split(",")[0]}! If you captured this{" "}
+                {allData.eventType} (
+                {allData.eventString.split(" ").slice(1).join(" ")}), we'd love
+                to see your photo. Your submission will appear on our world map,
+                allowing other users to compare our predicted rating of{" "}
+                {allData.rating}/100 with what you saw. Whether you're using a
+                professional camera or just a quick smartphone snap, all photos
+                are welcome - just make sure they show the sky during the{" "}
+                {allData.eventType}. Your shared image helps other sky
+                enthusiasts discover beautiful viewing spots and helps us
+                improve our predictions.
+              </>
+            )}
+          </div>
+        </div>
+      )}
       <Form
         ref={formRef}
         method="post"
