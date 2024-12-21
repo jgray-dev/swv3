@@ -8,7 +8,7 @@ function farDramaClouds(input: number): number {
     [10, 20],
     [20, 25],
     [30, 25],
-    [40, 25],
+    [40, 20],
     [50, 20],
     [60, 20],
     [70, 15],
@@ -33,13 +33,13 @@ function horizonMidClouds(input: number): number {
   input = Math.max(0, Math.min(100, input));
   const points: [number, number][] = [
     [0, 5],
-    [10, 10],
-    [20, 15],
+    [10, 15],
+    [20, 20],
     [30, 20],
-    [40, 20],
-    [50, 15],
-    [60, 10],
-    [70, 10],
+    [40, 15],
+    [50, 10],
+    [60, 8],
+    [70, 7],
     [80, 5],
     [90, 5],
     [100, 0],
@@ -66,11 +66,11 @@ function horizonHighClouds(input: number): number {
     [30, 30],
     [40, 30],
     [50, 30],
-    [60, 30],
-    [70, 25],
-    [80, 20],
-    [90, 20],
-    [100, 15],
+    [60, 25],
+    [70, 20],
+    [80, 15],
+    [90, 5],
+    [100, 0],
   ];
   let i = 0;
   while (i < points.length - 1 && points[i + 1][0] < input) {
@@ -115,15 +115,15 @@ function calculateAverageCloudHeight(horizonData: AveragedValues) {
 function totalCoverMulti(input: number): number {
   input = Math.max(0, Math.min(100, input));
   const points: [number, number][] = [
-    [0, 0.8],
-    [10, 0.9],
+    [0, 0.9],
+    [10, 1],
     [20, 1],
     [30, 1],
     [40, 1],
     [50, 1],
-    [60, 1],
-    [70, 1],
-    [80, 0.9],
+    [60, 0.9],
+    [70, 0.9],
+    [80, 0.8],
     [90, 0.8],
     [100, 0.7],
   ];
