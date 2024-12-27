@@ -858,7 +858,7 @@ export default function Sunwatch() {
             root.style.setProperty("--gradient-2-color", colors.gradient2);
           }}
         >
-          sunwatch
+          sunwatch - dev test
         </Link>
       </div>
       <LocationComponent />
