@@ -1,7 +1,7 @@
 import type { ActionFunction, MetaFunction } from "@remix-run/cloudflare";
 import { Link, redirect, useRouteLoaderData } from "@remix-run/react";
 import { json, LoaderFunction } from "@remix-run/router";
-import React, { Suspense, useEffect } from "react";
+import React, { useEffect } from "react";
 import SunCalc from "suncalc";
 import jwt from "@tsndr/cloudflare-worker-jwt";
 import {
@@ -43,7 +43,6 @@ const CloudCoverDisplay = React.lazy(
 );
 // import CloudCoverDisplay from "~/components/CloudCoverDisplay";
 
-import MapSuspense from "~/components/MapSuspense";
 const Map = React.lazy(() => import("~/components/Map"));
 // import Map from "~/components/Map";
 
@@ -866,9 +865,7 @@ export default function Sunwatch() {
       <LocationDisplay />
       <RatingDisplay />
       <CloudCoverDisplay />
-      <Suspense fallback={<MapSuspense />}>
-        <Map />
-      </Suspense>
+      <Map />
       <SubmitComponent />
       <Footer />
     </div>

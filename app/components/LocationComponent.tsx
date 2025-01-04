@@ -83,7 +83,7 @@ export default function LocationComponent() {
       if ("geolocation" in navigator) {
         const options: PositionOptions = {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 15000, // Increased timeout for better iOS compatibility
           maximumAge: 0,
         };
 
@@ -98,6 +98,8 @@ export default function LocationComponent() {
                 setGettingGeolocation(false);
               } else {
                 console.error("Invalid position data received");
+                setGettingGeolocation(false);
+                // User can fall back to manual input
               }
             },
             (err: GeolocationPositionError) => {
@@ -107,13 +109,35 @@ export default function LocationComponent() {
                 timestamp: new Date().toISOString(),
               };
 
-              if (err.code === err.PERMISSION_DENIED) {
-                const errorMsg = "Location permission denied";
-                console.error(errorMsg, errorDetails);
-                setGeolocationError(true);
-              } else if (err.code === err.POSITION_UNAVAILABLE) {
-                const errorMsg = "Position unavailable";
-                console.error(errorMsg, errorDetails);
+              switch (err.code) {
+                case err.PERMISSION_DENIED:
+                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                  const errorMsg = isIOS
+                    ? "Location access denied. Please enable location services in iOS Settings > Privacy > Location Services."
+                    : "Location permission denied. Please allow location access and try again.";
+                  console.error(errorMsg, errorDetails);
+                  setGeolocationError(true);
+                  break;
+
+                case err.POSITION_UNAVAILABLE:
+                  console.error(
+                    "Unable to determine your location. Please try manual input.",
+                    errorDetails
+                  );
+                  break;
+
+                case err.TIMEOUT:
+                  console.error(
+                    "Location request timed out. Please try again or use manual input.",
+                    errorDetails
+                  );
+                  break;
+
+                default:
+                  console.error(
+                    "An unexpected error occurred while getting location.",
+                    errorDetails
+                  );
               }
 
               setGettingGeolocation(false);
