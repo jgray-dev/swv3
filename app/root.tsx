@@ -8,7 +8,7 @@ import {
 } from "@remix-run/react";
 
 import "./tailwind.css";
-import React from "react";
+import React, { Suspense } from "react";
 
 export const links: LinksFunction = () => [
   {
@@ -40,5 +40,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <Suspense fallback={null}>
+      <Outlet />
+    </Suspense>
+  );
 }
