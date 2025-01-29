@@ -30,10 +30,10 @@ export default function StarryPage() {
         Math.random() < 0.2
           ? 2
           : Math.random() < 0.5
-          ? 1.5
-          : Math.random() < 0.8
-          ? 1
-          : 0.5,
+            ? 1.5
+            : Math.random() < 0.8
+              ? 1
+              : 0.5,
       top: `${Math.random() * 100}%`,
       left: `${Math.random() * 100}%`,
       opacity: 0.2 + Math.random() * 0.8,
