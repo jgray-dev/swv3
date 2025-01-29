@@ -34,7 +34,7 @@ export default function LocationDisplay() {
             try {
               if (!showNotification) {
                 void navigator.clipboard.writeText(
-                  `${allData.permaLink}&method=copy`
+                  `${allData.permaLink}&method=copy`,
                 );
               } else if (navigator.share) {
                 void navigator.share({
