@@ -35,7 +35,7 @@ export async function createUpload(
     data: any;
     time: number;
     type: string;
-  }
+  },
 ) {
   try {
     const db = drizzle(context.cloudflare.env.swv3_d1);
@@ -60,14 +60,14 @@ export async function createUpload(
             between(
               uploads.lat,
               newLat - SPREAD_DISTANCE,
-              newLat + SPREAD_DISTANCE
+              newLat + SPREAD_DISTANCE,
             ),
             between(
               uploads.lon,
               newLon - SPREAD_DISTANCE,
-              newLon + SPREAD_DISTANCE
-            )
-          )
+              newLon + SPREAD_DISTANCE,
+            ),
+          ),
         );
 
       foundValidPosition = nearby.length === 0;
@@ -103,7 +103,7 @@ export async function getSubmissions(
   }: {
     lat?: number;
     lon?: number;
-  } = {}
+  } = {},
 ): Promise<DbUpload[] | null> {
   try {
     const db = drizzle(context.cloudflare.env.swv3_d1);
