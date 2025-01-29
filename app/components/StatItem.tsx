@@ -19,7 +19,7 @@ export default function StatItem({
     const visibilityMiles = feetToMiles(value);
     const progress = Math.min(
       100,
-      Math.max(0, (Math.min(value, 52800) / 52800) * 100)
+      Math.max(0, (Math.min(value, 52800) / 52800) * 100),
     );
     return (
       <div
