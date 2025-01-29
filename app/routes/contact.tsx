@@ -26,7 +26,7 @@ export const action: ActionFunction = async ({ request, context }) => {
           message: `Missing required field ${field}`,
           success: false,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
   }
@@ -39,7 +39,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         message: `Null token`,
         success: false,
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
   if (!ip) {
@@ -48,7 +48,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         message: `Null ip`,
         success: false,
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
   let formData = new FormData();
@@ -81,7 +81,7 @@ export const action: ActionFunction = async ({ request, context }) => {
           message: `Form submitted. We'll be in touch if required.`,
           success: true,
         },
-        { status: 200 }
+        { status: 200 },
       );
     } catch (error) {
       return json(
@@ -90,7 +90,7 @@ export const action: ActionFunction = async ({ request, context }) => {
           message: error.message,
           success: false,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
   } else {
@@ -99,7 +99,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         message: `Verification failed. Please refresh the page and try again!`,
         success: false,
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 };
@@ -132,7 +132,7 @@ export default function Contact() {
   });
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
