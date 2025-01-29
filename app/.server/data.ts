@@ -34,7 +34,7 @@ export function generateCoordinateString(
   lat: number,
   lon: number,
   eventType: "sunrise" | "sunset",
-  date: Date
+  date: Date,
 ): [string, number] {
   if (lat < -90 || lat > 90) {
     console.error("Invalid latitude (generateCoordinateString)");
@@ -50,7 +50,7 @@ export function generateCoordinateString(
     console.error(
       `ALTITUDE INDUCED ERROR POSSIBLE. REVERTING TO ${
         eventType === "sunrise" ? 90 : 270
-      }`
+      }`,
     );
     console.error(position.altitude);
     bearing = eventType === "sunrise" ? 90 : 270;
@@ -63,7 +63,7 @@ export function generateCoordinateString(
     const point = computeDestinationPoint(
       { latitude: lat, longitude: lon },
       distance,
-      bearing
+      bearing,
     );
     latitudes.push(Number(point.latitude.toFixed(6)));
     longitudes.push(Number(point.longitude.toFixed(6)));
@@ -77,7 +77,7 @@ export function generateCoordinateString(
 //Helper function for interpolating (below)
 function findBoundingTimeIndices(
   times: number[],
-  targetTime: number
+  targetTime: number,
 ): [number, number] {
   let left = 0;
   let right = times.length - 1;
@@ -102,7 +102,7 @@ function findBoundingTimeIndices(
 function calculateInterpolationWeight(
   time1: number,
   time2: number,
-  targetTime: number
+  targetTime: number,
 ): number {
   const weight = (targetTime - time1) / (time2 - time1);
   // Ensure weight is bounded between 0 and 1
@@ -119,7 +119,7 @@ function lerp(a: number, b: number, weight: number): number {
 // Function to interpolate weather data when a sunrise/sunset falls between 2 hours (59/60 chance - hence why this is needed lol)
 export function interpolateWeatherData(
   apiResponse: WeatherLocation[],
-  targetTime: number
+  targetTime: number,
 ): InterpolatedWeather[] {
   if (!Array.isArray(apiResponse) || !apiResponse.length) {
     console.error("Invalid API Response (interpolateWeatherData)");
@@ -135,7 +135,7 @@ export function interpolateWeatherData(
     const weight = calculateInterpolationWeight(
       time[lowerIndex],
       time[upperIndex],
-      targetTime
+      targetTime,
     );
     try {
       return {
@@ -145,50 +145,50 @@ export function interpolateWeatherData(
           lerp(
             location.hourly.temperature_2m[lowerIndex],
             location.hourly.temperature_2m[upperIndex],
-            weight
-          )
+            weight,
+          ),
         ),
         cloud_cover: Math.round(
           lerp(
             location.hourly.cloud_cover[lowerIndex],
             location.hourly.cloud_cover[upperIndex],
-            weight
-          )
+            weight,
+          ),
         ),
         cloud_cover_low: Math.round(
           lerp(
             location.hourly.cloud_cover_low[lowerIndex],
             location.hourly.cloud_cover_low[upperIndex],
-            weight
-          )
+            weight,
+          ),
         ),
         cloud_cover_mid: Math.round(
           lerp(
             location.hourly.cloud_cover_mid[lowerIndex],
             location.hourly.cloud_cover_mid[upperIndex],
-            weight
-          )
+            weight,
+          ),
         ),
         cloud_cover_high: Math.round(
           lerp(
             location.hourly.cloud_cover_high[lowerIndex],
             location.hourly.cloud_cover_high[upperIndex],
-            weight
-          )
+            weight,
+          ),
         ),
         visibility: Math.round(
           lerp(
             location.hourly.visibility[lowerIndex],
             location.hourly.visibility[upperIndex],
-            weight
-          )
+            weight,
+          ),
         ),
         freezing_height: Math.round(
           lerp(
             location.hourly.freezing_level_height[lowerIndex],
             location.hourly.freezing_level_height[upperIndex],
-            weight
-          )
+            weight,
+          ),
         ),
         zone: location.zone,
         distance: location.distance,
@@ -196,7 +196,7 @@ export function interpolateWeatherData(
     } catch (error) {
       console.error(
         // @ts-ignore
-        `Error interpolating values (interpolateWeatherData) (${error.message})`
+        `Error interpolating values (interpolateWeatherData) (${error.message})`,
       );
       // @ts-ignore
       throw new Error(`Error interpolating values: ${error.message}`);
@@ -252,7 +252,7 @@ export function averageData(data: InterpolatedWeather[]): AveragedValues {
       high_clouds: 0,
       mid_clouds: 0,
       low_clouds: 0,
-    }
+    },
   );
   return {
     cloud_cover: cloudSums.cloud_cover / totalEntries,
@@ -270,7 +270,7 @@ export function averageData(data: InterpolatedWeather[]): AveragedValues {
 export function getStringLiteral(
   currentTime: number,
   eventTime: number,
-  type: string
+  type: string,
 ): string {
   const differenceInSeconds = eventTime - currentTime;
   const absoluteDifferenceInSeconds = Math.abs(differenceInSeconds);
@@ -367,7 +367,7 @@ export function getRelevantSunEvent(lat: number, lon: number): SunEvent {
   const NINETY_MINUTES = 90 * 60;
   const recentEvents = allEvents
     .filter(
-      (event) => now - event.time <= NINETY_MINUTES && now - event.time >= 0
+      (event) => now - event.time <= NINETY_MINUTES && now - event.time >= 0,
     )
     .sort((a, b) => b.time - a.time);
 
@@ -388,7 +388,7 @@ export function getRelevantSunEvent(lat: number, lon: number): SunEvent {
 
 export function purgeDuplicates(
   coordinates: WeatherLocation[],
-  eventType: "sunrise" | "sunset"
+  eventType: "sunrise" | "sunset",
 ): WeatherLocation[] {
   const sortedCoords = coordinates.sort((a, b) => {
     if (eventType === "sunrise") {
@@ -422,7 +422,7 @@ export function purgeDuplicates(
 
 export function findNextSunEvent(
   latitude: number,
-  longitude: number
+  longitude: number,
 ): [number, string] {
   const NOW = Date.now();
   const DAY_MS = 86400000;
@@ -535,7 +535,7 @@ export async function checkImage(context: any, image: File): Promise<Boolean> {
       },
       method: "POST",
       body: buffer,
-    }
+    },
   );
   const result = (await response.json()) as ClassificationResult[];
   const normalScore =
@@ -555,15 +555,15 @@ export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
   const addressComponents = response.results[0].address_components;
 
   const cityComponent = addressComponents.find((component) =>
-    component.types.includes("locality")
+    component.types.includes("locality"),
   );
 
   const stateComponent = addressComponents.find((component) =>
-    component.types.includes("administrative_area_level_1")
+    component.types.includes("administrative_area_level_1"),
   );
 
   const countryComponent = addressComponents.find((component) =>
-    component.types.includes("country")
+    component.types.includes("country"),
   );
 
   let city = cityComponent?.long_name;
@@ -572,7 +572,7 @@ export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
     const fallbackComponent = addressComponents.find(
       (component) =>
         component.types.includes("sublocality") ||
-        component.types.includes("administrative_area_level_3")
+        component.types.includes("administrative_area_level_3"),
     );
     city = fallbackComponent?.long_name;
   }
@@ -597,14 +597,14 @@ export function getCityFromGeocodeResponse(response: GeocodeResponse): string {
 export function generatePermaLink(
   eventDate: string,
   params: string,
-  type: string
+  type: string,
 ): string {
   return params.split("&date")[0] + `&date=${eventDate}&type=${type}`;
 }
 
 export function unixToDateString(
   unixTimestamp: number,
-  timezone: string
+  timezone: string,
 ): string {
   const date = new Date(unixTimestamp * 1000);
   const formatter = new Intl.DateTimeFormat("en-US", {
@@ -636,7 +636,7 @@ export function getExpirationTime(literal: string): number {
       return now + value;
     default:
       throw new Error(
-        'Invalid time format. Use format like "2h", "15m", or "30s"'
+        'Invalid time format. Use format like "2h", "15m", or "30s"',
       );
   }
 }
