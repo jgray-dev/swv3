@@ -73,7 +73,7 @@ export default function RatingDisplay() {
             preserveAspectRatio="xMidYMid meet"
             role="img"
             aria-label={`Rating indicator showing ${Math.round(
-              displayNumber
+              displayNumber,
             )}%`}
           >
             <defs>
@@ -119,7 +119,7 @@ export default function RatingDisplay() {
               fill="none"
               strokeWidth="4"
               className={`${getColor(
-                rating
+                rating,
               )} transition-all duration-500 ease-in-out`}
               strokeDasharray={circumference}
               strokeDashoffset={dashOffset}
@@ -142,8 +142,8 @@ export default function RatingDisplay() {
               allData.relative === "current"
                 ? "gradient default-gradient font-bold"
                 : allData.relative === "future"
-                ? "text-green-400"
-                : "text-red-400"
+                  ? "text-green-400"
+                  : "text-red-400"
             }`}
             aria-label={`Event timing: ${allData.eventString}`}
           >
@@ -156,7 +156,7 @@ export default function RatingDisplay() {
               allData.eventType.charAt(0).toUpperCase() +
               allData.eventType.slice(1)
             } direction ${Math.round(allData.bearing)}° (${degreesToCompass(
-              Math.round(allData.bearing)
+              Math.round(allData.bearing),
             )})`}
           >
             <FaLongArrowAltUp
