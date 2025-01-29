@@ -146,7 +146,7 @@ export function skyRating(data: InterpolatedWeather[]): {
 } {
   const nearData = averageData(data.filter((data) => data.zone === "near"));
   const horizonData = averageData(
-    data.filter((data) => data.zone === "horizon")
+    data.filter((data) => data.zone === "horizon"),
   );
   const farData = averageData(data.filter((data) => data.zone === "far"));
 
@@ -171,8 +171,8 @@ export function skyRating(data: InterpolatedWeather[]): {
             0,
             Math.min(
               100,
-              100 - Math.max(0, Math.min(50000, nearData.visibility)) * 0.002
-            )
+              100 - Math.max(0, Math.min(50000, nearData.visibility)) * 0.002,
+            ),
           )) /
           100);
   }
@@ -198,8 +198,8 @@ export function skyRating(data: InterpolatedWeather[]): {
             1.2,
             Math.max(
               0.8,
-              1 + (horizonHeight - horizonData.freezing_height) / horizonHeight
-            )
+              1 + (horizonHeight - horizonData.freezing_height) / horizonHeight,
+            ),
           );
   }
 
@@ -215,7 +215,7 @@ export function skyRating(data: InterpolatedWeather[]): {
       freezeMulti = 1;
     }
     const farCoverage = farDramaClouds(
-      (farData.low_clouds + farData.mid_clouds + farData.high_clouds) / 3
+      (farData.low_clouds + farData.mid_clouds + farData.high_clouds) / 3,
     );
     farRating = farCoverage * freezeMulti;
   }
@@ -234,7 +234,7 @@ export function skyRating(data: InterpolatedWeather[]): {
     (nearRating + horizonRating + farRating) *
       nearMulti *
       horizonMulti *
-      totalMulti
+      totalMulti,
   );
   return {
     rating: Math.min(Math.max(0, final), 100),
