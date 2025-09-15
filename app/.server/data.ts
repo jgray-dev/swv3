@@ -286,9 +286,18 @@ export function getStringLiteral(
   const pluralize = (value: number, unit: string) =>
     `${value} ${unit}${value === 1 ? "" : "s"}`;
 
+  // Format the actual time in the event's local timezone
+  const eventDate = new Date(eventTime * 1000);
+  const timeFormatter = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const localTime = timeFormatter.format(eventDate);
+
   // Just now
   if (absoluteDifferenceInMinutes < 1) {
-    return `${type === "sunset" ? "sunsetting" : "sunrising"} just now`;
+    return `${type === "sunset" ? "sunsetting" : "sunrising"} just now (${localTime})`;
   }
 
   // Create the time string
@@ -307,10 +316,10 @@ export function getStringLiteral(
     timeString = pluralize(minutes, "minute");
   }
 
-  // Return formatted string
+  // Return formatted string with local time in parentheses
   return differenceInSeconds < 0
-    ? `${type} ${timeString} ago`
-    : `${type} in ${timeString}`;
+    ? `${type} ${timeString} ago (${localTime})`
+    : `${type} in ${timeString} (${localTime})`;
 }
 
 // Used for formatting text when displaying the date/time of an event
