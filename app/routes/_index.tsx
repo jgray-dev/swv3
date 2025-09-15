@@ -1,6 +1,6 @@
 import type { ActionFunction, MetaFunction } from "@remix-run/cloudflare";
 import { Link, redirect, useRouteLoaderData } from "@remix-run/react";
-import { json, LoaderFunction } from "@remix-run/router";
+import { LoaderFunction } from "@remix-run/router";
 import React, { useEffect } from "react";
 import SunCalc from "suncalc";
 import jwt from "@tsndr/cloudflare-worker-jwt";
@@ -332,7 +332,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   const formData = await request.formData();
   const element = formData.get("element");
   if (!element || typeof element !== "string") {
-    return json({ error: "Missing form identifier" }, { status: 500 });
+    return Response.json({ error: "Missing form identifier" }, { status: 500 });
   }
   switch (element) {
     case "deleteRequest": {
@@ -458,7 +458,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       ];
       for (const field of requiredFields) {
         if (!formData.get(field)) {
-          return json(
+          return Response.json(
             {
               error: `Missing required field: ${field}`,
               success: false,
@@ -479,7 +479,7 @@ export const action: ActionFunction = async ({ request, context }) => {
 
       // Validate data types
       if (!imageFile || !(imageFile instanceof Blob)) {
-        return json(
+        return Response.json(
           {
             error: "Invalid image format",
             success: false,
@@ -495,7 +495,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         isNaN(Number(lon)) ||
         isNaN(Number(eventTime))
       ) {
-        return json(
+        return Response.json(
           {
             error: "Invalid numeric values provided",
             details: {
@@ -514,7 +514,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       try {
         const safe = await checkImage(context, imageFile);
         if (!safe) {
-          return json(
+          return Response.json(
             {
               error: "Unsafe image detected",
               success: false,
@@ -524,7 +524,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         }
       } catch (error) {
         console.error(error);
-        return json(
+        return Response.json(
           {
             error: "Failed to check image safety. Please try again",
             details: error instanceof Error ? error.message : "Unknown error",
@@ -542,7 +542,7 @@ export const action: ActionFunction = async ({ request, context }) => {
           !context.cloudflare.env.CF_ACCOUNT_ID ||
           !context.cloudflare.env.CF_TOKEN
         ) {
-          return json(
+          return Response.json(
             {
               error: "Missing Cloudflare credentials",
               success: false,
@@ -564,7 +564,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         });
 
         if (!response.ok) {
-          return json(
+          return Response.json(
             {
               error: "Error uploading image to images provider",
               details: `HTTP ${response.status}: ${response.statusText}`,
@@ -579,7 +579,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         const image_id = responseData?.result?.id;
 
         if (!image_id) {
-          return json(
+          return Response.json(
             {
               error: "Error uploading image to images provider",
               details: "No image ID returned",
@@ -602,7 +602,7 @@ export const action: ActionFunction = async ({ request, context }) => {
             type: String(eventType),
           });
 
-          return json(
+          return Response.json(
             {
               message: "Uploaded to database",
               image_id,
@@ -612,7 +612,7 @@ export const action: ActionFunction = async ({ request, context }) => {
           );
         } catch (error) {
           console.error("Error posting to database:", error);
-          return json(
+          return Response.json(
             {
               error: "Failed to post to database",
               details: error instanceof Error ? error.message : "Unknown error",
@@ -623,7 +623,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-        return json(
+        return Response.json(
           {
             error: "Failed to upload image",
             details: error instanceof Error ? error.message : "Unknown error",
@@ -640,15 +640,18 @@ export const action: ActionFunction = async ({ request, context }) => {
       const locationDataString = formData.get("locationData");
       if (!locationDataString || typeof locationDataString !== "string") {
         console.log("Error: Invalid location data, 400");
-        return json({ error: "Invalid location data" }, { status: 400 });
+        return Response.json(
+          { error: "Invalid location data" },
+          { status: 400 },
+        );
       }
       if (!eventType || typeof eventType !== "string") {
         console.log("Error: Invalid eventType, 400");
-        return json({ error: "Invalid eventType" }, { status: 400 });
+        return Response.json({ error: "Invalid eventType" }, { status: 400 });
       }
       if (!date || typeof date !== "string") {
         console.log("Error: Invalid date, 400");
-        return json({ error: "Invalid date" }, { status: 400 });
+        return Response.json({ error: "Invalid date" }, { status: 400 });
       }
 
       try {
@@ -728,7 +731,7 @@ export const action: ActionFunction = async ({ request, context }) => {
       }
     }
     default:
-      return json({ error: "Unknown element type" }, { status: 400 });
+      return Response.json({ error: "Unknown element type" }, { status: 400 });
   }
 };
 
@@ -812,6 +815,7 @@ const getBackgroundColors = (rating: number | null) => {
 
 export default function Sunwatch() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
+  console.log(allData?.weatherData);
   useEffect(() => {
     if (allData?.rating) {
       const colors = getBackgroundColors(
