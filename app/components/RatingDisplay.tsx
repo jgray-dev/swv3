@@ -7,8 +7,22 @@ import StatItem from "~/components/StatItem";
 export default function RatingDisplay() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
   const [displayNumber, setDisplayNumber] = useState(allData?.rating || 0);
+  const [userLocalTime, setUserLocalTime] = useState<string>("");
   const startTimeRef = useRef<number>(0);
   const startValueRef = useRef(displayNumber);
+
+  // Calculate user's local time for hover tooltip
+  useEffect(() => {
+    if (!allData?.ok || !allData.eventTime) return;
+
+    const eventDate = new Date(allData.eventTime * 1000);
+    const userTimeFormatter = new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    setUserLocalTime(userTimeFormatter.format(eventDate));
+  }, [allData?.eventTime]);
 
   useEffect(() => {
     if (!allData?.ok) return;
@@ -73,7 +87,7 @@ export default function RatingDisplay() {
             preserveAspectRatio="xMidYMid meet"
             role="img"
             aria-label={`Rating indicator showing ${Math.round(
-              displayNumber
+              displayNumber,
             )}%`}
           >
             <defs>
@@ -119,7 +133,7 @@ export default function RatingDisplay() {
               fill="none"
               strokeWidth="4"
               className={`${getColor(
-                rating
+                rating,
               )} transition-all duration-500 ease-in-out`}
               strokeDasharray={circumference}
               strokeDashoffset={dashOffset}
@@ -138,13 +152,14 @@ export default function RatingDisplay() {
             </span>
           </div>
           <div
-            className={`text-sm sm:text-base mt-1 relative rounded px-1 ${
+            className={`text-sm sm:text-base mt-1 relative rounded px-1 cursor-help ${
               allData.relative === "current"
                 ? "gradient default-gradient font-bold"
                 : allData.relative === "future"
-                ? "text-green-400"
-                : "text-red-400"
+                  ? "text-green-400"
+                  : "text-red-400"
             }`}
+            title={userLocalTime ? `${userLocalTime} in your timezone` : ""}
             aria-label={`Event timing: ${allData.eventString}`}
           >
             {allData.eventString.charAt(0).toUpperCase() +
@@ -156,7 +171,7 @@ export default function RatingDisplay() {
               allData.eventType.charAt(0).toUpperCase() +
               allData.eventType.slice(1)
             } direction ${Math.round(allData.bearing)}° (${degreesToCompass(
-              Math.round(allData.bearing)
+              Math.round(allData.bearing),
             )})`}
           >
             <FaLongArrowAltUp

@@ -18,15 +18,15 @@ export default function LocationComponent() {
   const [useNextEvent, setUseNextEvent] = useState(allData?.useNext ?? true);
 
   const [selectedDate, setSelectedDate] = useState<string>(
-    allData?.eventDate ?? new Date().toISOString().split("T")[0]
+    allData?.eventDate ?? new Date().toISOString().split("T")[0],
   );
   const [eventType, setEventType] = useState<"sunrise" | "sunset">(
-    allData?.eventType ?? "sunrise"
+    allData?.eventType ?? "sunrise",
   );
 
   const [useGpsLocation, setUseGpsLocation] = useState<boolean>(false);
   const [gpsPosition, setGpsPosition] = useState<GeolocationPosition | null>(
-    null
+    null,
   );
 
   const resetGPSStates = () => {
@@ -44,7 +44,7 @@ export default function LocationComponent() {
           date: useNextEvent ? "next" : selectedDate,
           eventType: useNextEvent ? "next" : eventType,
         },
-        { method: "post" }
+        { method: "post" },
       );
       if (locationData.type === "input") {
         resetGPSStates();
@@ -122,27 +122,27 @@ export default function LocationComponent() {
                 case err.POSITION_UNAVAILABLE:
                   console.error(
                     "Unable to determine your location. Please try manual input.",
-                    errorDetails
+                    errorDetails,
                   );
                   break;
 
                 case err.TIMEOUT:
                   console.error(
                     "Location request timed out. Please try again or use manual input.",
-                    errorDetails
+                    errorDetails,
                   );
                   break;
 
                 default:
                   console.error(
                     "An unexpected error occurred while getting location.",
-                    errorDetails
+                    errorDetails,
                   );
               }
 
               setGettingGeolocation(false);
             },
-            options
+            options,
           );
         } catch (error) {
           const typedError = error as Error;
@@ -229,8 +229,8 @@ export default function LocationComponent() {
                geolocationError
                  ? "bg-red-500/20 border-red-500/30 cursor-not-allowed"
                  : gotGeolocation
-                 ? "bg-green-500/20 border-green-500/30"
-                 : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10"
+                   ? "bg-green-500/20 border-green-500/30"
+                   : "bg-white/20 border-white/10 hover:bg-white/30 active:bg-white/10"
              }`}
                 disabled={
                   geolocationError || gettingGeolocation || gotGeolocation
@@ -239,8 +239,8 @@ export default function LocationComponent() {
                   geolocationError
                     ? "GPS location unavailable"
                     : gotGeolocation
-                    ? "GPS location acquired"
-                    : "Use GPS location"
+                      ? "GPS location acquired"
+                      : "Use GPS location"
                 }
               >
                 {gettingGeolocation && !gotGeolocation ? (
@@ -255,8 +255,8 @@ export default function LocationComponent() {
                       geolocationError
                         ? "text-red-400"
                         : gotGeolocation
-                        ? "text-green-400"
-                        : "text-slate-100"
+                          ? "text-green-400"
+                          : "text-slate-100"
                     }`}
                   />
                 )}

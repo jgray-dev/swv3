@@ -135,7 +135,7 @@ export default function CloudCoverDisplay() {
 
   const nearLocations = data.weatherData.filter((loc) => loc.zone === "near");
   const horizonLocations = data.weatherData.filter(
-    (loc) => loc.zone === "horizon"
+    (loc) => loc.zone === "horizon",
   );
   const farLocations = data.weatherData.filter((loc) => loc.zone === "far");
 

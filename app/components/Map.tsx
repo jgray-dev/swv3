@@ -97,7 +97,7 @@ export default function MapComponent() {
   const handleMarkerClick = (
     longitude: number,
     latitude: number,
-    submission: any
+    submission: any,
   ) => {
     setSelectedSubmission(submission);
     mapRef.current?.flyTo({
@@ -147,7 +147,7 @@ export default function MapComponent() {
                 )}
                 <div
                   className={`w-full h-full ${getBorderColor(
-                    sub.rating
+                    sub.rating,
                   )} border`}
                   onClick={() => {
                     handleMarkerClick(sub.lon, sub.lat, sub);
@@ -204,7 +204,7 @@ export default function MapComponent() {
               {supercluster
                 .getClusters(
                   [-180, -85, 180, 85] as BBox,
-                  Math.floor(viewState.zoom)
+                  Math.floor(viewState.zoom),
                 )
                 .map((cluster) => {
                   const [longitude, latitude] = cluster.geometry.coordinates;
@@ -213,7 +213,7 @@ export default function MapComponent() {
                   if (isCluster) return null;
 
                   const submission = allData.uploads.find(
-                    (sub) => sub.id === cluster.properties.submissionId
+                    (sub) => sub.id === cluster.properties.submissionId,
                   );
 
                   return (
@@ -233,7 +233,7 @@ export default function MapComponent() {
               {supercluster
                 .getClusters(
                   [-180, -85, 180, 85] as BBox,
-                  Math.floor(viewState.zoom)
+                  Math.floor(viewState.zoom),
                 )
                 .map((cluster) => {
                   const [longitude, latitude] = cluster.geometry.coordinates;
@@ -273,7 +273,7 @@ export default function MapComponent() {
                   className="object-cover w-full max-h-full group-hover:scale-105 duration-150 select-none"
                   onClick={() =>
                     setImgModal(
-                      `https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${selectedSubmission.image_id}/public`
+                      `https://imagedelivery.net/owAW_Q5wZODBr4c43A0cEw/${selectedSubmission.image_id}/public`,
                     )
                   }
                 />

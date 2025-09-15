@@ -1,6 +1,6 @@
 import type { ActionFunction, MetaFunction } from "@remix-run/cloudflare";
 import { Link, redirect, useRouteLoaderData } from "@remix-run/react";
-import { json, LoaderFunction } from "@remix-run/router";
+import { LoaderFunction } from "@remix-run/router";
 import React, { useEffect } from "react";
 import SunCalc from "suncalc";
 import jwt from "@tsndr/cloudflare-worker-jwt";
@@ -39,7 +39,7 @@ import LocationDisplay from "~/components/LocationDisplay";
 import RatingDisplay from "~/components/RatingDisplay";
 
 const CloudCoverDisplay = React.lazy(
-  () => import("~/components/CloudCoverDisplay")
+  () => import("~/components/CloudCoverDisplay"),
 );
 // import CloudCoverDisplay from "~/components/CloudCoverDisplay";
 
@@ -47,7 +47,7 @@ const Map = React.lazy(() => import("~/components/Map"));
 // import Map from "~/components/Map";
 
 const SubmitComponent = React.lazy(
-  () => import("~/components/SubmitComponent")
+  () => import("~/components/SubmitComponent"),
 );
 // import SubmitComponent from "~/components/SubmitComponent";
 
@@ -74,7 +74,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
         const token = cookie.split("auth=")[1].split(";")[0];
         const verifiedToken = await jwt.verify(
           token,
-          context.cloudflare.env.JWT_SECRET
+          context.cloudflare.env.JWT_SECRET,
         );
         if (verifiedToken) {
           const { payload } = verifiedToken;
@@ -123,7 +123,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       const [time, type] = findNextSunEvent(Number(lat), Number(lon));
       return {
         message: `No ${type} time found | Next event in approximately ${unixToApproximateString(
-          time
+          time,
         )}`,
         ok: false,
         uploads: await getSubmissions(context),
@@ -140,12 +140,12 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       dateUrl = date.toISOString().split("T")[0];
     }
     dayBefore = new Date(
-      new Date(dateUrl).setDate(new Date(dateUrl).getDate() - 1)
+      new Date(dateUrl).setDate(new Date(dateUrl).getDate() - 1),
     )
       .toISOString()
       .split("T")[0];
     dayAfter = new Date(
-      new Date(dateUrl).setDate(new Date(dateUrl).getDate() + 1)
+      new Date(dateUrl).setDate(new Date(dateUrl).getDate() + 1),
     )
       .toISOString()
       .split("T")[0];
@@ -162,7 +162,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
           eventType = "sunrise";
           eventTime = Math.round(
             SunCalc.getTimes(noon, Number(lat), Number(lon)).sunrise.getTime() /
-              1000
+              1000,
           );
           eventDate = SunCalc.getTimes(noon, Number(lat), Number(lon)).sunrise;
           break;
@@ -170,7 +170,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
           eventType = "sunset";
           eventTime = Math.round(
             SunCalc.getTimes(noon, Number(lat), Number(lon)).sunset.getTime() /
-              1000
+              1000,
           );
           eventDate = SunCalc.getTimes(noon, Number(lat), Number(lon)).sunset;
           break;
@@ -183,7 +183,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       Number(lat),
       Number(lon),
       eventType,
-      eventDate
+      eventDate,
     );
 
     const googleApiKey = context.cloudflare.env.GOOGLE_MAPS_API_KEY;
@@ -191,7 +191,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     const basePromises = [
       await getSubmissions(context),
       await fetch(
-        `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${coords}&start_date=${dayBefore}&end_date=${dayAfter}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${meteoApiKey}`
+        `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${coords}&start_date=${dayBefore}&end_date=${dayAfter}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${meteoApiKey}`,
       ),
     ] as const;
 
@@ -200,10 +200,10 @@ export const loader: LoaderFunction = async ({ request, context }) => {
           ...basePromises,
           fetch(
             `https://maps.googleapis.com/maps/api/timezone/json?location=${encodeURIComponent(
-              lat
+              lat,
             )}%2C${encodeURIComponent(lon)}&timestamp=${encodeURIComponent(
-              currentUnixTime
-            )}&key=${googleApiKey}`
+              currentUnixTime,
+            )}&key=${googleApiKey}`,
           ),
         ])
       : await Promise.all(basePromises);
@@ -219,15 +219,15 @@ export const loader: LoaderFunction = async ({ request, context }) => {
             redirect(
               appendErrorToUrl(
                 url.search,
-                `Error fetching TimeZone API [${parsedTimezoneResponse.status}]`
-              )
+                `Error fetching TimeZone API [${parsedTimezoneResponse.status}]`,
+              ),
             );
           }
 
           return generatePermaLink(
             unixToDateString(eventTime, parsedTimezoneResponse.timeZoneId),
             searchParams.toString(),
-            eventType
+            eventType,
           );
         })()
       : generatePermaLink(dateUrl, searchParams.toString(), eventType);
@@ -267,9 +267,9 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     const interpData = interpolateWeatherData(
       purgeDuplicates(
         parsedAllWeatherData as WeatherLocation[],
-        eventType
+        eventType,
       ) as WeatherLocation[],
-      eventTime
+      eventTime,
     );
 
     let { rating, debugData } = skyRating(interpData as InterpolatedWeather[]);
@@ -296,7 +296,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       eventString: getStringLiteral(
         Math.round(Date.now() / 1000),
         eventTime,
-        eventType
+        eventType,
       ),
       relative: getRelative(Math.round(Date.now() / 1000), eventTime),
       ok: true,
@@ -332,7 +332,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   const formData = await request.formData();
   const element = formData.get("element");
   if (!element || typeof element !== "string") {
-    return json({ error: "Missing form identifier" }, { status: 500 });
+    return Response.json({ error: "Missing form identifier" }, { status: 500 });
   }
   switch (element) {
     case "deleteRequest": {
@@ -343,7 +343,7 @@ export const action: ActionFunction = async ({ request, context }) => {
           const token = cookie.split("auth=")[1].split(";")[0];
           const verifiedToken = await jwt.verify(
             token,
-            context.cloudflare.env.JWT_SECRET
+            context.cloudflare.env.JWT_SECRET,
           );
           if (verifiedToken) {
             const { payload } = verifiedToken;
@@ -379,12 +379,12 @@ export const action: ActionFunction = async ({ request, context }) => {
             return redirect("/");
           } else {
             return redirect(
-              appendErrorToUrl(url.search, `Failed to delete submission`)
+              appendErrorToUrl(url.search, `Failed to delete submission`),
             );
           }
         } else {
           return redirect(
-            appendErrorToUrl(url.search, `Failed to delete image`)
+            appendErrorToUrl(url.search, `Failed to delete image`),
           );
         }
       } catch (e) {
@@ -430,7 +430,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         if (input === context.cloudflare.env.AUTHORIZEPASSWORD) {
           const token = await jwt.sign(
             { authorized: true, exp: getExpirationTime("15m") },
-            context.cloudflare.env.JWT_SECRET
+            context.cloudflare.env.JWT_SECRET,
           );
           const headers = new Headers();
           headers.append("Set-Cookie", `auth=${token}; Path=/; HttpOnly`);
@@ -458,12 +458,12 @@ export const action: ActionFunction = async ({ request, context }) => {
       ];
       for (const field of requiredFields) {
         if (!formData.get(field)) {
-          return json(
+          return Response.json(
             {
               error: `Missing required field: ${field}`,
               success: false,
             },
-            { status: 400 }
+            { status: 400 },
           );
         }
       }
@@ -479,12 +479,12 @@ export const action: ActionFunction = async ({ request, context }) => {
 
       // Validate data types
       if (!imageFile || !(imageFile instanceof Blob)) {
-        return json(
+        return Response.json(
           {
             error: "Invalid image format",
             success: false,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -495,7 +495,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         isNaN(Number(lon)) ||
         isNaN(Number(eventTime))
       ) {
-        return json(
+        return Response.json(
           {
             error: "Invalid numeric values provided",
             details: {
@@ -506,7 +506,7 @@ export const action: ActionFunction = async ({ request, context }) => {
             },
             success: false,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -514,23 +514,23 @@ export const action: ActionFunction = async ({ request, context }) => {
       try {
         const safe = await checkImage(context, imageFile);
         if (!safe) {
-          return json(
+          return Response.json(
             {
               error: "Unsafe image detected",
               success: false,
             },
-            { status: 418 }
+            { status: 418 },
           );
         }
       } catch (error) {
         console.error(error);
-        return json(
+        return Response.json(
           {
             error: "Failed to check image safety. Please try again",
             details: error instanceof Error ? error.message : "Unknown error",
             success: false,
           },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
@@ -542,12 +542,12 @@ export const action: ActionFunction = async ({ request, context }) => {
           !context.cloudflare.env.CF_ACCOUNT_ID ||
           !context.cloudflare.env.CF_TOKEN
         ) {
-          return json(
+          return Response.json(
             {
               error: "Missing Cloudflare credentials",
               success: false,
             },
-            { status: 500 }
+            { status: 500 },
           );
         }
 
@@ -564,13 +564,13 @@ export const action: ActionFunction = async ({ request, context }) => {
         });
 
         if (!response.ok) {
-          return json(
+          return Response.json(
             {
               error: "Error uploading image to images provider",
               details: `HTTP ${response.status}: ${response.statusText}`,
               success: false,
             },
-            { status: response.status }
+            { status: response.status },
           );
         }
 
@@ -579,14 +579,14 @@ export const action: ActionFunction = async ({ request, context }) => {
         const image_id = responseData?.result?.id;
 
         if (!image_id) {
-          return json(
+          return Response.json(
             {
               error: "Error uploading image to images provider",
               details: "No image ID returned",
               responseData,
               success: false,
             },
-            { status: 500 }
+            { status: 500 },
           );
         }
 
@@ -602,34 +602,34 @@ export const action: ActionFunction = async ({ request, context }) => {
             type: String(eventType),
           });
 
-          return json(
+          return Response.json(
             {
               message: "Uploaded to database",
               image_id,
               success: true,
             },
-            { status: 201 }
+            { status: 201 },
           );
         } catch (error) {
           console.error("Error posting to database:", error);
-          return json(
+          return Response.json(
             {
               error: "Failed to post to database",
               details: error instanceof Error ? error.message : "Unknown error",
               success: false,
             },
-            { status: 500 }
+            { status: 500 },
           );
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-        return json(
+        return Response.json(
           {
             error: "Failed to upload image",
             details: error instanceof Error ? error.message : "Unknown error",
             success: false,
           },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
@@ -640,15 +640,18 @@ export const action: ActionFunction = async ({ request, context }) => {
       const locationDataString = formData.get("locationData");
       if (!locationDataString || typeof locationDataString !== "string") {
         console.log("Error: Invalid location data, 400");
-        return json({ error: "Invalid location data" }, { status: 400 });
+        return Response.json(
+          { error: "Invalid location data" },
+          { status: 400 },
+        );
       }
       if (!eventType || typeof eventType !== "string") {
         console.log("Error: Invalid eventType, 400");
-        return json({ error: "Invalid eventType" }, { status: 400 });
+        return Response.json({ error: "Invalid eventType" }, { status: 400 });
       }
       if (!date || typeof date !== "string") {
         console.log("Error: Invalid date, 400");
-        return json({ error: "Invalid date" }, { status: 400 });
+        return Response.json({ error: "Invalid date" }, { status: 400 });
       }
 
       try {
@@ -662,16 +665,16 @@ export const action: ActionFunction = async ({ request, context }) => {
             case "geolocation":
               geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
                 // @ts-expect-error fts
-                locationData.data.coords.latitude
+                locationData.data.coords.latitude,
               )},${encodeURIComponent(
                 // @ts-expect-error fts
-                locationData.data.coords.longitude
+                locationData.data.coords.longitude,
               )}&key=${apiKey}`;
               break;
             case "input":
               geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
                 // @ts-expect-error fts
-                locationData.data
+                locationData.data,
               )}&key=${apiKey}`;
               break;
             default:
@@ -688,15 +691,15 @@ export const action: ActionFunction = async ({ request, context }) => {
             redirectUrl.searchParams.set("lon", `${lon}`);
             redirectUrl.searchParams.set(
               "city",
-              getCityFromGeocodeResponse(data)
+              getCityFromGeocodeResponse(data),
             );
             redirectUrl.searchParams.set(
               "date",
-              date !== "next" ? date : "next"
+              date !== "next" ? date : "next",
             );
             redirectUrl.searchParams.set(
               "type",
-              date !== "next" ? eventType : "next"
+              date !== "next" ? eventType : "next",
             );
             return redirect(redirectUrl.toString());
           } else {
@@ -708,13 +711,13 @@ export const action: ActionFunction = async ({ request, context }) => {
                   locationData.type === "input"
                     ? locationData.data
                     : "coordinates"
-                }`
-              )
+                }`,
+              ),
             );
           }
         } else {
           return redirect(
-            appendErrorToUrl(url.search, `Invalid location data format`)
+            appendErrorToUrl(url.search, `Invalid location data format`),
           );
         }
       } catch (error) {
@@ -722,19 +725,19 @@ export const action: ActionFunction = async ({ request, context }) => {
         return redirect(
           appendErrorToUrl(
             url.search,
-            `Error processing location data: ${error}`
-          )
+            `Error processing location data: ${error}`,
+          ),
         );
       }
     }
     default:
-      return json({ error: "Unknown element type" }, { status: 400 });
+      return Response.json({ error: "Unknown element type" }, { status: 400 });
   }
 };
 
 function appendErrorToUrl(baseUrlSearch: string, error?: string) {
   const searchParams = new URLSearchParams(
-    baseUrlSearch.startsWith("?") ? baseUrlSearch.slice(1) : baseUrlSearch
+    baseUrlSearch.startsWith("?") ? baseUrlSearch.slice(1) : baseUrlSearch,
   );
   if (error) {
     searchParams.append("error", `${error}`);
@@ -812,10 +815,11 @@ const getBackgroundColors = (rating: number | null) => {
 
 export default function Sunwatch() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
+  console.log(allData?.weatherData);
   useEffect(() => {
     if (allData?.rating) {
       const colors = getBackgroundColors(
-        !allData.lat && !allData.lon ? null : allData.rating
+        !allData.lat && !allData.lon ? null : allData.rating,
       );
       const root = document.documentElement;
 

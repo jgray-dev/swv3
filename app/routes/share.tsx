@@ -45,7 +45,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       } catch (error) {
         console.error("Error logging analytics link:", error);
       }
-    })()
+    })(),
   );
 
   return redirectResponse;
