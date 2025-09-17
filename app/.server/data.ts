@@ -271,6 +271,7 @@ export function getStringLiteral(
   currentTime: number,
   eventTime: number,
   type: string,
+  timezone?: string,
 ): string {
   const differenceInSeconds = eventTime - currentTime;
   const absoluteDifferenceInSeconds = Math.abs(differenceInSeconds);
@@ -292,6 +293,7 @@ export function getStringLiteral(
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+    timeZone: timezone,
   });
   const localTime = timeFormatter.format(eventDate);
 
