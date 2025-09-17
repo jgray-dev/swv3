@@ -195,41 +195,39 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       ),
     ] as const;
 
-    const responses = historic
-      ? await Promise.all([
-          ...basePromises,
-          fetch(
-            `https://maps.googleapis.com/maps/api/timezone/json?location=${encodeURIComponent(
-              lat,
-            )}%2C${encodeURIComponent(lon)}&timestamp=${encodeURIComponent(
-              currentUnixTime,
-            )}&key=${googleApiKey}`,
-          ),
-        ])
-      : await Promise.all(basePromises);
+    // Always fetch timezone data for proper time display
+    const responses = await Promise.all([
+      ...basePromises,
+      fetch(
+        `https://maps.googleapis.com/maps/api/timezone/json?location=${encodeURIComponent(
+          lat,
+        )}%2C${encodeURIComponent(lon)}&timestamp=${encodeURIComponent(
+          currentUnixTime,
+        )}&key=${googleApiKey}`,
+      ),
+    ]);
 
-    const [mapData, meteoResponse] = responses;
+    const [mapData, meteoResponse, timezoneResponse] = responses;
+
+    // Parse timezone response
+    const parsedTimezoneResponse =
+      (await timezoneResponse?.json()) as TimeZoneApiResponse;
+
+    if (parsedTimezoneResponse.status !== "OK") {
+      redirect(
+        appendErrorToUrl(
+          url.search,
+          `Error fetching TimeZone API [${parsedTimezoneResponse.status}]`,
+        ),
+      );
+    }
+
     const permaLink = historic
-      ? await (async () => {
-          const timezoneResponse = responses[2];
-          const parsedTimezoneResponse =
-            (await timezoneResponse?.json()) as TimeZoneApiResponse;
-
-          if (parsedTimezoneResponse.status !== "OK") {
-            redirect(
-              appendErrorToUrl(
-                url.search,
-                `Error fetching TimeZone API [${parsedTimezoneResponse.status}]`,
-              ),
-            );
-          }
-
-          return generatePermaLink(
-            unixToDateString(eventTime, parsedTimezoneResponse.timeZoneId),
-            searchParams.toString(),
-            eventType,
-          );
-        })()
+      ? generatePermaLink(
+          unixToDateString(eventTime, parsedTimezoneResponse.timeZoneId),
+          searchParams.toString(),
+          eventType,
+        )
       : generatePermaLink(dateUrl, searchParams.toString(), eventType);
 
     // Return error for failure to fetch database
@@ -297,7 +295,9 @@ export const loader: LoaderFunction = async ({ request, context }) => {
         Math.round(Date.now() / 1000),
         eventTime,
         eventType,
+        parsedTimezoneResponse.timeZoneId,
       ),
+      eventTimeZone: parsedTimezoneResponse.timeZoneId,
       relative: getRelative(Math.round(Date.now() / 1000), eventTime),
       ok: true,
       uploads: mapData,

@@ -15,6 +15,8 @@ export default function RatingDisplay() {
   useEffect(() => {
     if (!allData?.ok || !allData.eventTime) return;
 
+    // eventTime is a Unix timestamp - when converted to Date, it automatically
+    // displays in the user's local timezone, which is exactly what we want for the tooltip
     const eventDate = new Date(allData.eventTime * 1000);
     const userTimeFormatter = new Intl.DateTimeFormat("en-US", {
       hour: "numeric",
@@ -159,7 +161,7 @@ export default function RatingDisplay() {
                   ? "text-green-400"
                   : "text-red-400"
             }`}
-            title={userLocalTime ? `${userLocalTime} in your timezone` : ""}
+            title={userLocalTime ? `${userLocalTime} your local time` : ""}
             aria-label={`Event timing: ${allData.eventString}`}
           >
             {allData.eventString.charAt(0).toUpperCase() +

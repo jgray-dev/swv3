@@ -22,6 +22,7 @@ export interface LoaderData {
   eventType: "sunrise" | "sunset";
   eventString: string;
   eventTime: number;
+  eventTimeZone?: string;
   now: number;
   rating: number;
   weatherData: InterpolatedWeather[];
