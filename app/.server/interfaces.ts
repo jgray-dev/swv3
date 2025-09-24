@@ -35,6 +35,26 @@ export interface LoaderData {
   eventDate: string;
   useNext: boolean;
   bearing: number;
+  calendar?: CalendarDaySummary[];
+  calendarLimited?: boolean;
+  calendarLimitDate?: string;
+}
+
+export interface CalendarEventRating {
+  rating: number;
+  eventTime: number;
+  eventString: string;
+  relative: "future" | "past" | "current";
+  type: "sunrise" | "sunset";
+  isAutoFocus?: boolean;
+}
+
+export interface CalendarDaySummary {
+  date: string;
+  label: string;
+  sunrise: CalendarEventRating | null;
+  sunset: CalendarEventRating | null;
+  isToday: boolean;
 }
 
 export interface AveragedValues {

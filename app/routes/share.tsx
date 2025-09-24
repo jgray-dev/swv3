@@ -10,7 +10,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
 
   // Get the method parameter
   const method = searchParams.get("method");
-  console.log(`tracking link found. method ${method}`);
   // Remove the method parameter for the redirect URL
   searchParams.delete("method");
 
@@ -45,7 +44,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       } catch (error) {
         console.error("Error logging analytics link:", error);
       }
-    })(),
+    })()
   );
 
   return redirectResponse;

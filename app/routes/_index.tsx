@@ -6,7 +6,6 @@ import SunCalc from "suncalc";
 import jwt from "@tsndr/cloudflare-worker-jwt";
 import {
   averageData,
-  checkImage,
   findNextSunEvent,
   generateCoordinateString,
   generatePermaLink,
@@ -37,9 +36,10 @@ import LocationComponent from "~/components/LocationComponent";
 
 import LocationDisplay from "~/components/LocationDisplay";
 import RatingDisplay from "~/components/RatingDisplay";
+import WeeklyOutlook from "~/components/WeeklyOutlook";
 
 const CloudCoverDisplay = React.lazy(
-  () => import("~/components/CloudCoverDisplay"),
+  () => import("~/components/CloudCoverDisplay")
 );
 // import CloudCoverDisplay from "~/components/CloudCoverDisplay";
 
@@ -47,7 +47,7 @@ const Map = React.lazy(() => import("~/components/Map"));
 // import Map from "~/components/Map";
 
 const SubmitComponent = React.lazy(
-  () => import("~/components/SubmitComponent"),
+  () => import("~/components/SubmitComponent")
 );
 // import SubmitComponent from "~/components/SubmitComponent";
 
@@ -74,7 +74,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
         const token = cookie.split("auth=")[1].split(";")[0];
         const verifiedToken = await jwt.verify(
           token,
-          context.cloudflare.env.JWT_SECRET,
+          context.cloudflare.env.JWT_SECRET
         );
         if (verifiedToken) {
           const { payload } = verifiedToken;
@@ -110,6 +110,10 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       date: eventDate,
     } = getRelevantSunEvent(Number(lat), Number(lon));
 
+    const defaultEventType = eventType;
+    const defaultEventTime = eventTime;
+    const defaultEventDate = eventDate;
+
     //@ts-ignore
     if (!eventType) {
       return {
@@ -123,7 +127,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       const [time, type] = findNextSunEvent(Number(lat), Number(lon));
       return {
         message: `No ${type} time found | Next event in approximately ${unixToApproximateString(
-          time,
+          time
         )}`,
         ok: false,
         uploads: await getSubmissions(context),
@@ -131,27 +135,67 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       };
     }
 
-    //Grab one day before and one day after of dates in YYYY-MM-DD format, for use in the open meteo api call
-    let dayBefore, dayAfter;
     let historic = false;
     if (dateUrl === "next" || !dateUrl) {
       historic = true;
       const date = new Date();
       dateUrl = date.toISOString().split("T")[0];
     }
-    dayBefore = new Date(
-      new Date(dateUrl).setDate(new Date(dateUrl).getDate() - 1),
-    )
-      .toISOString()
-      .split("T")[0];
-    dayAfter = new Date(
-      new Date(dateUrl).setDate(new Date(dateUrl).getDate() + 1),
-    )
-      .toISOString()
-      .split("T")[0];
+
+    const today = new Date();
+    const maxFutureDate = new Date(today);
+    maxFutureDate.setDate(maxFutureDate.getDate() + 6);
+    const maxFutureDateString = maxFutureDate.toISOString().split("T")[0];
+
+    if (dateUrl > maxFutureDateString) {
+      dateUrl = maxFutureDateString;
+    }
 
     const [year, month, day] = dateUrl.split("-").map(Number);
     const noon = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+    const formatISODate = (date: Date) => date.toISOString().split("T")[0];
+
+    const limitNoon = new Date(
+      Date.UTC(
+        maxFutureDate.getUTCFullYear(),
+        maxFutureDate.getUTCMonth(),
+        maxFutureDate.getUTCDate(),
+        12,
+        0,
+        0
+      )
+    );
+
+    // Optimize: Reduce calendar window from 7 days to 5 days to minimize API calls
+    const baseOffsets = [-2, -1, 0, 1, 2];
+    const candidateDays = baseOffsets.map((offset) => {
+      const candidate = new Date(noon);
+      candidate.setUTCDate(candidate.getUTCDate() + offset);
+      return candidate;
+    });
+
+    const usableDays = candidateDays.filter(
+      (candidate) => candidate.getTime() <= limitNoon.getTime()
+    );
+
+    if (
+      !usableDays.some((candidate) => candidate.getTime() === noon.getTime())
+    ) {
+      usableDays.push(noon);
+    }
+
+    usableDays.sort((a, b) => a.getTime() - b.getTime());
+
+    const calendarLimited = usableDays.length < candidateDays.length;
+
+    const fetchWindowStart = new Date(usableDays[0]);
+    fetchWindowStart.setUTCDate(fetchWindowStart.getUTCDate() - 1);
+    const fetchWindowEnd = new Date(usableDays[usableDays.length - 1]);
+    fetchWindowEnd.setUTCDate(fetchWindowEnd.getUTCDate() + 1);
+
+    const rangeStart = formatISODate(fetchWindowStart);
+    const rangeEnd = formatISODate(fetchWindowEnd);
+    const calendarDays = usableDays;
     // Grab the event type ("sunrise" | "sunset" | "next") from the URL query
     const typeUrl = url.searchParams.get("type");
 
@@ -162,7 +206,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
           eventType = "sunrise";
           eventTime = Math.round(
             SunCalc.getTimes(noon, Number(lat), Number(lon)).sunrise.getTime() /
-              1000,
+              1000
           );
           eventDate = SunCalc.getTimes(noon, Number(lat), Number(lon)).sunrise;
           break;
@@ -170,7 +214,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
           eventType = "sunset";
           eventTime = Math.round(
             SunCalc.getTimes(noon, Number(lat), Number(lon)).sunset.getTime() /
-              1000,
+              1000
           );
           eventDate = SunCalc.getTimes(noon, Number(lat), Number(lon)).sunset;
           break;
@@ -183,31 +227,60 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       Number(lat),
       Number(lon),
       eventType,
-      eventDate,
+      eventDate
     );
+
+    const alternateType = eventType === "sunrise" ? "sunset" : "sunrise";
+    const referenceTimes = SunCalc.getTimes(noon, Number(lat), Number(lon));
+    const alternateEventDate =
+      alternateType === "sunrise"
+        ? referenceTimes.sunrise
+        : referenceTimes.sunset;
+
+    let alternateCoords: string | null = null;
+    if (alternateEventDate && !isNaN(alternateEventDate.getTime())) {
+      [alternateCoords] = generateCoordinateString(
+        Number(lat),
+        Number(lon),
+        alternateType,
+        alternateEventDate
+      );
+    }
+
+    const sunriseCoords = eventType === "sunrise" ? coords : alternateCoords;
+    const sunsetCoords = eventType === "sunset" ? coords : alternateCoords;
 
     const googleApiKey = context.cloudflare.env.GOOGLE_MAPS_API_KEY;
     const currentUnixTime = Math.floor(Date.now() / 1000);
-    const basePromises = [
-      await getSubmissions(context),
-      await fetch(
-        `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${coords}&start_date=${dayBefore}&end_date=${dayAfter}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${meteoApiKey}`,
-      ),
-    ] as const;
 
-    // Always fetch timezone data for proper time display
-    const responses = await Promise.all([
-      ...basePromises,
-      fetch(
-        `https://maps.googleapis.com/maps/api/timezone/json?location=${encodeURIComponent(
-          lat,
-        )}%2C${encodeURIComponent(lon)}&timestamp=${encodeURIComponent(
-          currentUnixTime,
-        )}&key=${googleApiKey}`,
-      ),
-    ]);
+    // Always fetch data for both sunrise and sunset for complete weekly outlook
+    const sunriseFetchPromise = sunriseCoords
+      ? fetch(
+          `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${sunriseCoords}&start_date=${rangeStart}&end_date=${rangeEnd}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${meteoApiKey}`
+        )
+      : Promise.resolve(null);
 
-    const [mapData, meteoResponse, timezoneResponse] = responses;
+    const sunsetFetchPromise = sunsetCoords
+      ? fetch(
+          `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${sunsetCoords}&start_date=${rangeStart}&end_date=${rangeEnd}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${meteoApiKey}`
+        )
+      : Promise.resolve(null);
+
+    const timezoneFetchPromise = fetch(
+      `https://maps.googleapis.com/maps/api/timezone/json?location=${encodeURIComponent(
+        lat
+      )}%2C${encodeURIComponent(lon)}&timestamp=${encodeURIComponent(
+        currentUnixTime
+      )}&key=${googleApiKey}`
+    );
+
+    const [mapData, sunriseResponse, sunsetResponse, timezoneResponse] =
+      await Promise.all([
+        getSubmissions(context),
+        sunriseFetchPromise,
+        sunsetFetchPromise,
+        timezoneFetchPromise,
+      ]);
 
     // Parse timezone response
     const parsedTimezoneResponse =
@@ -217,8 +290,8 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       redirect(
         appendErrorToUrl(
           url.search,
-          `Error fetching TimeZone API [${parsedTimezoneResponse.status}]`,
-        ),
+          `Error fetching TimeZone API [${parsedTimezoneResponse.status}]`
+        )
       );
     }
 
@@ -226,7 +299,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       ? generatePermaLink(
           unixToDateString(eventTime, parsedTimezoneResponse.timeZoneId),
           searchParams.toString(),
-          eventType,
+          eventType
         )
       : generatePermaLink(dateUrl, searchParams.toString(), eventType);
 
@@ -238,53 +311,160 @@ export const loader: LoaderFunction = async ({ request, context }) => {
         authorized: authorized,
       };
 
-    // Parse our weather data as json.
-    let parsedAllWeatherData;
+    const parseWeatherResponse = async (
+      response: Response | null,
+      type: "sunrise" | "sunset",
+      label: string
+    ) => {
+      if (!response) return { data: null, locations: null } as const;
+      if (!response.ok) {
+        throw new Error(`Error fetching weather API [${label}]`);
+      }
+      const json = (await response.json()) as unknown;
+      if ((json as { error?: string })?.error) {
+        throw new Error(`Error fetching weather API [${label}]`);
+      }
+      const locations = purgeDuplicates(
+        json as WeatherLocation[],
+        type
+      ) as WeatherLocation[];
+      return { data: json as WeatherLocation[], locations } as const;
+    };
 
-    try {
-      parsedAllWeatherData = await meteoResponse.json();
-    } catch (e) {
+    const [
+      { data: sunriseRaw, locations: sunriseLocations },
+      { data: sunsetRaw, locations: sunsetLocations },
+    ] = await Promise.all([
+      parseWeatherResponse(sunriseResponse, "sunrise", "sunrise"),
+      parseWeatherResponse(sunsetResponse, "sunset", "sunset"),
+    ]);
+
+    const selectedLocations =
+      eventType === "sunrise" ? sunriseLocations : sunsetLocations;
+    const selectedRawData = eventType === "sunrise" ? sunriseRaw : sunsetRaw;
+
+    if (!selectedLocations || !selectedLocations.length) {
       return {
-        message: `Error fetching weather API. Try again later [0]`,
+        message: `Unable to load weather data for selected event`,
         ok: false,
-        uploads: await getSubmissions(context),
+        uploads: mapData,
         authorized: authorized,
       };
     }
-    // @ts-ignore
-    if (parsedAllWeatherData?.error) {
-      return {
-        message: `Error fetching weather API. Try again later [1]`,
-        ok: false,
-        uploads: await getSubmissions(context),
-        authorized: authorized,
-      };
-    }
 
-    // Purge the duplicate locations and interpolate the weather data based on the eventTime
-    const interpData = interpolateWeatherData(
-      purgeDuplicates(
-        parsedAllWeatherData as WeatherLocation[],
-        eventType,
-      ) as WeatherLocation[],
-      eventTime,
-    );
+    const interpData = interpolateWeatherData(selectedLocations, eventTime);
 
     let { rating, debugData } = skyRating(interpData as InterpolatedWeather[]);
     if (isNaN(rating)) rating = 0;
     const stats = averageData(interpData);
     if ((!eventTime || !eventType) && !error)
       error = "No sunrise or sunset found";
+
+    const nowUnix = Math.round(Date.now() / 1000);
+
+    const defaultEventDateIso = defaultEventDate
+      ? formatISODate(defaultEventDate)
+      : defaultEventTime
+      ? formatISODate(new Date(defaultEventTime * 1000))
+      : null;
+
+    // Memoize calendar event generation to avoid redundant calculations
+    const eventCache: Record<string, any> = {};
+    const buildCalendarEvent = (
+      dateObject: Date | undefined,
+      type: "sunrise" | "sunset"
+    ) => {
+      if (!dateObject || isNaN(dateObject.getTime())) return null;
+
+      const eventUnix = Math.round(dateObject.getTime() / 1000);
+      const cacheKey = `${eventUnix}-${type}`;
+
+      if (eventCache[cacheKey]) {
+        return eventCache[cacheKey];
+      }
+
+      const source = type === "sunrise" ? sunriseLocations : sunsetLocations;
+      if (!source || !source.length) {
+        eventCache[cacheKey] = null;
+        return null;
+      }
+
+      try {
+        const eventWeather = interpolateWeatherData(source, eventUnix);
+        let { rating: eventRating } = skyRating(
+          eventWeather as InterpolatedWeather[]
+        );
+        if (isNaN(eventRating)) eventRating = 0;
+        const isAutoFocus = Boolean(
+          defaultEventTime &&
+            defaultEventDateIso &&
+            type === defaultEventType &&
+            formatISODate(dateObject) === defaultEventDateIso
+        );
+
+        const result = {
+          rating: eventRating,
+          eventTime: eventUnix,
+          eventString: getStringLiteral(
+            nowUnix,
+            eventUnix,
+            type,
+            parsedTimezoneResponse.timeZoneId
+          ),
+          relative: getRelative(nowUnix, eventUnix),
+          type,
+          isAutoFocus,
+        };
+
+        eventCache[cacheKey] = result;
+        return result;
+      } catch (err) {
+        console.error(`Calendar event generation failed: ${err}`);
+        eventCache[cacheKey] = null;
+        return null;
+      }
+    };
+
+    const calendarFormatter = new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      timeZone: parsedTimezoneResponse.timeZoneId,
+    });
+
+    const localDateFormatter = new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone: parsedTimezoneResponse.timeZoneId,
+    });
+
+    const todayLocalDateString = localDateFormatter.format(new Date());
+
+    const calendar = calendarDays.map((dayDate) => {
+      const times = SunCalc.getTimes(dayDate, Number(lat), Number(lon));
+      const sunriseEvent = buildCalendarEvent(times.sunrise, "sunrise");
+      const sunsetEvent = buildCalendarEvent(times.sunset, "sunset");
+      const isoDate = formatISODate(dayDate);
+      return {
+        date: isoDate,
+        label: calendarFormatter.format(dayDate),
+        sunrise: sunriseEvent,
+        sunset: sunsetEvent,
+        isToday: isoDate === todayLocalDateString,
+      };
+    });
+
     return {
       authorized: authorized,
       permaLink: `${url.origin}/share?${permaLink}`,
-      allData: parsedAllWeatherData,
+      allData: selectedRawData ?? [],
       lat: parseFloat(lat),
       lon: parseFloat(lon),
       city: String(city),
       eventType: eventType,
       eventTime: eventTime,
-      now: Math.round(Date.now() / 1000),
+      now: nowUnix,
       rating: rating,
       weatherData: interpData,
       stats: stats as AveragedValues,
@@ -292,17 +472,20 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       bearing: bearing,
       ratingDebug: debugData,
       eventString: getStringLiteral(
-        Math.round(Date.now() / 1000),
+        nowUnix,
         eventTime,
         eventType,
-        parsedTimezoneResponse.timeZoneId,
+        parsedTimezoneResponse.timeZoneId
       ),
       eventTimeZone: parsedTimezoneResponse.timeZoneId,
-      relative: getRelative(Math.round(Date.now() / 1000), eventTime),
+      relative: getRelative(nowUnix, eventTime),
       ok: true,
       uploads: mapData,
       eventDate: dateUrl,
       useNext: historic,
+      calendar,
+      calendarLimited,
+      calendarLimitDate: maxFutureDateString,
     };
   } catch (e) {
     console.log("ERROR");
@@ -343,7 +526,7 @@ export const action: ActionFunction = async ({ request, context }) => {
           const token = cookie.split("auth=")[1].split(";")[0];
           const verifiedToken = await jwt.verify(
             token,
-            context.cloudflare.env.JWT_SECRET,
+            context.cloudflare.env.JWT_SECRET
           );
           if (verifiedToken) {
             const { payload } = verifiedToken;
@@ -379,12 +562,12 @@ export const action: ActionFunction = async ({ request, context }) => {
             return redirect("/");
           } else {
             return redirect(
-              appendErrorToUrl(url.search, `Failed to delete submission`),
+              appendErrorToUrl(url.search, `Failed to delete submission`)
             );
           }
         } else {
           return redirect(
-            appendErrorToUrl(url.search, `Failed to delete image`),
+            appendErrorToUrl(url.search, `Failed to delete image`)
           );
         }
       } catch (e) {
@@ -430,7 +613,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         if (input === context.cloudflare.env.AUTHORIZEPASSWORD) {
           const token = await jwt.sign(
             { authorized: true, exp: getExpirationTime("15m") },
-            context.cloudflare.env.JWT_SECRET,
+            context.cloudflare.env.JWT_SECRET
           );
           const headers = new Headers();
           headers.append("Set-Cookie", `auth=${token}; Path=/; HttpOnly`);
@@ -463,7 +646,7 @@ export const action: ActionFunction = async ({ request, context }) => {
               error: `Missing required field: ${field}`,
               success: false,
             },
-            { status: 400 },
+            { status: 400 }
           );
         }
       }
@@ -484,7 +667,7 @@ export const action: ActionFunction = async ({ request, context }) => {
             error: "Invalid image format",
             success: false,
           },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
@@ -506,31 +689,7 @@ export const action: ActionFunction = async ({ request, context }) => {
             },
             success: false,
           },
-          { status: 400 },
-        );
-      }
-
-      // Check image safety
-      try {
-        const safe = await checkImage(context, imageFile);
-        if (!safe) {
-          return Response.json(
-            {
-              error: "Unsafe image detected",
-              success: false,
-            },
-            { status: 418 },
-          );
-        }
-      } catch (error) {
-        console.error(error);
-        return Response.json(
-          {
-            error: "Failed to check image safety. Please try again",
-            details: error instanceof Error ? error.message : "Unknown error",
-            success: false,
-          },
-          { status: 500 },
+          { status: 400 }
         );
       }
 
@@ -547,7 +706,7 @@ export const action: ActionFunction = async ({ request, context }) => {
               error: "Missing Cloudflare credentials",
               success: false,
             },
-            { status: 500 },
+            { status: 500 }
           );
         }
 
@@ -570,7 +729,7 @@ export const action: ActionFunction = async ({ request, context }) => {
               details: `HTTP ${response.status}: ${response.statusText}`,
               success: false,
             },
-            { status: response.status },
+            { status: response.status }
           );
         }
 
@@ -586,7 +745,7 @@ export const action: ActionFunction = async ({ request, context }) => {
               responseData,
               success: false,
             },
-            { status: 500 },
+            { status: 500 }
           );
         }
 
@@ -608,7 +767,7 @@ export const action: ActionFunction = async ({ request, context }) => {
               image_id,
               success: true,
             },
-            { status: 201 },
+            { status: 201 }
           );
         } catch (error) {
           console.error("Error posting to database:", error);
@@ -618,7 +777,7 @@ export const action: ActionFunction = async ({ request, context }) => {
               details: error instanceof Error ? error.message : "Unknown error",
               success: false,
             },
-            { status: 500 },
+            { status: 500 }
           );
         }
       } catch (error) {
@@ -629,7 +788,7 @@ export const action: ActionFunction = async ({ request, context }) => {
             details: error instanceof Error ? error.message : "Unknown error",
             success: false,
           },
-          { status: 500 },
+          { status: 500 }
         );
       }
     }
@@ -642,7 +801,7 @@ export const action: ActionFunction = async ({ request, context }) => {
         console.log("Error: Invalid location data, 400");
         return Response.json(
           { error: "Invalid location data" },
-          { status: 400 },
+          { status: 400 }
         );
       }
       if (!eventType || typeof eventType !== "string") {
@@ -665,16 +824,16 @@ export const action: ActionFunction = async ({ request, context }) => {
             case "geolocation":
               geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
                 // @ts-expect-error fts
-                locationData.data.coords.latitude,
+                locationData.data.coords.latitude
               )},${encodeURIComponent(
                 // @ts-expect-error fts
-                locationData.data.coords.longitude,
+                locationData.data.coords.longitude
               )}&key=${apiKey}`;
               break;
             case "input":
               geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
                 // @ts-expect-error fts
-                locationData.data,
+                locationData.data
               )}&key=${apiKey}`;
               break;
             default:
@@ -691,15 +850,15 @@ export const action: ActionFunction = async ({ request, context }) => {
             redirectUrl.searchParams.set("lon", `${lon}`);
             redirectUrl.searchParams.set(
               "city",
-              getCityFromGeocodeResponse(data),
+              getCityFromGeocodeResponse(data)
             );
             redirectUrl.searchParams.set(
               "date",
-              date !== "next" ? date : "next",
+              date !== "next" ? date : "next"
             );
             redirectUrl.searchParams.set(
               "type",
-              date !== "next" ? eventType : "next",
+              date !== "next" ? eventType : "next"
             );
             return redirect(redirectUrl.toString());
           } else {
@@ -711,13 +870,13 @@ export const action: ActionFunction = async ({ request, context }) => {
                   locationData.type === "input"
                     ? locationData.data
                     : "coordinates"
-                }`,
-              ),
+                }`
+              )
             );
           }
         } else {
           return redirect(
-            appendErrorToUrl(url.search, `Invalid location data format`),
+            appendErrorToUrl(url.search, `Invalid location data format`)
           );
         }
       } catch (error) {
@@ -725,8 +884,8 @@ export const action: ActionFunction = async ({ request, context }) => {
         return redirect(
           appendErrorToUrl(
             url.search,
-            `Error processing location data: ${error}`,
-          ),
+            `Error processing location data: ${error}`
+          )
         );
       }
     }
@@ -737,7 +896,7 @@ export const action: ActionFunction = async ({ request, context }) => {
 
 function appendErrorToUrl(baseUrlSearch: string, error?: string) {
   const searchParams = new URLSearchParams(
-    baseUrlSearch.startsWith("?") ? baseUrlSearch.slice(1) : baseUrlSearch,
+    baseUrlSearch.startsWith("?") ? baseUrlSearch.slice(1) : baseUrlSearch
   );
   if (error) {
     searchParams.append("error", `${error}`);
@@ -815,11 +974,10 @@ const getBackgroundColors = (rating: number | null) => {
 
 export default function Sunwatch() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
-  console.log(allData?.weatherData);
   useEffect(() => {
     if (allData?.rating) {
       const colors = getBackgroundColors(
-        !allData.lat && !allData.lon ? null : allData.rating,
+        !allData.lat && !allData.lon ? null : allData.rating
       );
       const root = document.documentElement;
 
@@ -868,6 +1026,7 @@ export default function Sunwatch() {
       <Alert />
       <LocationDisplay />
       <RatingDisplay />
+      <WeeklyOutlook />
       <CloudCoverDisplay />
       <Map />
       <SubmitComponent />
