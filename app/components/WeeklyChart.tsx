@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from "react";
-import { useNavigate } from "@remix-run/react";
+import { useNavigate, useNavigation } from "@remix-run/react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,6 +15,10 @@ import {
 import { Line } from "react-chartjs-2";
 import "chartjs-adapter-date-fns";
 import { CalendarDaySummary } from "~/.server/interfaces";
+import {
+  WeeklySelectionOptimisticPayload,
+  WeeklySelectionState,
+} from "~/context/WeeklySelectionContext";
 
 ChartJS.register(
   CategoryScale,
@@ -34,6 +38,8 @@ interface WeeklyChartProps {
   currentTime: number; // Unix timestamp
   timeZoneId: string;
   hrefBuilder?: (date: string, type: "sunrise" | "sunset") => string | null;
+  onOptimisticSelect?: (payload: WeeklySelectionOptimisticPayload) => void;
+  optimisticSelection?: WeeklySelectionState;
 }
 
 type WeeklyEventPoint = {
@@ -42,6 +48,9 @@ type WeeklyEventPoint = {
   type: "sunrise" | "sunset";
   rating: number;
   date: string;
+  isAutoFocus?: boolean;
+  eventString?: string | null;
+  relative?: "future" | "past" | "current" | null;
 };
 
 export default function WeeklyChart({
@@ -51,8 +60,11 @@ export default function WeeklyChart({
   currentTime,
   timeZoneId,
   hrefBuilder,
+  onOptimisticSelect,
+  optimisticSelection,
 }: WeeklyChartProps) {
   const navigate = useNavigate();
+  const navigation = useNavigation();
 
   // Helper function to get rating-based colors (matching exact app theme)
   const getRatingColors = (rating: number) => {
@@ -112,104 +124,165 @@ export default function WeeklyChart({
     };
   };
 
-  const chartData = useMemo(() => {
-    const allEvents: WeeklyEventPoint[] = [];
+  const { chartData, chartEvents } = useMemo(() => {
+    const events: WeeklyEventPoint[] = [];
 
     // Combine all sunrise and sunset events into single dataset
     days.forEach((day) => {
       if (day.sunrise?.eventTime && day.sunrise?.rating !== null) {
-        allEvents.push({
+        events.push({
           x: day.sunrise.eventTime * 1000,
           y: day.sunrise.rating,
           type: "sunrise",
           rating: day.sunrise.rating,
-          date: day.date
+          date: day.date,
+          isAutoFocus: day.sunrise.isAutoFocus,
+          eventString: day.sunrise.eventString,
+          relative: day.sunrise.relative,
         });
       }
-      
+
       if (day.sunset?.eventTime && day.sunset?.rating !== null) {
-        allEvents.push({
+        events.push({
           x: day.sunset.eventTime * 1000,
           y: day.sunset.rating,
           type: "sunset",
           rating: day.sunset.rating,
-          date: day.date
+          date: day.date,
+          isAutoFocus: day.sunset.isAutoFocus,
+          eventString: day.sunset.eventString,
+          relative: day.sunset.relative,
         });
       }
     });
 
     // Sort by time for continuous line
-    allEvents.sort((a, b) => a.x - b.x);
+    events.sort((a, b) => a.x - b.x);
     
     // Create point colors based on ratings
-    const pointColors = allEvents.map(event => getRatingColors(event.rating).point);
+    const pointColors = events.map(event => getRatingColors(event.rating).point);
 
     return {
-      datasets: [
-        {
-          label: "Viewing Quality Rating",
-          data: allEvents,
-          borderColor: (context: any) => {
-            // Create gradient based on data points
-            if (context.chart && context.chart.ctx) {
-              const gradient = context.chart.ctx.createLinearGradient(0, 0, context.chart.width, 0);
-              const stops = allEvents.length;
-              if (stops === 1) {
-                const colors = getRatingColors(allEvents[0].rating);
-                gradient.addColorStop(0, colors.line);
-                gradient.addColorStop(1, colors.line);
-              } else if (stops > 1) {
-                const denominator = Math.max(stops - 1, 1);
-                allEvents.forEach((event, index) => {
-                  const colors = getRatingColors(event.rating);
-                  const position = index / denominator;
-                  gradient.addColorStop(position, colors.line);
-                });
+      chartEvents: events,
+      chartData: {
+        datasets: [
+          {
+            label: "Viewing Quality Rating",
+            data: events,
+            borderColor: (context: any) => {
+              // Create gradient based on data points
+              if (context.chart && context.chart.ctx) {
+                const gradient = context.chart.ctx.createLinearGradient(0, 0, context.chart.width, 0);
+                const stops = events.length;
+                if (stops === 1) {
+                  const colors = getRatingColors(events[0].rating);
+                  gradient.addColorStop(0, colors.line);
+                  gradient.addColorStop(1, colors.line);
+                } else if (stops > 1) {
+                  const denominator = Math.max(stops - 1, 1);
+                  events.forEach((event, index) => {
+                    const colors = getRatingColors(event.rating);
+                    const position = index / denominator;
+                    gradient.addColorStop(position, colors.line);
+                  });
+                }
+                return gradient;
               }
-              return gradient;
-            }
-            return "rgba(255, 255, 255, 0.6)";
+              return "rgba(255, 255, 255, 0.6)";
+            },
+            backgroundColor: "rgba(255, 255, 255, 0.02)",
+            borderWidth: 4,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointBackgroundColor: pointColors,
+            pointBorderColor: "rgba(255, 255, 255, 0.6)",
+            pointBorderWidth: 1,
+            pointHoverBackgroundColor: pointColors,
+            pointHoverBorderColor: "rgba(255, 255, 255, 0.9)",
+            pointHoverBorderWidth: 2,
           },
-          backgroundColor: "rgba(255, 255, 255, 0.02)",
-          borderWidth: 4,
-          fill: false,
-          tension: 0.4,
-          pointRadius: 6,
-          pointHoverRadius: 8,
-          pointBackgroundColor: pointColors,
-          pointBorderColor: "rgba(255, 255, 255, 0.6)",
-          pointBorderWidth: 1,
-          pointHoverBackgroundColor: pointColors,
-          pointHoverBorderColor: "rgba(255, 255, 255, 0.9)",
-          pointHoverBorderWidth: 2,
-        },
-      ],
+        ],
+      },
     };
   }, [days]);
 
-  // Get selected event time for vertical line
+  const [immediateSelection, setImmediateSelection] = React.useState<{
+    eventTime: number;
+    date: string;
+    type: "sunrise" | "sunset";
+  } | null>(null);
+
+  // Get selected event time for vertical line - prioritize immediate selection and optimistic selection
+  const activeSelectionDate = immediateSelection?.date ?? optimisticSelection?.date ?? selectedDate;
+  const activeSelectionType = immediateSelection?.type ?? optimisticSelection?.type ?? selectedType;
+
   const selectedEventTime = useMemo(() => {
-    // First try to find manually selected event (user clicked on chart or calendar)
-    const selectedDay = days.find(day => day.date === selectedDate);
+    // Use immediate selection for instant feedback when user clicks
+    if (immediateSelection) {
+      console.log('Using immediate selection:', immediateSelection);
+      return immediateSelection.eventTime * 1000;
+    }
+
+    // Check if we have optimistic selection 
+    if (optimisticSelection?.eventTime) {
+      console.log('Using optimistic selection:', optimisticSelection);
+      return optimisticSelection.eventTime * 1000;
+    }
+
+    // Find matching event in chart data
+    const manualSelection = chartEvents.find(
+      (event) =>
+        event.date === activeSelectionDate && event.type === activeSelectionType
+    );
+    if (manualSelection) {
+      console.log('Using manual selection from chart:', manualSelection);
+      return manualSelection.x;
+    }
+
+    // Fallback to day data
+    const selectedDay = days.find((day) => day.date === activeSelectionDate);
     if (selectedDay) {
-      const selectedEvent = selectedType === "sunrise" ? selectedDay.sunrise : selectedDay.sunset;
-      if (selectedEvent?.eventTime) {
-        return selectedEvent.eventTime * 1000;
+      const eventData =
+        activeSelectionType === "sunrise"
+          ? selectedDay.sunrise
+          : selectedDay.sunset;
+      if (eventData?.eventTime) {
+        console.log('Using selected day event:', eventData);
+        return eventData.eventTime * 1000;
       }
     }
-    
-    // Fallback to auto-focus event if no manual selection is available
-    for (const day of days) {
-      if (day.sunrise?.isAutoFocus) {
-        return day.sunrise.eventTime * 1000;
-      }
-      if (day.sunset?.isAutoFocus) {
-        return day.sunset.eventTime * 1000;
-      }
+
+    // Auto focus fallback
+    const autoFocusEvent = chartEvents.find((event) => event.isAutoFocus);
+    if (autoFocusEvent) {
+      console.log('Using auto focus event:', autoFocusEvent);
+      return autoFocusEvent.x;
     }
-    
-    return null;
-  }, [days, selectedDate, selectedType]);
+
+    const firstEvent = chartEvents[0]?.x ?? null;
+    console.log('Using first event fallback:', firstEvent);
+    return firstEvent;
+  }, [
+    immediateSelection,
+    optimisticSelection,
+    chartEvents,
+    days,
+    activeSelectionDate,
+    activeSelectionType,
+  ]);
+
+  // Clear immediate selection when navigation is complete and optimistic selection matches
+  React.useEffect(() => {
+    if (immediateSelection && 
+        optimisticSelection?.date === immediateSelection.date && 
+        optimisticSelection?.type === immediateSelection.type &&
+        optimisticSelection?.isPending === false) {
+      console.log('Clearing immediate selection - navigation complete');
+      setImmediateSelection(null);
+    }
+  }, [immediateSelection, optimisticSelection]);
 
   const handlePointClick = useCallback<NonNullable<ChartOptions<"line">["onClick"]>>(
     (_event, elements, chart) => {
@@ -230,9 +303,28 @@ export default function WeeklyChart({
         return;
       }
 
+      // Set immediate selection for instant visual feedback
+      const newSelection = {
+        eventTime: Math.round(datum.x / 1000),
+        date: datum.date,
+        type: datum.type,
+      };
+      console.log('Setting immediate selection:', newSelection);
+      setImmediateSelection(newSelection);
+
+      onOptimisticSelect?.({
+        date: datum.date,
+        type: datum.type,
+        rating: datum.rating ?? null,
+        eventTime: Math.round(datum.x / 1000),
+        eventString: datum.eventString ?? null,
+        relative: datum.relative ?? null,
+        timeZoneId,
+      });
+
       navigate(href, { preventScrollReset: true });
     },
-    [hrefBuilder, navigate]
+    [hrefBuilder, navigate, onOptimisticSelect, timeZoneId]
   );
 
   const options: ChartOptions<"line"> = {
@@ -411,13 +503,21 @@ export default function WeeklyChart({
     },
   };
 
+  const isLoading =
+    navigation.state === "loading" && !(optimisticSelection?.isPending === false);
+
   return (
     <div className="relative w-full h-64 sm:h-80 lg:h-96">
-      <Line 
-        data={chartData} 
-        options={options} 
+      <Line
+        data={chartData}
+        options={options}
         plugins={[verticalLinesPlugin]}
       />
+      {isLoading ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-950/40 backdrop-blur-[1px] pointer-events-none">
+          <div className="h-5 w-5 rounded-full border-2 border-white/40 border-t-transparent animate-spin"></div>
+        </div>
+      ) : null}
     </div>
   );
 }

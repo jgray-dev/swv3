@@ -3,6 +3,10 @@ import { Link } from "@remix-run/react";
 import { GiSunrise, GiSunset } from "react-icons/gi";
 import { CalendarDaySummary } from "~/.server/interfaces";
 import WeeklyChart from "./WeeklyChart";
+import {
+  WeeklySelectionOptimisticPayload,
+  WeeklySelectionState,
+} from "~/context/WeeklySelectionContext";
 
 interface WeeklyCalendarProps {
   days: CalendarDaySummary[];
@@ -13,6 +17,8 @@ interface WeeklyCalendarProps {
   disabled?: boolean;
   currentTime?: number;
   timeZoneId?: string;
+  onOptimisticNavigate?: (payload: WeeklySelectionOptimisticPayload) => void;
+  optimisticSelection?: WeeklySelectionState;
 }
 
 const ratingStyles = (rating: number | null, isSelected: boolean) => {
@@ -84,6 +90,8 @@ export default function WeeklyCalendar({
   disabled = false,
   currentTime = Date.now() / 1000,
   timeZoneId = "UTC",
+  onOptimisticNavigate,
+  optimisticSelection,
 }: WeeklyCalendarProps) {
   if (!days || days.length === 0) return null;
 
@@ -105,14 +113,16 @@ export default function WeeklyCalendar({
       <div className="space-y-8">
         {/* Continuous Line Chart */}
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur-sm">
-          <WeeklyChart
-            days={days}
-            selectedDate={selectedDate}
-            selectedType={selectedType}
-            currentTime={currentTime}
-            timeZoneId={timeZoneId}
-            hrefBuilder={hrefBuilder}
-          />
+        <WeeklyChart
+          days={days}
+          selectedDate={selectedDate}
+          selectedType={selectedType}
+          currentTime={currentTime}
+          timeZoneId={timeZoneId}
+          hrefBuilder={hrefBuilder}
+          onOptimisticSelect={onOptimisticNavigate}
+          optimisticSelection={optimisticSelection}
+        />
         </div>
         
         {/* Interactive day selector */}
@@ -183,17 +193,39 @@ export default function WeeklyCalendar({
                             prefetch="render"
                             title={event?.eventString ?? "No data"}
                             className={sharedClasses}
+                            onClick={() =>
+                              onOptimisticNavigate?.({
+                                date: day.date,
+                                type,
+                                rating: event?.rating ?? null,
+                                eventTime: event?.eventTime ?? null,
+                                eventString: event?.eventString ?? null,
+                                relative: event?.relative ?? null,
+                                timeZoneId: timeZoneId,
+                              })
+                            }
                           >
                             {content}
                           </Link>
                         );
                       }
-                      
+
                       return (
                         <button
                           key={type}
                           type="button"
                           onClick={() => onSelect?.(day.date, type)}
+                          onMouseDown={() =>
+                            onOptimisticNavigate?.({
+                              date: day.date,
+                              type,
+                              rating: event?.rating ?? null,
+                              eventTime: event?.eventTime ?? null,
+                              eventString: event?.eventString ?? null,
+                              relative: event?.relative ?? null,
+                              timeZoneId: timeZoneId,
+                            })
+                          }
                           title={event?.eventString ?? "No data"}
                           className={sharedClasses}
                         >

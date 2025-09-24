@@ -1,7 +1,7 @@
 import type { ActionFunction, MetaFunction } from "@remix-run/cloudflare";
-import { Link, redirect, useRouteLoaderData } from "@remix-run/react";
+import { Link, redirect, useNavigation, useRouteLoaderData } from "@remix-run/react";
 import { LoaderFunction } from "@remix-run/router";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import SunCalc from "suncalc";
 import jwt from "@tsndr/cloudflare-worker-jwt";
 import {
@@ -30,6 +30,7 @@ import {
   WeatherLocation,
 } from "~/.server/interfaces";
 import { skyRating } from "~/.server/rating";
+import { WeeklySelectionState } from "~/context/WeeklySelectionContext";
 
 import Alert from "~/components/Alert";
 import LocationComponent from "~/components/LocationComponent";
@@ -37,13 +38,17 @@ import LocationComponent from "~/components/LocationComponent";
 import LocationDisplay from "~/components/LocationDisplay";
 import RatingDisplay from "~/components/RatingDisplay";
 import WeeklyOutlook from "~/components/WeeklyOutlook";
+import {
+  WeeklySelectionProvider,
+  useWeeklySelection,
+} from "~/context/WeeklySelectionContext";
 
 const CloudCoverDisplay = React.lazy(
   () => import("~/components/CloudCoverDisplay")
 );
 // import CloudCoverDisplay from "~/components/CloudCoverDisplay";
 
-const Map = React.lazy(() => import("~/components/Map"));
+const LazyMap = React.lazy(() => import("~/components/Map"));
 // import Map from "~/components/Map";
 
 const SubmitComponent = React.lazy(
@@ -53,6 +58,168 @@ const SubmitComponent = React.lazy(
 
 const Footer = React.lazy(() => import("~/components/Footer"));
 // import Footer from "~/components/Footer";
+
+const WEATHER_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const WEATHER_HOURLY_FIELDS: Array<keyof WeatherLocation["hourly"]> = [
+  "time",
+  "temperature_2m",
+  "cloud_cover",
+  "cloud_cover_low",
+  "cloud_cover_mid",
+  "cloud_cover_high",
+  "visibility",
+  "freezing_level_height",
+];
+
+interface WeatherCacheEntry {
+  rangeStart: string;
+  rangeEnd: string;
+  data: WeatherLocation[];
+  timestamp: number;
+}
+
+const weatherCache = new Map<string, WeatherCacheEntry>();
+
+const cloneWeatherLocations = (data: WeatherLocation[]): WeatherLocation[] =>
+  JSON.parse(JSON.stringify(data));
+
+const dateValue = (isoDate: string) =>
+  new Date(`${isoDate}T00:00:00Z`).getTime();
+
+const shiftIsoDate = (isoDate: string, offsetDays: number) => {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + offsetDays);
+  return date.toISOString().split("T")[0];
+};
+
+const locationKey = (location: WeatherLocation) =>
+  `${location.latitude}:${location.longitude}:${location.zone}`;
+
+function mergeWeatherData(
+  base: WeatherLocation[],
+  addition: WeatherLocation[],
+  position: "prepend" | "append"
+) {
+  const baseMap = new Map(base.map((loc) => [locationKey(loc), loc] as const));
+
+  addition.forEach((addLoc) => {
+    const key = locationKey(addLoc);
+    const existing = baseMap.get(key);
+    if (!existing) {
+      base.push(JSON.parse(JSON.stringify(addLoc)) as WeatherLocation);
+      baseMap.set(key, base[base.length - 1]);
+      return;
+    }
+
+    WEATHER_HOURLY_FIELDS.forEach((field) => {
+      const existingSeries = existing.hourly[field];
+      const additionSeries = addLoc.hourly[field];
+      if (position === "prepend") {
+        existing.hourly[field] = ([
+          ...additionSeries,
+          ...existingSeries,
+        ] as typeof existingSeries);
+      } else {
+        existing.hourly[field] = ([
+          ...existingSeries,
+          ...additionSeries,
+        ] as typeof existingSeries);
+      }
+    });
+  });
+}
+
+async function fetchWeatherSegment(
+  coords: string,
+  start: string,
+  end: string,
+  apiKey: string,
+  label: string
+) {
+  const url = `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${coords}&start_date=${start}&end_date=${end}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${apiKey}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Error fetching weather API [${label}]`);
+  }
+  const json = (await response.json()) as unknown;
+  if ((json as { error?: string })?.error) {
+    throw new Error(`Error fetching weather API [${label}]`);
+  }
+  return json as WeatherLocation[];
+}
+
+async function getWeatherDataWithCache(options: {
+  coords: string | null;
+  start: string;
+  end: string;
+  apiKey: string;
+  label: string;
+  cacheKey: string;
+}) {
+  const { coords, start, end, apiKey, label, cacheKey } = options;
+  if (!coords) {
+    return { data: null, fromCache: false } as const;
+  }
+
+  const now = Date.now();
+  let entry = weatherCache.get(cacheKey);
+
+  const loadFresh = async () => {
+    const data = await fetchWeatherSegment(coords, start, end, apiKey, label);
+    entry = {
+      rangeStart: start,
+      rangeEnd: end,
+      data: cloneWeatherLocations(data),
+      timestamp: now,
+    } satisfies WeatherCacheEntry;
+    weatherCache.set(cacheKey, entry);
+    return { data: cloneWeatherLocations(data), fromCache: false } as const;
+  };
+
+  if (!entry || now - entry.timestamp > WEATHER_CACHE_TTL_MS) {
+    return loadFresh();
+  }
+
+  let updated = false;
+
+  if (dateValue(start) < dateValue(entry.rangeStart)) {
+    const segmentEnd = shiftIsoDate(entry.rangeStart, -1);
+    if (dateValue(segmentEnd) >= dateValue(start)) {
+      const addition = await fetchWeatherSegment(
+        coords,
+        start,
+        segmentEnd,
+        apiKey,
+        label
+      );
+      mergeWeatherData(entry.data, addition, "prepend");
+      entry.rangeStart = start;
+      updated = true;
+    }
+  }
+
+  if (dateValue(end) > dateValue(entry.rangeEnd)) {
+    const segmentStart = shiftIsoDate(entry.rangeEnd, 1);
+    if (dateValue(segmentStart) <= dateValue(end)) {
+      const addition = await fetchWeatherSegment(
+        coords,
+        segmentStart,
+        end,
+        apiKey,
+        label
+      );
+      mergeWeatherData(entry.data, addition, "append");
+      entry.rangeEnd = end;
+      updated = true;
+    }
+  }
+
+  entry.timestamp = now;
+  return {
+    data: cloneWeatherLocations(entry.data),
+    fromCache: !updated,
+  } as const;
+}
 
 export const meta: MetaFunction = () => {
   return [
@@ -254,17 +421,23 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     const currentUnixTime = Math.floor(Date.now() / 1000);
 
     // Always fetch data for both sunrise and sunset for complete weekly outlook
-    const sunriseFetchPromise = sunriseCoords
-      ? fetch(
-          `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${sunriseCoords}&start_date=${rangeStart}&end_date=${rangeEnd}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${meteoApiKey}`
-        )
-      : Promise.resolve(null);
+    const sunriseFetchPromise = getWeatherDataWithCache({
+      coords: sunriseCoords,
+      start: rangeStart,
+      end: rangeEnd,
+      apiKey: meteoApiKey,
+      label: "sunrise",
+      cacheKey: `sunrise:${sunriseCoords ?? "none"}`,
+    });
 
-    const sunsetFetchPromise = sunsetCoords
-      ? fetch(
-          `https://customer-historical-forecast-api.open-meteo.com/v1/forecast?${sunsetCoords}&start_date=${rangeStart}&end_date=${rangeEnd}&hourly=temperature_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,freezing_level_height&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timeformat=unixtime&apikey=${meteoApiKey}`
-        )
-      : Promise.resolve(null);
+    const sunsetFetchPromise = getWeatherDataWithCache({
+      coords: sunsetCoords,
+      start: rangeStart,
+      end: rangeEnd,
+      apiKey: meteoApiKey,
+      label: "sunset",
+      cacheKey: `sunset:${sunsetCoords ?? "none"}`,
+    });
 
     const timezoneFetchPromise = fetch(
       `https://maps.googleapis.com/maps/api/timezone/json?location=${encodeURIComponent(
@@ -274,7 +447,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
       )}&key=${googleApiKey}`
     );
 
-    const [mapData, sunriseResponse, sunsetResponse, timezoneResponse] =
+    const [mapData, sunriseResult, sunsetResult, timezoneResponse] =
       await Promise.all([
         getSubmissions(context),
         sunriseFetchPromise,
@@ -311,33 +484,15 @@ export const loader: LoaderFunction = async ({ request, context }) => {
         authorized: authorized,
       };
 
-    const parseWeatherResponse = async (
-      response: Response | null,
-      type: "sunrise" | "sunset",
-      label: string
-    ) => {
-      if (!response) return { data: null, locations: null } as const;
-      if (!response.ok) {
-        throw new Error(`Error fetching weather API [${label}]`);
-      }
-      const json = (await response.json()) as unknown;
-      if ((json as { error?: string })?.error) {
-        throw new Error(`Error fetching weather API [${label}]`);
-      }
-      const locations = purgeDuplicates(
-        json as WeatherLocation[],
-        type
-      ) as WeatherLocation[];
-      return { data: json as WeatherLocation[], locations } as const;
-    };
+    const sunriseRaw = sunriseResult.data;
+    const sunsetRaw = sunsetResult.data;
 
-    const [
-      { data: sunriseRaw, locations: sunriseLocations },
-      { data: sunsetRaw, locations: sunsetLocations },
-    ] = await Promise.all([
-      parseWeatherResponse(sunriseResponse, "sunrise", "sunrise"),
-      parseWeatherResponse(sunsetResponse, "sunset", "sunset"),
-    ]);
+    const sunriseLocations = sunriseRaw
+      ? purgeDuplicates(sunriseRaw, "sunrise")
+      : null;
+    const sunsetLocations = sunsetRaw
+      ? purgeDuplicates(sunsetRaw, "sunset")
+      : null;
 
     const selectedLocations =
       eventType === "sunrise" ? sunriseLocations : sunsetLocations;
@@ -974,32 +1129,93 @@ const getBackgroundColors = (rating: number | null) => {
 
 export default function Sunwatch() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
+
+  const initialSelection = useMemo(
+    () => ({
+      date: allData?.eventDate ?? null,
+      type: allData?.eventType ?? "sunrise",
+      rating: allData?.rating ?? null,
+      eventTime: allData?.eventTime ?? null,
+      timeZoneId: allData?.eventTimeZone ?? null,
+      eventString: allData?.eventString ?? null,
+      relative: allData?.relative ?? null,
+      isPending: false,
+    }),
+    [
+      allData?.eventDate,
+      allData?.eventType,
+      allData?.rating,
+      allData?.eventTime,
+      allData?.eventTimeZone,
+      allData?.eventString,
+      allData?.relative,
+    ]
+  );
+
+  return (
+    <WeeklySelectionProvider initialState={initialSelection}>
+      <SunwatchContent allData={allData} />
+    </WeeklySelectionProvider>
+  );
+}
+
+function SunwatchContent({ allData }: { allData?: LoaderData }) {
+  const navigation = useNavigation();
+  const { selection, setSelection } = useWeeklySelection();
+
   useEffect(() => {
-    if (allData?.rating) {
-      const colors = getBackgroundColors(
-        !allData.lat && !allData.lon ? null : allData.rating
-      );
-      const root = document.documentElement;
+    if (!allData) return;
+    if (navigation.state !== "loading") {
+      setSelection({
+        date: allData.eventDate ?? null,
+        type: allData.eventType ?? "sunrise",
+        rating: allData.rating ?? null,
+        eventTime: allData.eventTime ?? null,
+        timeZoneId: allData.eventTimeZone ?? null,
+        eventString: allData.eventString ?? null,
+        relative: allData.relative ?? null,
+        isPending: false,
+      });
+    }
+  }, [
+    allData?.eventDate,
+    allData?.eventType,
+    allData?.rating,
+    allData?.eventTime,
+    allData?.eventTimeZone,
+    allData?.eventString,
+    allData?.relative,
+    navigation.state,
+    setSelection,
+  ]);
 
-      root.style.setProperty("--bg-base-color", colors.base);
-      root.style.setProperty("--gradient-1-color", colors.gradient1);
-      root.style.setProperty("--gradient-2-color", colors.gradient2);
+  const effectiveRating = selection.rating ?? allData?.rating ?? null;
 
-      const backgroundElement = document.querySelector(".background-colors");
-      if (backgroundElement) {
-        if (allData.rating > 95) {
-          backgroundElement.classList.add("high-rating");
-        } else {
-          backgroundElement.classList.remove("high-rating");
-        }
+  useEffect(() => {
+    if (!effectiveRating) return;
+    const colors = getBackgroundColors(
+      !allData?.lat && !allData?.lon ? null : effectiveRating
+    );
+    const root = document.documentElement;
+
+    root.style.setProperty("--bg-base-color", colors.base);
+    root.style.setProperty("--gradient-1-color", colors.gradient1);
+    root.style.setProperty("--gradient-2-color", colors.gradient2);
+
+    const backgroundElement = document.querySelector(".background-colors");
+    if (backgroundElement) {
+      if (effectiveRating > 95) {
+        backgroundElement.classList.add("high-rating");
+      } else {
+        backgroundElement.classList.remove("high-rating");
       }
     }
-  }, [allData?.rating, allData?.lat, allData?.lon]);
+  }, [effectiveRating, allData?.lat, allData?.lon]);
 
   return (
     <div
       className={`w-screen min-h-screen background-colors overflow-x-hidden ${
-        allData?.rating && allData?.rating > 95 ? "high-rating" : ""
+        effectiveRating && effectiveRating > 95 ? "high-rating" : ""
       }`}
     >
       <div className={"w-screen text-center mx-auto"}>
@@ -1028,7 +1244,7 @@ export default function Sunwatch() {
       <RatingDisplay />
       <WeeklyOutlook />
       <CloudCoverDisplay />
-      <Map />
+      <LazyMap />
       <SubmitComponent />
       <Footer />
     </div>
