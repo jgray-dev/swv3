@@ -3,28 +3,39 @@ import { useEffect, useRef, useState } from "react";
 import { FaLongArrowAltUp } from "react-icons/fa";
 import { LoaderData } from "~/.server/interfaces";
 import StatItem from "~/components/StatItem";
+import { useWeeklySelection } from "~/context/WeeklySelectionContext";
 
 export default function RatingDisplay() {
   const allData = useRouteLoaderData<LoaderData>("routes/_index");
-  const [displayNumber, setDisplayNumber] = useState(allData?.rating || 0);
+  const { selection } = useWeeklySelection();
+
+  const ratingValue = selection.rating ?? allData?.rating ?? 0;
+  const eventTimeUnix = selection.eventTime ?? allData?.eventTime ?? null;
+  const eventString = selection.eventString ?? allData?.eventString ?? "";
+  const relative = selection.relative ?? allData?.relative ?? "future";
+
+  const [displayNumber, setDisplayNumber] = useState(ratingValue || 0);
   const [userLocalTime, setUserLocalTime] = useState<string>("");
   const startTimeRef = useRef<number>(0);
   const startValueRef = useRef(displayNumber);
 
+  const rating = Math.max(0, Math.min(100, ratingValue));
+  const ANIMATION_DURATION = 500;
+
   // Calculate user's local time for hover tooltip
   useEffect(() => {
-    if (!allData?.ok || !allData.eventTime) return;
+    if (!allData?.ok || !eventTimeUnix) return;
 
     // eventTime is a Unix timestamp - when converted to Date, it automatically
     // displays in the user's local timezone, which is exactly what we want for the tooltip
-    const eventDate = new Date(allData.eventTime * 1000);
+    const eventDate = new Date(eventTimeUnix * 1000);
     const userTimeFormatter = new Intl.DateTimeFormat("en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
     });
     setUserLocalTime(userTimeFormatter.format(eventDate));
-  }, [allData?.eventTime]);
+  }, [allData?.ok, eventTimeUnix]);
 
   useEffect(() => {
     if (!allData?.ok) return;
@@ -48,12 +59,10 @@ export default function RatingDisplay() {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [allData?.rating]);
+  }, [allData?.ok, rating]);
 
   if (!allData?.ok) return null;
 
-  const rating = Math.max(0, Math.min(100, allData.rating));
-  const ANIMATION_DURATION = 500;
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const progress = (rating / 100) * circumference;
@@ -155,17 +164,18 @@ export default function RatingDisplay() {
           </div>
           <div
             className={`text-sm sm:text-base mt-1 relative rounded px-1 cursor-help ${
-              allData.relative === "current"
+              relative === "current"
                 ? "gradient default-gradient font-bold"
-                : allData.relative === "future"
+                : relative === "future"
                   ? "text-green-400"
                   : "text-red-400"
             }`}
             title={userLocalTime ? `${userLocalTime} your local time` : ""}
-            aria-label={`Event timing: ${allData.eventString}`}
+            aria-label={`Event timing: ${eventString}`}
           >
-            {allData.eventString.charAt(0).toUpperCase() +
-              allData.eventString.slice(1)}
+            {eventString
+              ? eventString.charAt(0).toUpperCase() + eventString.slice(1)
+              : ""}
           </div>
           <div
             className="text-sm flex align-center content-center text-white/40 "
