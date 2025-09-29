@@ -53,9 +53,7 @@ body {
       var(--gradient-2-color, hsla(290, 55%, 25%, 0.4)) 0px,
       transparent 50%
     );
-  transition:
-    background-color,
-    0.5s linear;
+  transition: background-color 0.4s ease-in-out, background-image 0.4s ease-in-out;
 }
 
 .background-colors.high-rating {

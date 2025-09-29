@@ -1191,6 +1191,7 @@ function SunwatchContent({ allData }: { allData?: LoaderData }) {
     setSelection,
   ]);
 
+  // Use selection rating (which includes optimistic updates) for instant feedback
   const effectiveRating = selection.rating ?? allData?.rating ?? null;
 
   useEffect(() => {

@@ -73,6 +73,7 @@ export default function WeeklyChart({
   // Use refs to store the latest values for the plugin
   const selectedEventTimeRef = useRef<number | null>(null);
   const selectedEventDataRef = useRef<{ type: string; rating: number; time: number } | null>(null);
+  const previousDataLengthRef = useRef<number>(0);
 
   // Memoized color helper
   const getRatingColors = useCallback((rating: number) => {
@@ -233,7 +234,7 @@ export default function WeeklyChart({
             backgroundColor: "transparent",
             borderWidth: 3,
             fill: false,
-            tension: 0.3,
+            tension: 0.25,
             pointRadius: 5,
             pointHoverRadius: 7,
             pointBackgroundColor: pointColors,
@@ -285,10 +286,10 @@ export default function WeeklyChart({
     [hrefBuilder, navigate, onOptimisticSelect, timeZoneId],
   );
 
-  // Custom plugin to draw vertical lines
+  // Custom plugin to draw vertical lines and info box
   const verticalLinesPlugin = useMemo(() => ({
     id: "verticalLines",
-    beforeDraw: (chart: any) => {
+    afterDatasetsDraw: (chart: any) => {
       const { ctx, scales } = chart;
       const xScale = scales.x;
       const yScale = scales.y;
@@ -400,8 +401,16 @@ export default function WeeklyChart({
           return false;
         };
         
-        // Strategy: Try positions in order of preference
-        const positions = [
+        // Determine if box should be on left or right side
+        const spaceRight = xScale.right - xPosition;
+        const spaceLeft = xPosition - xScale.left;
+        const preferRight = spaceRight >= spaceLeft;
+        
+        // Horizontal offset from the line
+        const horizontalOffset = 15;
+        
+        // Strategy: Try positions in order of preference, considering both sides
+        const verticalPositions = [
           ratingY, // First try: at rating level
           ratingY - halfBoxHeight - clearance - 10, // Try above
           ratingY + halfBoxHeight + clearance + 10, // Try below
@@ -409,9 +418,11 @@ export default function WeeklyChart({
           yScale.bottom - halfBoxHeight - bottomMargin, // Bottom of chart
         ];
         
-        // Find first position that doesn't intersect and fits in bounds
+        // Try each vertical position with preferred horizontal side first
         let foundPosition = false;
-        for (const pos of positions) {
+        let boxX = preferRight ? xPosition + horizontalOffset : xPosition - boxWidth - horizontalOffset;
+        
+        for (const pos of verticalPositions) {
           // Check bounds
           if (pos - halfBoxHeight < yScale.top + topMargin || 
               pos + halfBoxHeight > yScale.bottom - bottomMargin) {
@@ -426,30 +437,50 @@ export default function WeeklyChart({
           }
         }
         
-        // Fallback: if all positions intersect, pick the one with most space
+        // If no position found on preferred side, try the other side
+        if (!foundPosition) {
+          boxX = preferRight ? xPosition - boxWidth - horizontalOffset : xPosition + horizontalOffset;
+          
+          for (const pos of verticalPositions) {
+            if (pos - halfBoxHeight < yScale.top + topMargin || 
+                pos + halfBoxHeight > yScale.bottom - bottomMargin) {
+              continue;
+            }
+            
+            if (!checkLineIntersection(pos)) {
+              boxY = pos;
+              foundPosition = true;
+              break;
+            }
+          }
+        }
+        
+        // Final fallback: if all positions intersect, pick the one with most space
         if (!foundPosition) {
           const spaceAbove = ratingY - yScale.top;
           const spaceBelow = yScale.bottom - ratingY;
           
-          if (spaceAbove > spaceBelow) {
-            boxY = yScale.top + halfBoxHeight + topMargin;
-          } else {
-            boxY = yScale.bottom - halfBoxHeight - bottomMargin;
-          }
+          boxY = spaceAbove > spaceBelow 
+            ? yScale.top + halfBoxHeight + topMargin 
+            : yScale.bottom - halfBoxHeight - bottomMargin;
+          
+          // Use preferred side
+          boxX = preferRight ? xPosition + horizontalOffset : xPosition - boxWidth - horizontalOffset;
         }
         
-        // Position box to the right or left of the line depending on space
-        let boxX = xPosition + 10;
-        if (boxX + boxWidth > xScale.right) {
-          boxX = xPosition - boxWidth - 10;
+        // Ensure box doesn't go off screen horizontally
+        if (boxX < xScale.left) {
+          boxX = xPosition + horizontalOffset;
+        } else if (boxX + boxWidth > xScale.right) {
+          boxX = xPosition - boxWidth - horizontalOffset;
         }
 
-        // Draw box background
-        ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+        // Draw box background (semi-transparent so line is visible through it)
+        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
         ctx.fillRect(boxX, boxY - boxHeight / 2, boxWidth, boxHeight);
         
         // Draw box border
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
         ctx.lineWidth = 1;
         ctx.strokeRect(boxX, boxY - boxHeight / 2, boxWidth, boxHeight);
 
@@ -484,13 +515,20 @@ export default function WeeklyChart({
     },
   }), [currentTime, timeZoneId]);
 
+  // Check if data length changed (edge case - loading new date range)
+  const dataLengthChanged = chartEvents.length !== previousDataLengthRef.current;
+  previousDataLengthRef.current = chartEvents.length;
+
   // Mobile-optimized options
   const options: ChartOptions<"line"> = useMemo(() => {
     const isMobile = typeof window !== 'undefined' ? window.innerWidth < 640 : false;
     return {
     responsive: true,
     maintainAspectRatio: false,
-    animation: false,
+    animation: dataLengthChanged ? false : {
+      duration: 400,
+      easing: 'easeInOutQuart',
+    },
     plugins: {
       legend: {
         display: false,
@@ -588,25 +626,15 @@ export default function WeeklyChart({
     },
     onClick: handlePointClick,
   };
-  }, [handlePointClick, timeZoneId]);
-
-  const isLoading =
-    navigation.state === "loading" &&
-    !(optimisticSelection?.isPending === false);
+  }, [handlePointClick, timeZoneId, dataLengthChanged]);
 
   return (
     <div className="relative w-full h-48 sm:h-64 md:h-80">
       <Line
-        key={`${actualSelectedDate}-${actualSelectedType}-${selectedEventTime}`}
         data={chartData}
         options={options}
         plugins={[verticalLinesPlugin]}
       />
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px] pointer-events-none">
-          <div className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white/80 animate-spin" />
-        </div>
-      )}
     </div>
   );
 }
