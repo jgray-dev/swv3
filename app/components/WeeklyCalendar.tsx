@@ -109,7 +109,7 @@ export default function WeeklyCalendar({
           </div>
         ) : null}
       </div>
-      
+
       <div className="space-y-8">
         {/* Continuous Line Chart */}
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur-sm">
@@ -124,13 +124,13 @@ export default function WeeklyCalendar({
           optimisticSelection={optimisticSelection}
         />
         </div>
-        
+
         {/* Interactive day selector */}
         <div className="grid grid-cols-5 gap-2 sm:gap-3">
           {days.map((day) => {
             const sunriseSelected = selectedDate === day.date && selectedType === "sunrise";
             const sunsetSelected = selectedDate === day.date && selectedType === "sunset";
-            
+
             return (
               <div
                 key={day.date}
@@ -142,17 +142,17 @@ export default function WeeklyCalendar({
               >
                 <div className="p-2 sm:p-4 space-y-2 sm:space-y-3">
                   <div className="text-center">
-                    <div className="text-xs sm:text-sm font-medium text-white/90 leading-tight">{day.label}</div>
+                            <div className={"text-xs sm:text-sm font-medium text-white/90 leading-tight"}>{day.label}</div>
                     {day.isToday && <div className="text-xs text-emerald-400 mt-0.5 sm:mt-1">Today</div>}
                   </div>
-                  
+
                   <div className="space-y-1 sm:space-y-2">
                     {(["sunrise", "sunset"] as const).map((type) => {
                       const event = day[type];
                       const isSelected = type === "sunrise" ? sunriseSelected : sunsetSelected;
                       const Icon = type === "sunrise" ? GiSunrise : GiSunset;
                       const href = hrefBuilder?.(day.date, type);
-                      
+
                       const getRatingColor = (rating: number | null) => {
                         if (!rating) return 'text-white/40';
                         if (rating >= 80) return 'text-emerald-400';
@@ -160,7 +160,7 @@ export default function WeeklyCalendar({
                         if (rating >= 40) return 'text-amber-400';
                         return 'text-rose-400';
                       };
-                      
+
                       const content = (
                         <div className="flex items-center justify-between w-full min-w-0">
                           <div className="flex items-center gap-1 sm:gap-2 min-w-0">
@@ -174,17 +174,17 @@ export default function WeeklyCalendar({
                           </div>
                         </div>
                       );
-                      
+
                       const sharedClasses = `flex w-full items-center gap-1 sm:gap-2 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 min-w-0 ${
-                        isSelected 
-                          ? "ring-2 ring-white/40 bg-white/[0.1]" 
+                        isSelected
+                          ? "ring-2 ring-white/40 bg-white/[0.1]"
                           : "hover:bg-white/[0.05]"
                       } ${
                         event?.isAutoFocus
                           ? "ring-2 ring-white/20 bg-white/[0.06]"
                           : ""
                       }`;
-                      
+
                       if (href) {
                         return (
                           <Link

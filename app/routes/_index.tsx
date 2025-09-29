@@ -1165,7 +1165,9 @@ function SunwatchContent({ allData }: { allData?: LoaderData }) {
 
   useEffect(() => {
     if (!allData) return;
-    if (navigation.state !== "loading") {
+    
+    // Only sync when navigation completes (not during loading)
+    if (navigation.state === "idle") {
       setSelection({
         date: allData.eventDate ?? null,
         type: allData.eventType ?? "sunrise",
